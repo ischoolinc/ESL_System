@@ -680,7 +680,8 @@
             this.node18.Editable = false;
             this.node18.Expanded = true;
             this.node18.Name = "node18";
-            this.node18.Text = "<b><font color=\"#ED1C24\">+加入新子項目</font></b>";
+            this.node18.TagString = "function";
+            this.node18.Text = "<b><font color=\"#ED1C24\">+加入新子評量</font></b>";
             // 
             // node14
             // 
@@ -688,12 +689,14 @@
             this.node14.Editable = false;
             this.node14.Expanded = true;
             this.node14.Name = "node14";
+            this.node14.TagString = "function";
             this.node14.Text = "<b><font color=\"#ED1C24\">+加入新子項目</font></b>";
             // 
             // node8
             // 
             this.node8.Expanded = true;
             this.node8.Name = "node8";
+            this.node8.TagString = "function";
             this.node8.Text = "<b><font color=\"#ED1C24\">+加入新試別</font></b>";
             this.node8.NodeDoubleClick += new System.EventHandler(this.node8_NodeDoubleClick);
             // 
