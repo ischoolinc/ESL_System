@@ -1,0 +1,8 @@
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\bin\Debug\ESL_System.dll
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\bin\Debug\ESL_System.pdb
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.dll
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.pdb
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.Form.ESL_TemplateSetupManager.resources
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.csproj.GenerateResource.Cache
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.csprojResolveAssemblyReference.cache
+C:\Users\ED\Documents\Visual Studio 2017\Projects\Loador(test.p.kcbs.hc.edu.tw)\ESL_System\obj\Debug\ESL_System.Properties.Resources.resources
