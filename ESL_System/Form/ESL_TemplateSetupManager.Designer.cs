@@ -270,7 +270,7 @@
             this.peTemplateName1.Dock = System.Windows.Forms.DockStyle.Top;
             this.peTemplateName1.Location = new System.Drawing.Point(156, 0);
             this.peTemplateName1.Name = "peTemplateName1";
-            this.peTemplateName1.Size = new System.Drawing.Size(713, 37);
+            this.peTemplateName1.Size = new System.Drawing.Size(745, 37);
             this.peTemplateName1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground;
             this.peTemplateName1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground2;
             this.peTemplateName1.Style.BorderColor.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarDockedBorder;
@@ -301,11 +301,12 @@
             this.btnSave.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnSave.Location = new System.Drawing.Point(583, 8);
+            this.btnSave.Location = new System.Drawing.Point(615, 8);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 23);
             this.btnSave.TabIndex = 3;
             this.btnSave.Text = "儲存ESL 評分樣版";
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // advTree1
             // 
@@ -333,7 +334,7 @@
             this.advTree1.NodesConnector = this.nodeConnector1;
             this.advTree1.NodeStyle = this.elementStyle1;
             this.advTree1.PathSeparator = ";";
-            this.advTree1.Size = new System.Drawing.Size(707, 654);
+            this.advTree1.Size = new System.Drawing.Size(739, 654);
             this.advTree1.Styles.Add(this.elementStyle1);
             this.advTree1.Styles.Add(this.elementStyle2);
             this.advTree1.Styles.Add(this.elementStyle3);
@@ -346,7 +347,7 @@
             this.colItem.Name = "colItem";
             this.colItem.SortingEnabled = false;
             this.colItem.Text = "項目";
-            this.colItem.Width.Absolute = 210;
+            this.colItem.Width.Absolute = 250;
             // 
             // colValue
             // 
@@ -375,7 +376,8 @@
             this.node13,
             this.node15,
             this.node14});
-            this.node9.Text = "試別1";
+            this.node9.TagString = "term";
+            this.node9.Text = "試別(mid-term)";
             // 
             // node10
             // 
@@ -484,7 +486,8 @@
             this.node17,
             this.node19,
             this.node18});
-            this.node15.Text = "子項目1";
+            this.node15.TagString = "subject";
+            this.node15.Text = "科目(ART)";
             // 
             // node16
             // 
@@ -546,7 +549,8 @@
             this.node22,
             this.node23,
             this.node24});
-            this.node19.Text = "子評量1";
+            this.node19.TagString = "assessment";
+            this.node19.Text = "評量(In Class Score,教師一)";
             // 
             // node20
             // 
@@ -765,7 +769,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(869, 697);
+            this.ClientSize = new System.Drawing.Size(901, 697);
             this.Controls.Add(this.advTree1);
             this.Controls.Add(this.peTemplateName1);
             this.Controls.Add(this.npLeft);

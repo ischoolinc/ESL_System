@@ -16,7 +16,7 @@ namespace ESL_System
         /// <summary>
         /// 子項目分數比例
         /// </summary>
-        public string Percentage { get; set; }
+        public string Weight { get; set; }
 
         /// <summary>
         /// 子評量List

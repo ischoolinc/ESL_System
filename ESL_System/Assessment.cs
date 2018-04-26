@@ -16,12 +16,12 @@ namespace ESL_System
         /// <summary>
         /// 子評量分數比例
         /// </summary>
-        public string Percentage { get; set; }
+        public string Weight { get; set; }
 
         /// <summary>
-        /// 子評量評分教師
+        /// 子評量評分教師(教師一、教師二、教師三)
         /// </summary>
-        public string TeacherRole { get; set; }
+        public string TeacherSequence { get; set; }
 
         /// <summary>
         /// 子評量評分種類

@@ -16,7 +16,7 @@ namespace ESL_System
         /// <summary>
         /// 試別分數比例
         /// </summary>
-        public string Percentage { get; set; }
+        public string Weight { get; set; }
 
         /// <summary>
         /// 試別分數輸入開始時間
