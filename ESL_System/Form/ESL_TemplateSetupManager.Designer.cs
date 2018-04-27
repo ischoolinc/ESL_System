@@ -41,6 +41,7 @@
             this.btnDelete = new DevComponents.DotNetBar.ButtonX();
             this.buttonItem4 = new DevComponents.DotNetBar.ButtonItem();
             this.peTemplateName1 = new DevComponents.DotNetBar.PanelEx();
+            this.labelX3 = new DevComponents.DotNetBar.LabelX();
             this.lblIsDirty = new DevComponents.DotNetBar.LabelX();
             this.btnSave = new DevComponents.DotNetBar.ButtonX();
             this.advTree1 = new DevComponents.AdvTree.AdvTree();
@@ -112,7 +113,7 @@
             this.npLeft.Location = new System.Drawing.Point(0, 0);
             this.npLeft.Name = "npLeft";
             this.npLeft.Padding = new System.Windows.Forms.Padding(1);
-            this.npLeft.Size = new System.Drawing.Size(156, 697);
+            this.npLeft.Size = new System.Drawing.Size(156, 693);
             this.npLeft.Style = DevComponents.DotNetBar.eDotNetBarStyle.Office2007;
             this.npLeft.TabIndex = 5;
             // 
@@ -144,7 +145,7 @@
             this.navigationPanePanel1.Location = new System.Drawing.Point(1, 25);
             this.navigationPanePanel1.Name = "navigationPanePanel1";
             this.navigationPanePanel1.ParentItem = this.buttonItem4;
-            this.navigationPanePanel1.Size = new System.Drawing.Size(154, 639);
+            this.navigationPanePanel1.Size = new System.Drawing.Size(154, 635);
             this.navigationPanePanel1.Style.Alignment = System.Drawing.StringAlignment.Center;
             this.navigationPanePanel1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.PanelBackground;
             this.navigationPanePanel1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.PanelBackground2;
@@ -189,7 +190,7 @@
             this.ipList.LicenseKey = "F962CEC7-CD8F-4911-A9E9-CAB39962FC1F";
             this.ipList.Location = new System.Drawing.Point(0, 0);
             this.ipList.Name = "ipList";
-            this.ipList.Size = new System.Drawing.Size(154, 608);
+            this.ipList.Size = new System.Drawing.Size(154, 604);
             this.ipList.TabIndex = 0;
             this.ipList.Text = "itemPanel1";
             // 
@@ -227,7 +228,7 @@
             this.panel2.Controls.Add(this.btnAddNew);
             this.panel2.Controls.Add(this.btnDelete);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 608);
+            this.panel2.Location = new System.Drawing.Point(0, 604);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(154, 31);
             this.panel2.TabIndex = 14;
@@ -265,12 +266,13 @@
             // 
             this.peTemplateName1.CanvasColor = System.Drawing.SystemColors.Control;
             this.peTemplateName1.ColorSchemeStyle = DevComponents.DotNetBar.eDotNetBarStyle.Office2007;
+            this.peTemplateName1.Controls.Add(this.labelX3);
             this.peTemplateName1.Controls.Add(this.lblIsDirty);
             this.peTemplateName1.Controls.Add(this.btnSave);
-            this.peTemplateName1.Dock = System.Windows.Forms.DockStyle.Top;
-            this.peTemplateName1.Location = new System.Drawing.Point(156, 0);
+            this.peTemplateName1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.peTemplateName1.Location = new System.Drawing.Point(156, 656);
             this.peTemplateName1.Name = "peTemplateName1";
-            this.peTemplateName1.Size = new System.Drawing.Size(745, 37);
+            this.peTemplateName1.Size = new System.Drawing.Size(777, 37);
             this.peTemplateName1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground;
             this.peTemplateName1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground2;
             this.peTemplateName1.Style.BorderColor.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarDockedBorder;
@@ -279,6 +281,21 @@
             this.peTemplateName1.Style.GradientAngle = 90;
             this.peTemplateName1.Style.MarginLeft = 15;
             this.peTemplateName1.TabIndex = 6;
+            // 
+            // labelX3
+            // 
+            this.labelX3.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX3.BackgroundStyle.Class = "";
+            this.labelX3.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX3.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.labelX3.Location = new System.Drawing.Point(19, 8);
+            this.labelX3.Name = "labelX3";
+            this.labelX3.Size = new System.Drawing.Size(511, 23);
+            this.labelX3.TabIndex = 17;
+            this.labelX3.Text = "若需新增刪除，試別、科目、評量、設定指標，可點選項目後，右鍵選擇新增刪除。";
             // 
             // lblIsDirty
             // 
@@ -289,7 +306,7 @@
             this.lblIsDirty.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
             this.lblIsDirty.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.lblIsDirty.ForeColor = System.Drawing.Color.Red;
-            this.lblIsDirty.Location = new System.Drawing.Point(426, 8);
+            this.lblIsDirty.Location = new System.Drawing.Point(528, 8);
             this.lblIsDirty.Name = "lblIsDirty";
             this.lblIsDirty.Size = new System.Drawing.Size(63, 23);
             this.lblIsDirty.TabIndex = 4;
@@ -301,7 +318,7 @@
             this.btnSave.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnSave.Location = new System.Drawing.Point(615, 8);
+            this.btnSave.Location = new System.Drawing.Point(647, 8);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 23);
             this.btnSave.TabIndex = 3;
@@ -326,7 +343,7 @@
             this.advTree1.Columns.Add(this.colValue);
             this.advTree1.Columns.Add(this.colGuide);
             this.advTree1.LicenseKey = "F962CEC7-CD8F-4911-A9E9-CAB39962FC1F";
-            this.advTree1.Location = new System.Drawing.Point(162, 43);
+            this.advTree1.Location = new System.Drawing.Point(162, 0);
             this.advTree1.Name = "advTree1";
             this.advTree1.Nodes.AddRange(new DevComponents.AdvTree.Node[] {
             this.node9,
@@ -334,7 +351,7 @@
             this.advTree1.NodesConnector = this.nodeConnector1;
             this.advTree1.NodeStyle = this.elementStyle1;
             this.advTree1.PathSeparator = ";";
-            this.advTree1.Size = new System.Drawing.Size(739, 654);
+            this.advTree1.Size = new System.Drawing.Size(771, 650);
             this.advTree1.Styles.Add(this.elementStyle1);
             this.advTree1.Styles.Add(this.elementStyle2);
             this.advTree1.Styles.Add(this.elementStyle3);
@@ -769,11 +786,12 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(901, 697);
+            this.ClientSize = new System.Drawing.Size(933, 693);
             this.Controls.Add(this.advTree1);
             this.Controls.Add(this.peTemplateName1);
             this.Controls.Add(this.npLeft);
             this.DoubleBuffered = true;
+            this.MaximizeBox = true;
             this.Name = "ESL_TemplateSetupManager";
             this.Text = "ESL評分樣版設定";
             this.Load += new System.EventHandler(this.ESL_TemplateSetupManager_Load);
@@ -852,5 +870,6 @@
         private DevComponents.AdvTree.Cell cell22;
         private DevComponents.DotNetBar.ElementStyle elementStyle2;
         private DevComponents.DotNetBar.ElementStyle elementStyle3;
+        private DevComponents.DotNetBar.LabelX labelX3;
     }
 }
