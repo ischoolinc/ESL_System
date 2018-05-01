@@ -19,6 +19,8 @@ namespace ESL_System.Form
 {
     public partial class ESL_TemplateSetupManager : FISCA.Presentation.Controls.BaseForm
     {
+        private ButtonItem _current_item;
+
         private BackgroundWorker _workder;
 
         private Dictionary<string, string> hintGuideDict = new Dictionary<string, string>();
@@ -29,9 +31,15 @@ namespace ESL_System.Form
         private Dictionary<string, string> teacherRoleCovertDict = new Dictionary<string, string>();
         private Dictionary<string, string> teacherRoleCovertRevDict = new Dictionary<string, string>();
 
-
         private Dictionary<string, string> nodeTagCovertDict = new Dictionary<string, string>();
 
+        private Dictionary<string, string> oriTemplateDescriptionDict = new Dictionary<string, string>();
+
+        private ButtonItem CurrentItem
+        {
+            get { return _current_item; }
+            set { _current_item = value; }
+        }
 
         // 現在點在哪一小節
         DevComponents.AdvTree.Node node_now;
@@ -69,6 +77,9 @@ namespace ESL_System.Form
             nodeTagCovertDict.Add("assessment", "評量");
             nodeTagCovertDict.Add("string", "指標");
 
+            //載入資料
+            LoadAssessmentSetups();
+
         }
 
 
@@ -77,28 +88,19 @@ namespace ESL_System.Form
         /// </summary>
         private void LoadAssessmentSetups()
         {
-            //_workder = new BackgroundWorker();
-            //_workder.DoWork += new DoWorkEventHandler(Workder_DoWork);
-            //_workder.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Workder_RunWorkerCompleted);
+            _workder = new BackgroundWorker();
+            _workder.DoWork += new DoWorkEventHandler(Workder_DoWork);
+            _workder.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Workder_RunWorkerCompleted);
 
-            BeforeLoadAssessmentSetup();
-            //_workder.RunWorkerAsync();
+            _workder.RunWorkerAsync();
+
         }
 
-        private void BeforeLoadAssessmentSetup()
+        private void Workder_DoWork(object sender, DoWorkEventArgs e)
         {
-            //將設計範例全部清光，開始抓取table 資料
-
-            advTree1.Nodes.Clear();
-
-            Loading = true;
-            ipList.Items.Clear();
-            //panel1.Enabled = false;
-
-            //btnSave.Enabled = false;
-
-
+            // 2018/05/01 穎華重要備註， 在table exam_template 欄位 description 不為空代表其為ESL 的樣板
             string query = "select * from exam_template where description !=''";
+
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
 
@@ -111,87 +113,199 @@ namespace ESL_System.Form
                     item.Text = "" + dr[1];
                     item.Tag = "" + dr[0];
                     item.OptionGroup = "AssessmentSetup";
-                    //item.Click += new EventHandler(AssessmentSetup_Click);
+                    item.Click += new EventHandler(AssessmentSetup_Click);
                     //item.DoubleClick += new EventHandler(AssessmentSetup_DoubleClick);
                     ipList.Items.Add(item);
-                }
-            }
 
-
-
-            // 取得ESL 描述 in description
-
-            string selQuery = "select id,description from exam_template where name = 'ESL 科目樣版' ";
-            dt = qh.Select(selQuery);
-            string xmlStr = "<root>" + dt.Rows[0]["description"].ToString() + "</root>";
-            XElement elmRoot = XElement.Parse(xmlStr);
-
-            if (elmRoot != null)
-            {
-                if (elmRoot.Element("ESLTemplate") != null)
-                {
-                    foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
+                    // 紀錄原本樣板 Description 資料，作為比較用
+                    if (!oriTemplateDescriptionDict.ContainsKey("" + dr[0]))
                     {
-                        Term t = new Term();
-
-                        t.Name = ele_term.Attribute("Name").Value;
-                        t.Weight = ele_term.Attribute("Weight").Value;
-                        t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
-                        t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
-
-                        t.SubjectList = new List<Subject>();
-
-                        foreach (XElement ele_subject in ele_term.Elements("Subject"))
-                        {
-                            Subject s = new Subject();
-
-                            s.Name = ele_subject.Attribute("Name").Value;
-                            s.Weight = ele_subject.Attribute("Weight").Value;
-
-                            s.AssessmentList = new List<Assessment>();
-
-                            foreach (XElement ele_assessment in ele_subject.Elements("Assessment"))
-                            {
-                                Assessment a = new Assessment();
-
-                                a.Name = ele_assessment.Attribute("Name").Value;
-                                a.Weight = ele_assessment.Attribute("Weight").Value;
-                                a.TeacherSequence = ele_assessment.Attribute("TeacherSequence").Value;
-                                a.Type = ele_assessment.Attribute("Type").Value;
-                                a.AllowCustomAssessment = ele_assessment.Attribute("AllowCustomAssessment").Value;
-
-                                a.IndicatorsList = new List<Indicators>();
-
-                                if (ele_assessment.Element("Indicators") != null)
-                                {
-
-                                    foreach (XElement ele_Indicator in ele_assessment.Element("Indicators").Elements("Indicator"))
-                                    {
-                                        Indicators i = new Indicators();
-
-                                        i.Name = ele_Indicator.Value;
-
-                                        a.IndicatorsList.Add(i);
-                                    }
-                                }
-
-                                s.AssessmentList.Add(a);
-                            }
-
-
-                            t.SubjectList.Add(s);
-                        }
-
-
-
-                        ParseDBxmlToNodeUI(t);
+                        oriTemplateDescriptionDict.Add("" + dr[0], "" + dr["description"]);
                     }
+                }
+            }
+        }
+
+        private void Workder_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            try
+            {
+                if (e.Error != null)
+                {
+                    //CurrentUser.ReportError(e.Error);
+                    DisableFunctions();
+                    AfterLoadAssessmentSetup();
+                    MsgBox.Show("下載評量設定資料錯誤。", Application.ProductName);
+                    return;
+                }
+
+                //FillAssessmentSetupToItemPanel(); //顯示 Tempalte 資料物件到畫面上。
+
+                AfterLoadAssessmentSetup();
+            }
+            catch (Exception ex)
+            {
+                MsgBox.Show(ex.Message);
+            }
+        }
 
 
+
+
+        private void BeforeLoadAssessmentSetup()
+        {
+            //將設計範例全部清光，開始抓取table 資料
+            advTree1.Nodes.Clear();
+
+            CurrentItem = null;
+            oriTemplateDescriptionDict.Clear();
+
+            Loading = true;
+            ipList.Items.Clear();
+
+            advTree1.Enabled = false;
+            btnSave.Enabled = false;
+        }
+
+        private void SelectAssessmentSetup(ButtonItem item)
+        {
+            advTree1.Nodes.Clear();
+
+            //沒東西 預設空畫面
+            if (item == null)
+            {
+
+                return;
+            }
+            else
+            {
+                string esl_exam_template_id = "" + item.Tag;
+
+                // 取得ESL 描述 in description
+                DataTable dt;
+                QueryHelper qh = new QueryHelper();
+
+                //string selQuery = "select id,description from exam_template where name = 'ESL 科目樣版' ";
+
+                string selQuery = "select id,description from exam_template where id = '" + esl_exam_template_id + "'";
+                dt = qh.Select(selQuery);
+                string xmlStr = "<root>" + dt.Rows[0]["description"].ToString() + "</root>";
+                XElement elmRoot = XElement.Parse(xmlStr);
+
+                if (elmRoot != null)
+                {
+                    if (elmRoot.Element("ESLTemplate") != null)
+                    {
+                        foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
+                        {
+                            Term t = new Term();
+
+                            t.Name = ele_term.Attribute("Name").Value;
+                            t.Weight = ele_term.Attribute("Weight").Value;
+                            t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
+                            t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
+
+                            t.SubjectList = new List<Subject>();
+
+                            foreach (XElement ele_subject in ele_term.Elements("Subject"))
+                            {
+                                Subject s = new Subject();
+
+                                s.Name = ele_subject.Attribute("Name").Value;
+                                s.Weight = ele_subject.Attribute("Weight").Value;
+
+                                s.AssessmentList = new List<Assessment>();
+
+                                foreach (XElement ele_assessment in ele_subject.Elements("Assessment"))
+                                {
+                                    Assessment a = new Assessment();
+
+                                    a.Name = ele_assessment.Attribute("Name").Value;
+                                    a.Weight = ele_assessment.Attribute("Weight").Value;
+                                    a.TeacherSequence = ele_assessment.Attribute("TeacherSequence").Value;
+                                    a.Type = ele_assessment.Attribute("Type").Value;
+                                    a.AllowCustomAssessment = ele_assessment.Attribute("AllowCustomAssessment").Value;
+
+                                    a.IndicatorsList = new List<Indicators>();
+
+                                    if (ele_assessment.Element("Indicators") != null)
+                                    {
+
+                                        foreach (XElement ele_Indicator in ele_assessment.Element("Indicators").Elements("Indicator"))
+                                        {
+                                            Indicators i = new Indicators();
+
+                                            i.Name = ele_Indicator.Value;
+
+                                            a.IndicatorsList.Add(i);
+                                        }
+                                    }
+                                    s.AssessmentList.Add(a);
+                                }
+                                t.SubjectList.Add(s);
+                            }
+                            ParseDBxmlToNodeUI(t);
+                        }
+                    }
+                }
+            }
+        }
+
+        private void AssessmentSetup_Click(object sender, EventArgs e)
+        {
+            if (CurrentItem == sender) return;
+
+            if (!CanContinue()) return;
+
+            CurrentItem = sender as ButtonItem;
+            SelectAssessmentSetup(CurrentItem);
+        }
+
+        private bool CanContinue()
+        {
+            if (lblIsDirty.Visible)
+            {
+                DialogResult dr = MsgBox.Show("您未儲存目前資料，是否要儲存？", Application.ProductName, MessageBoxButtons.YesNoCancel, MessageBoxIcon.Question);
+
+                if (dr == DialogResult.Cancel)
+                {
+                    CurrentItem.RaiseClick();
+                    return false;
+                }
+                else if (dr == DialogResult.Yes)
+                {
+                    btnSave_Click(null, null); //儲存
                 }
             }
 
+            return true;
         }
+
+        //private void AssessmentSetup_DoubleClick(object sender, EventArgs e)
+        //{
+        //    //if (!CanContinue()) return;
+
+        //    //AssessmentNameEditor editor = new AssessmentNameEditor(CurrentItem.Tag as AssessmentSetupRecord);
+        //    //DialogResult dr = editor.ShowDialog();
+
+        //    //if (dr == DialogResult.OK)
+        //    //{
+        //    //    try
+        //    //    {
+        //    //        EditTemplate.Rename(CurrentItem.Identity, editor.TemplateName);
+
+        //    //        CurrentItem.TemplateName = editor.TemplateName;
+        //    //        //CourseEntity.Instance.InvokeForeignTableChanged();
+        //    //    }
+        //    //    catch (Exception ex)
+        //    //    {
+        //    //        //CurrentUser.ReportError(ex);
+        //    //        MsgBox.Show(ex.Message);
+        //    //    }
+        //    //}
+        //}
+
+
 
         private void HideNavigationBar()
         {
@@ -201,11 +315,17 @@ namespace ESL_System.Form
         private void AfterLoadAssessmentSetup()
         {
             ipList.RecalcLayout();
-            //panel1.Enabled = true;
 
+            lblIsDirty.Visible = false;
+            advTree1.Enabled = true;
             btnSave.Enabled = true;
 
             Loading = false;
+        }
+
+        private void DisableFunctions()
+        {
+            npLeft.Enabled = false;
         }
 
         private bool Loading
@@ -317,7 +437,7 @@ namespace ESL_System.Form
             // 試別為最上層，其parent 為null ， 需要至advtree1 檢查
             if (node_now.Parent != null)
             {
-                if (node_now.Parent.Nodes.Count==1)
+                if (node_now.Parent.Nodes.Count == 1)
                 {
                     menuItems_delete.Enabled = false;
                 }
@@ -327,13 +447,13 @@ namespace ESL_System.Form
                 if (advTree1.Nodes.Count == 1)
                 {
                     menuItems_delete.Enabled = false;
-                }                
+                }
             }
 
             //menuItems = new MenuItem[] { new MenuItem("新增" + nodeTagCovertDict[node_now.TagString], MenuItemInsert_Click), new MenuItem("刪除" + nodeTagCovertDict[node_now.TagString], MenuItemDelete_Click) };
 
             menuItems = new MenuItem[] { menuItems_insert, menuItems_delete };
-            
+
 
             if (e.Button == MouseButtons.Right)
             {
@@ -360,7 +480,7 @@ namespace ESL_System.Form
 
                     case "assessment":
                         DevComponents.AdvTree.Node a = BuildAssessmentNode(); // 組裝AssessmentNode
-
+                        a.Expanded = true; //將項目展開
                         node_now.Parent.Nodes.Add(a);
                         break;
                     case "subject":
@@ -380,7 +500,7 @@ namespace ESL_System.Form
             else
             {
                 //term 會在此新增
-                
+
                 DevComponents.AdvTree.Node t_s_a = BuildAssessmentNode();// 組裝AssessmentNode
                 DevComponents.AdvTree.Node s_a = BuildSubjectNode(); // 組裝SubjectNode
 
@@ -390,9 +510,11 @@ namespace ESL_System.Form
                 DevComponents.AdvTree.Node t = BuildTermNode(); // 組裝TermNode
 
                 t.Nodes.Add(s_a); //將組裝好的 SubjectNode加入 TermNode
-                t.Expanded =true; //將項目展開
+                t.Expanded = true; //將項目展開
                 advTree1.Nodes.Add(t); //將組裝好的 SubjectNode加入 advTree(最上層)
             }
+
+            IsDirtyOrNot();// 檢查是否有更動資料
         }
 
         private void MenuItemDelete_Click(Object sender, System.EventArgs e)
@@ -406,6 +528,8 @@ namespace ESL_System.Form
             {
                 advTree1.Nodes.Remove(node_now);
             }
+
+            IsDirtyOrNot();// 檢查是否有更動資料
         }
 
 
@@ -532,6 +656,7 @@ namespace ESL_System.Form
                 }
             }
 
+            IsDirtyOrNot();// 檢查是否有更動資料
         }
 
         // 在編輯完之後驗證使用者輸入的資料是否符合型態
@@ -549,13 +674,15 @@ namespace ESL_System.Form
                     {
                         //node_now.Style = DevComponents.AdvTree.NodeStyles.Red;
                         //node_now.StyleSelected = DevComponents.AdvTree.NodeStyles.Red;
-                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>";
+                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>"; //輸入規則錯誤，顯示紅字
+                        btnSave.Enabled = false;
                     }
                     else
                     {
                         //node_now.Style = null;
                         //node_now.StyleSelected = null;
-                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag];
+                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag]; //輸入規則正確
+                        btnSave.Enabled = true;
                     }
                     break;
                 // 時間
@@ -564,28 +691,33 @@ namespace ESL_System.Form
                     {
                         //node_now.Style = DevComponents.AdvTree.NodeStyles.Red;
                         //node_now.StyleSelected = DevComponents.AdvTree.NodeStyles.Red;
-                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>";
+                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>"; //輸入規則錯誤，顯示紅字
+                        btnSave.Enabled = false;
                     }
                     else
                     {
                         //node_now.Style = null;
                         //node_now.StyleSelected = null;
-                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag];
+                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag]; //輸入規則正確
+                        btnSave.Enabled = true;
                     }
                     break;
                 // 字串，名稱必定要輸入，且不能重覆
                 case "string":
-                    if (node_now.SelectedCell.Text == "")
+
+                    if (node_now.SelectedCell.Text == "" || CheckDuplicated())
                     {
                         //node_now.Style = DevComponents.AdvTree.NodeStyles.Red;
                         //node_now.StyleSelected = DevComponents.AdvTree.NodeStyles.Red;
-                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>";
+                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + hintGuideDict["" + node_now.Tag] + "</font></b>"; //輸入規則錯誤，顯示紅字
+
+                        btnSave.Enabled = false;
                     }
                     else
                     {
                         //node_now.Style = null;
                         //node_now.StyleSelected = null;
-                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag];
+                        node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag]; //輸入規則正確
 
                         // 更新項目名稱
                         if (node_now.Cells[0].Text == "名稱:")
@@ -600,11 +732,15 @@ namespace ESL_System.Form
                                 node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + "," + node_now.Parent.Nodes[2].Cells[1].Text + ")";
                             }
                         }
+                        btnSave.Enabled = true;
                     }
                     break;
                 default:
                     break;
             }
+
+            IsDirtyOrNot();// 檢查是否有更動資料
+
         }
 
         private void LeftMouseClick(MenuItem[] menuItems, MouseEventArgs e)
@@ -891,6 +1027,27 @@ namespace ESL_System.Form
         //儲存ESL 樣板
         private void btnSave_Click(object sender, EventArgs e)
         {
+            string esl_exam_template_id = "" + CurrentItem.Tag;
+
+            string description_xml = GetXmlDesriptionInTree();
+
+            UpdateHelper uh = new UpdateHelper();
+
+            //依照所選項目儲存
+            string updQuery = "UPDATE exam_template SET description ='" + description_xml + "' WHERE id ='" + esl_exam_template_id + "'";
+
+            //執行sql，更新
+            uh.Execute(updQuery);
+
+            lblIsDirty.Visible = false;
+
+            MsgBox.Show("儲存樣板成功");
+
+        }
+
+        //將tree畫面上的  資訊 解析出成Xml
+        private string GetXmlDesriptionInTree()
+        {
             string description_xml = "";
 
             XmlDocument doc = new XmlDocument();
@@ -961,32 +1118,11 @@ namespace ESL_System.Form
                 element_ESLTemplate.AppendChild(element_Term);
             }
 
-            //XmlElement element3 = doc.CreateElement(string.Empty, "level2", string.Empty);
-            //XmlText text1 = doc.CreateTextNode("text");
-            //element3.AppendChild(text1);
-            //element2.AppendChild(element3);
-
-            //XmlElement element4 = doc.CreateElement(string.Empty, "level2", string.Empty);
-            //XmlText text2 = doc.CreateTextNode("other text");
-            //element4.AppendChild(text2);
-            //element2.AppendChild(element4);
-
-
             description_xml = doc.OuterXml;
 
-
-            UpdateHelper uh = new UpdateHelper();
-
-            string updQuery = "UPDATE exam_template SET description ='" + description_xml + "' WHERE name ='ESL 科目樣版' ";
-
-            //執行sql，更新
-            uh.Execute(updQuery);
-
-            MsgBox.Show("儲存樣板成功");
-
+            return description_xml;
 
         }
-
 
 
         private void InsertIndicatorSettingNode()
@@ -1023,7 +1159,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_assessment_node = new DevComponents.AdvTree.Node();
 
             // 評量(名稱)
-            new_assessment_node.Text = "評量()";
+            new_assessment_node.Text = "評量(請輸入評量名稱,教師一)";
 
             //Tag
             new_assessment_node.TagString = "assessment";
@@ -1054,11 +1190,11 @@ namespace ESL_System.Form
             new_assessment_node_allowCustomAssessment.Tag = "AllowCustom";
 
             //值
-            new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell());
-            new_assessment_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell());
-            new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell());
-            new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell());
-            new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入評量名稱"));
+            new_assessment_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("0")); //預設為0
+            new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell("教師一")); //預設為教師一
+            new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell("分數")); //預設為分數
+            new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell("否")); //預設為否
 
             //說明
             new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_name.Tag]));
@@ -1113,7 +1249,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_subjet_node = new DevComponents.AdvTree.Node();
 
             // 科目(名稱)
-            new_subjet_node.Text = "科目()";
+            new_subjet_node.Text = "科目(請輸入科目名稱)";
 
             // Tag
             new_subjet_node.TagString = "subject";
@@ -1132,7 +1268,7 @@ namespace ESL_System.Form
             new_subject_node_percentage.Tag = "integer";
 
             //值
-            new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入科目名稱"));
             new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell());
 
             //說明
@@ -1166,7 +1302,7 @@ namespace ESL_System.Form
             // term node
             DevComponents.AdvTree.Node new_term_node = new DevComponents.AdvTree.Node();
             // 試別(名稱)
-            new_term_node.Text = "試別()";
+            new_term_node.Text = "試別(請輸入試別名稱)";
             // Tag
             new_term_node.TagString = "term";
 
@@ -1179,7 +1315,7 @@ namespace ESL_System.Form
             //設定為不能拖曳，避免使用者誤用
             new_term_node.DragDropEnabled = false;
 
-            DevComponents.AdvTree.Node new_term_node_name = new DevComponents.AdvTree.Node(); //試別名稱
+            DevComponents.AdvTree.Node new_term_node_name = new DevComponents.AdvTree.Node("請輸入試別名稱"); //試別名稱
             DevComponents.AdvTree.Node new_term_node_percentage = new DevComponents.AdvTree.Node(); //比例
             DevComponents.AdvTree.Node new_term_node_inputStartTime = new DevComponents.AdvTree.Node(); //輸入開始時間
             DevComponents.AdvTree.Node new_term_node_inputEndTime = new DevComponents.AdvTree.Node(); //輸入結束時間
@@ -1232,7 +1368,116 @@ namespace ESL_System.Form
             return new_term_node;
         }
 
+        private void IsDirtyOrNot()
+        {
+            //檢查是否與原資料相同，若有改變，則顯示"未儲存" 提醒使用者要儲存
+            if (oriTemplateDescriptionDict["" + CurrentItem.Tag] != GetXmlDesriptionInTree())
+            {
+                lblIsDirty.Visible = true;
+            }
+            else
+            {
+                lblIsDirty.Visible = false;
+            }
+        }
 
+        // 檢查是否在同一層資料結構有重覆的資料
+        private bool CheckDuplicated()
+        {
+            bool duplicated = false;
+
+            List<string> checkDuplicatedList = new List<string>();
+
+            if (node_now.Parent.TagString != "term")
+            {
+                // assessment subject  在此處理
+                foreach (DevComponents.AdvTree.Node node in node_now.Parent.Parent.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node2 in node.Nodes)
+                    {
+                        if (node2.Text == "名稱:")
+                        {
+                            if (!checkDuplicatedList.Contains(node2.Cells[1].Text))
+                            {
+                                checkDuplicatedList.Add(node2.Cells[1].Text);
+                            }
+                            else
+                            {
+                                duplicated = true;
+                            }
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // term 在此處理
+                foreach (DevComponents.AdvTree.Node node in advTree1.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node2 in node.Nodes)
+                    {
+                        if (node2.Text == "名稱:")
+                        {
+                            if (!checkDuplicatedList.Contains(node2.Cells[1].Text))
+                            {
+                                checkDuplicatedList.Add(node2.Cells[1].Text);
+                            }
+                            else
+                            {
+                                duplicated = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            return duplicated;
+        }
+
+        //刪除樣板
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                if (CurrentItem == null) return;
+
+                string msg = "確定要刪除「" + CurrentItem.Text + "」評量設定？\n";
+                msg += "刪除後，使用此評量設定的「課程」將會自動變成未設定評量設定狀態。";
+
+                DialogResult dr = MsgBox.Show(msg, Application.ProductName, MessageBoxButtons.YesNo);
+
+                if (dr == DialogResult.Yes)
+                {
+                    string esl_exam_template_id = "" + CurrentItem.Tag;
+
+                    UpdateHelper uh = new UpdateHelper();
+
+                    //依照所選項目刪除
+                    string updQuery = "DELETE FROM exam_template WHERE id ='" + esl_exam_template_id + "'";
+
+                    //執行sql，更新
+                    uh.Execute(updQuery);
+                    
+                    MsgBox.Show("刪除樣板成功");
+                    
+                    // renew UI畫面
+                    BeforeLoadAssessmentSetup();
+                    LoadAssessmentSetups();
+                }
+            }
+            catch (Exception ex)
+            {
+                MsgBox.Show(ex.Message);
+                //CurrentUser.ReportError(ex);
+            }
+
+        }
+
+        //新增樣板
+        private void btnAddNew_Click(object sender, EventArgs e)
+        {
+
+        }
     }
 }
 

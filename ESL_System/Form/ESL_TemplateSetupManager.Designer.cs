@@ -242,6 +242,7 @@
             this.btnAddNew.Size = new System.Drawing.Size(66, 23);
             this.btnAddNew.TabIndex = 1;
             this.btnAddNew.Text = "新增";
+            this.btnAddNew.Click += new System.EventHandler(this.btnAddNew_Click);
             // 
             // btnDelete
             // 
@@ -252,6 +253,7 @@
             this.btnDelete.Size = new System.Drawing.Size(71, 23);
             this.btnDelete.TabIndex = 3;
             this.btnDelete.Text = "刪除";
+            this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
             // buttonItem4
             // 
@@ -364,7 +366,7 @@
             this.colItem.Name = "colItem";
             this.colItem.SortingEnabled = false;
             this.colItem.Text = "項目";
-            this.colItem.Width.Absolute = 250;
+            this.colItem.Width.Absolute = 300;
             // 
             // colValue
             // 
