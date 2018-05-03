@@ -13,5 +13,10 @@ namespace ESL_System
         /// </summary>
         public string Name { get; set; }
 
+        /// <summary>
+        /// 指標型代碼描述
+        /// </summary>
+        public string Description { get; set; }
+
     }
 }

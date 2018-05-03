@@ -47,8 +47,10 @@ namespace ESL_System.Form
         public ESL_TemplateSetupManager()
         {
             InitializeComponent();
-            HideNavigationBar();
+            HideNavigationBar();// 將左下角功能藏起來
 
+            // 對照字典設定
+            #region 對照字典設定
             hintGuideDict.Add("string", "請輸入文字，不得空白、重覆。");
             hintGuideDict.Add("integer", "請輸入整數數字");
             hintGuideDict.Add("time", "請輸入日期(ex : 2018/04/21 00:00:00)");
@@ -75,13 +77,12 @@ namespace ESL_System.Form
             nodeTagCovertDict.Add("term", "試別");
             nodeTagCovertDict.Add("subject", "科目");
             nodeTagCovertDict.Add("assessment", "評量");
-            nodeTagCovertDict.Add("string", "指標");
+            nodeTagCovertDict.Add("string", "指標"); 
+            #endregion
 
             //載入資料
             LoadAssessmentSetups();
-
         }
-
 
         /// <summary>
         /// 非同步處理，使用時要小心。
@@ -139,8 +140,6 @@ namespace ESL_System.Form
                     return;
                 }
 
-                //FillAssessmentSetupToItemPanel(); //顯示 Tempalte 資料物件到畫面上。
-
                 AfterLoadAssessmentSetup();
             }
             catch (Exception ex)
@@ -149,16 +148,13 @@ namespace ESL_System.Form
             }
         }
 
-
-
-
         private void BeforeLoadAssessmentSetup()
         {
             //將設計範例全部清光，開始抓取table 資料
             advTree1.Nodes.Clear();
 
             CurrentItem = null;
-            oriTemplateDescriptionDict.Clear();
+            oriTemplateDescriptionDict.Clear(); //將OriData 紀錄全部清光
 
             Loading = true;
             ipList.Items.Clear();
@@ -174,7 +170,6 @@ namespace ESL_System.Form
             //沒東西 預設空畫面
             if (item == null)
             {
-
                 return;
             }
             else
@@ -185,13 +180,12 @@ namespace ESL_System.Form
                 DataTable dt;
                 QueryHelper qh = new QueryHelper();
 
-                //string selQuery = "select id,description from exam_template where name = 'ESL 科目樣版' ";
-
                 string selQuery = "select id,description from exam_template where id = '" + esl_exam_template_id + "'";
                 dt = qh.Select(selQuery);
                 string xmlStr = "<root>" + dt.Rows[0]["description"].ToString() + "</root>";
                 XElement elmRoot = XElement.Parse(xmlStr);
 
+                //解析讀下來的 descriptiony 資料，打包成物件群 最後交給 ParseDBxmlToNodeUI() 處理
                 if (elmRoot != null)
                 {
                     if (elmRoot.Element("ESLTemplate") != null)
@@ -235,7 +229,8 @@ namespace ESL_System.Form
                                         {
                                             Indicators i = new Indicators();
 
-                                            i.Name = ele_Indicator.Value;
+                                            i.Name = ele_Indicator.Attribute("Name").Value;
+                                            i.Description = ele_Indicator.Attribute("Description").Value;
 
                                             a.IndicatorsList.Add(i);
                                         }
@@ -277,7 +272,6 @@ namespace ESL_System.Form
                     btnSave_Click(null, null); //儲存
                 }
             }
-
             return true;
         }
 
@@ -304,8 +298,6 @@ namespace ESL_System.Form
         //    //    }
         //    //}
         //}
-
-
 
         private void HideNavigationBar()
         {
@@ -339,83 +331,7 @@ namespace ESL_System.Form
             BeforeLoadAssessmentSetup();
         }
 
-
-        // 加入新試別
-        private void node8_NodeDoubleClick(object sender, EventArgs e)
-        {
-            DevComponents.AdvTree.Node new_term_node = new DevComponents.AdvTree.Node();
-
-            new_term_node.Text = "請輸入新試別名稱";
-            //新試別點擊兩下，可以改變名稱
-            new_term_node.NodeDoubleClick += new System.EventHandler(NodeRename);
-
-
-            DevComponents.AdvTree.Node add_new_subject_node_btn = new DevComponents.AdvTree.Node();
-
-            add_new_subject_node_btn.Text = "<b><font color=\"#ED1C24\">+加入新子項目</font></b>";
-
-            add_new_subject_node_btn.NodeDoubleClick += new System.EventHandler(InsertNewSubject);
-
-
-            new_term_node.Nodes.Add(add_new_subject_node_btn);
-
-            //不用Add 改用Insert ，是因為可以指定位子，讓加入新試別功能可以永遠在最後一項。
-            //advTree1.Nodes.Add(new_term_node);
-            advTree1.Nodes.Insert(advTree1.Nodes.Count - 1, new_term_node);
-        }
-
-
-
-        private void NodeRename(object sender, EventArgs e)
-        {
-            DevComponents.AdvTree.Node term_node = (DevComponents.AdvTree.Node)sender;
-
-            //term_node.BeginEdit();
-
-            //2018/4/19 穎驊註解，看起來不太需要特別將編輯模式結束。
-            //term_node.EndEdit();
-
-            //term_node.Text = "YOYO";
-        }
-
-        private void InsertNewSubject(object sender, EventArgs e)
-        {
-            DevComponents.AdvTree.Node subject_node = (DevComponents.AdvTree.Node)sender;
-
-            DevComponents.AdvTree.Node mother_node = subject_node.Parent;
-
-            DevComponents.AdvTree.Node new_subject_node = new DevComponents.AdvTree.Node();
-
-            new_subject_node.Text = "請輸入新子項目名稱";
-            //新子項目點擊兩下，可以改變名稱
-            new_subject_node.NodeDoubleClick += new System.EventHandler(NodeRename);
-
-            DevComponents.AdvTree.Node add_new_assessment_node_btn = new DevComponents.AdvTree.Node();
-
-            add_new_assessment_node_btn.Text = "<b><font color=\"#ED1C24\">+加入新子評分項目</font></b>";
-
-            add_new_assessment_node_btn.NodeDoubleClick += new System.EventHandler(InsertNewAssessment);
-
-            new_subject_node.Nodes.Add(add_new_assessment_node_btn);
-
-            mother_node.Nodes.Insert(mother_node.Nodes.Count - 1, new_subject_node);
-        }
-
-        private void InsertNewAssessment(object sender, EventArgs e)
-        {
-            DevComponents.AdvTree.Node assessment_node = (DevComponents.AdvTree.Node)sender;
-
-            DevComponents.AdvTree.Node mother_node = assessment_node.Parent;
-
-            DevComponents.AdvTree.Node new_assessment_node = new DevComponents.AdvTree.Node();
-
-            new_assessment_node.Text = "請輸入新子評分項目名稱";
-            //新子項目點擊兩下，可以改變名稱
-            new_assessment_node.NodeDoubleClick += new System.EventHandler(NodeRename);
-
-            mother_node.Nodes.Insert(mother_node.Nodes.Count - 1, new_assessment_node);
-        }
-
+        // 新增、刪除 Node 按鈕
         private void NodeMouseDown_InsertDelete(object sender, MouseEventArgs e)
         {
             node_now = (DevComponents.AdvTree.Node)sender;
@@ -429,7 +345,6 @@ namespace ESL_System.Form
             MenuItem[] menuItems = new MenuItem[0];
 
             MenuItem menuItems_insert = new MenuItem("新增" + nodeTagCovertDict[node_now.TagString], MenuItemInsert_Click);
-
 
             MenuItem menuItems_delete = new MenuItem("刪除" + nodeTagCovertDict[node_now.TagString], MenuItemDelete_Click);
 
@@ -454,7 +369,6 @@ namespace ESL_System.Form
 
             menuItems = new MenuItem[] { menuItems_insert, menuItems_delete };
 
-
             if (e.Button == MouseButtons.Right)
             {
                 ContextMenu buttonMenu = new ContextMenu(menuItems);
@@ -465,6 +379,7 @@ namespace ESL_System.Form
             }
         }
 
+        //新增 node 子節項目
         private void MenuItemInsert_Click(Object sender, System.EventArgs e)
         {
             // 試別為最上層，其parent 為null ， 需要至advtree1 新增
@@ -517,6 +432,7 @@ namespace ESL_System.Form
             IsDirtyOrNot();// 檢查是否有更動資料
         }
 
+        //刪除 node 子節項目
         private void MenuItemDelete_Click(Object sender, System.EventArgs e)
         {
             // 試別為最上層，其parent 為null ， 需要至advtree1 新增
@@ -532,12 +448,9 @@ namespace ESL_System.Form
             IsDirtyOrNot();// 檢查是否有更動資料
         }
 
-
-
-
+        // 點下評量項目後，提供選項讓使用者選擇
         private void NodeMouseDown(object sender, MouseEventArgs e)
         {
-
             node_now = (DevComponents.AdvTree.Node)sender;
 
             if (node_now.SelectedCell == null || node_now.Cells[1] != node_now.SelectedCell)
@@ -545,7 +458,6 @@ namespace ESL_System.Form
                 advTree1.ContextMenu = null;
                 return;
             }
-
 
             MenuItem[] menuItems = new MenuItem[0];
 
@@ -574,24 +486,15 @@ namespace ESL_System.Form
                     break;
             }
 
+            //menuItem 的另一種寫法
             //ContextMenuStrip contexMenuuu = new ContextMenuStrip();
-
             //contexMenuuu.Items.Add("Edit ");
             //contexMenuuu.Items.Add("Delete ");
             //contexMenuuu.Show();
             //contexMenuuu.ItemClicked += new ToolStripItemClickedEventHandler(
             //    contexMenuuu_ItemClicked);
 
-
-
-
         }
-
-        //void contexMenuuu_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
-        //{
-        //    ToolStripItem item = e.ClickedItem;
-        //    // your code here
-        //}
 
         //  將右鍵點選的項目(ex: 教師一、教師二、教師三) 指定給 目前所選node 的第二個cell 
         private void MenuItemNew_Click(Object sender, System.EventArgs e)
@@ -614,22 +517,46 @@ namespace ESL_System.Form
                 node_now.Parent.Nodes[1].Cells[2].Text = "指標型評量無法輸入比例";
                 node_now.Parent.Nodes[1].Enabled = false;
 
+                //假如甚麼都沒有，就先加入起始
                 if (node_now.Nodes.Count == 0)
                 {
-
                     DevComponents.AdvTree.Node new_indicator_setting_node = new DevComponents.AdvTree.Node();
 
                     new_indicator_setting_node.Tag = "string";
-                    new_indicator_setting_node.Text = "設定指標";
+                    new_indicator_setting_node.Text = "指標(請輸入名稱)";
 
-                    DevComponents.AdvTree.Cell col_1 = new DevComponents.AdvTree.Cell();
-                    DevComponents.AdvTree.Cell col_2 = new DevComponents.AdvTree.Cell();
+                    DevComponents.AdvTree.Node new_indicators_node_name = new DevComponents.AdvTree.Node(); //指標名稱
+                    DevComponents.AdvTree.Node new_indicators_node_description = new DevComponents.AdvTree.Node(); //指標描述
 
-                    col_2.Text = "請輸入文字(ex: A、B、C)";
+                    //項目
+                    new_indicators_node_name.Text = "名稱:";
+                    new_indicators_node_description.Text = "描述:";
 
-                    new_indicator_setting_node.Cells.Add(col_1);
+                    //node Tag            
+                    new_indicators_node_name.Tag = "string";
 
-                    new_indicator_setting_node.Cells.Add(col_2);
+                    //值
+                    new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell());
+                    new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell());
+
+
+                    //說明
+                    new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_indicators_node_name.Tag]));
+                    new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell("請填入此指標項目的說明，以利評分老師了解。"));
+
+
+                    ////設定為不能點選編輯，避免使用者誤用
+                    new_indicators_node_name.Cells[0].Editable = false;
+                    new_indicators_node_name.Cells[2].Editable = false;
+                    new_indicators_node_description.Cells[0].Editable = false;
+
+
+                    //設定為不能拖曳，避免使用者誤用
+                    new_indicators_node_name.DragDropEnabled = false;
+                    new_indicators_node_description.DragDropEnabled = false;
+
+                    new_indicator_setting_node.Nodes.Add(new_indicators_node_name);
+                    new_indicator_setting_node.Nodes.Add(new_indicators_node_description);
 
                     //不可編輯不可、拖曳
                     new_indicator_setting_node.Editable = false;
@@ -638,11 +565,13 @@ namespace ESL_System.Form
                     //加入新增刪除按鈕
                     new_indicator_setting_node.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown_InsertDelete);
 
+                    //展開
+                    new_indicator_setting_node.Expanded = true;
+
                     node_now.Nodes.Add(new_indicator_setting_node);
 
-                    // 展開
-                    node_now.Expand();
-
+                    //展開
+                    node_now.Expanded = true;
                 }
             }
             else
@@ -722,7 +651,7 @@ namespace ESL_System.Form
                         // 更新項目名稱
                         if (node_now.Cells[0].Text == "名稱:")
                         {
-                            if (node_now.Parent.TagString != "assessment")
+                            if (node_now.Parent.TagString != "assessment" && node_now.Parent.TagString != null)
                             {
                                 node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + ")";
                             }
@@ -756,7 +685,7 @@ namespace ESL_System.Form
 
         }
 
-        //將資料印至畫面上
+        //將資料印至畫面上 (從 Term  > Subject > Assessment > Indicator)
         private void ParseDBxmlToNodeUI(Term t)
         {
             // term node
@@ -959,21 +888,53 @@ namespace ESL_System.Form
                             DevComponents.AdvTree.Node new_indicators_node = new DevComponents.AdvTree.Node();
 
                             //項目
-                            new_indicators_node.Text = "設定指標";
-                            //node Tag
-                            new_indicators_node.Tag = "string";
+                            new_indicators_node.Text = "指標(" + i.Name + ")";
+
 
                             //加入新增刪除按鈕
                             new_indicators_node.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown_InsertDelete);
 
+                            DevComponents.AdvTree.Node new_indicators_node_name = new DevComponents.AdvTree.Node(); //指標名稱
+
+                            DevComponents.AdvTree.Node new_indicators_node_description = new DevComponents.AdvTree.Node(); //指標描述
+
+                            //項目
+                            new_indicators_node_name.Text = "名稱:";
+                            new_indicators_node_description.Text = "描述:";
+
+                            //node Tag
+                            new_indicators_node.Tag = "string";
+                            new_indicators_node_name.Tag = "string";
+
                             //值
-                            new_indicators_node.Cells.Add(new DevComponents.AdvTree.Cell(i.Name));
+                            new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell(i.Name));
+                            new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell(i.Description != "" ? i.Description : ""));
+
+
                             //說明
-                            new_indicators_node.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_indicators_node.Tag]));
+                            new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_indicators_node_name.Tag]));
+                            new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell("請填入此指標項目的說明，以利評分老師了解。"));
+
+
+                            ////設定為不能點選編輯，避免使用者誤用
+                            new_indicators_node_name.Cells[0].Editable = false;
+                            new_indicators_node_name.Cells[2].Editable = false;
+                            new_indicators_node_description.Cells[0].Editable = false;
+
+
+                            //設定為不能拖曳，避免使用者誤用
+                            new_indicators_node_name.DragDropEnabled = false;
+                            new_indicators_node_description.DragDropEnabled = false;
+
+
+                            new_indicators_node.Nodes.Add(new_indicators_node_name);
+                            new_indicators_node.Nodes.Add(new_indicators_node_description);
 
                             //設定為不能點選編輯，避免使用者誤用
                             new_indicators_node.Cells[0].Editable = false;
-                            new_indicators_node.Cells[2].Editable = false;
+
+                            //設定為不能拖曳，避免使用者誤用
+                            new_indicators_node.DragDropEnabled = false;
 
                             //將 new_indicators_node 加入  new_assessment_node_type
                             new_assessment_node_type.Nodes.Add(new_indicators_node);
@@ -1096,17 +1057,14 @@ namespace ESL_System.Form
                                     {
                                         XmlElement element_indicator = doc.CreateElement(string.Empty, "Indicator", string.Empty);
 
-                                        XmlText text = doc.CreateTextNode(indicators_node.Cells[1].Text);
-
-                                        element_indicator.AppendChild(text);
+                                        element_indicator.SetAttribute("Name", indicators_node.Nodes[0].Cells[1].Text);
+                                        element_indicator.SetAttribute("Description", indicators_node.Nodes[1].Cells[1].Text);
 
                                         element_indicators.AppendChild(element_indicator);
                                     }
 
                                     element_Assessment.AppendChild(element_indicators);
                                 }
-
-
 
                                 element_Subject.AppendChild(element_Assessment);
                             }
@@ -1124,22 +1082,48 @@ namespace ESL_System.Form
 
         }
 
-
+        // 新增指標選項
         private void InsertIndicatorSettingNode()
         {
             DevComponents.AdvTree.Node new_indicator_setting_node = new DevComponents.AdvTree.Node();
 
             new_indicator_setting_node.Tag = "string";
-            new_indicator_setting_node.Text = "設定指標";
+            new_indicator_setting_node.Text = "指標(請輸入名稱)";
 
-            DevComponents.AdvTree.Cell col_1 = new DevComponents.AdvTree.Cell();
-            DevComponents.AdvTree.Cell col_2 = new DevComponents.AdvTree.Cell();
+            DevComponents.AdvTree.Node new_indicators_node_name = new DevComponents.AdvTree.Node(); //指標名稱
+            DevComponents.AdvTree.Node new_indicators_node_description = new DevComponents.AdvTree.Node(); //指標描述
 
-            col_2.Text = "請輸入文字(ex: A、B、C)";
+            //項目
+            new_indicators_node_name.Text = "名稱:";
+            new_indicators_node_description.Text = "描述:";
 
-            new_indicator_setting_node.Cells.Add(col_1);
+            //node Tag            
+            new_indicators_node_name.Tag = "string";
 
-            new_indicator_setting_node.Cells.Add(col_2);
+            //值
+            new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell());
+
+
+            //說明
+            new_indicators_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_indicators_node_name.Tag]));
+            new_indicators_node_description.Cells.Add(new DevComponents.AdvTree.Cell("請填入此指標項目的說明，以利評分老師了解。"));
+
+
+            ////設定為不能點選編輯，避免使用者誤用
+            new_indicators_node_name.Cells[0].Editable = false;
+            new_indicators_node_name.Cells[2].Editable = false;
+            new_indicators_node_description.Cells[0].Editable = false;
+
+
+            //設定為不能拖曳，避免使用者誤用
+            new_indicators_node_name.DragDropEnabled = false;
+            new_indicators_node_description.DragDropEnabled = false;
+
+
+            new_indicator_setting_node.Nodes.Add(new_indicators_node_name);
+            new_indicator_setting_node.Nodes.Add(new_indicators_node_description);
+
 
             //不可編輯不可、拖曳
             new_indicator_setting_node.Editable = false;
@@ -1150,7 +1134,6 @@ namespace ESL_System.Form
 
             node_now.Parent.Nodes.Add(new_indicator_setting_node);
         }
-
 
         // 組裝  assessment_node 用
         private DevComponents.AdvTree.Node BuildAssessmentNode()
@@ -1241,7 +1224,6 @@ namespace ESL_System.Form
             return new_assessment_node;
         }
 
-
         // 組裝  subject_node 用
         private DevComponents.AdvTree.Node BuildSubjectNode()
         {
@@ -1294,7 +1276,6 @@ namespace ESL_System.Form
 
             return new_subjet_node;
         }
-
 
         // 組裝  term_node 用
         private DevComponents.AdvTree.Node BuildTermNode()
@@ -1457,9 +1438,9 @@ namespace ESL_System.Form
 
                     //執行sql，更新
                     uh.Execute(updQuery);
-                    
+
                     MsgBox.Show("刪除樣板成功");
-                    
+
                     // renew UI畫面
                     BeforeLoadAssessmentSetup();
                     LoadAssessmentSetups();
