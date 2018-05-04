@@ -83,6 +83,18 @@
     <Compile Include="Form\ESL_TemplateSetupManager.Designer.cs">
       <DependentUpon>ESL_TemplateSetupManager.cs</DependentUpon>
     </Compile>
+    <Compile Include="Form\InsertNewTemplateForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\InsertNewTemplateForm.Designer.cs">
+      <DependentUpon>InsertNewTemplateForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Form\TemplateReNameForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\TemplateReNameForm.Designer.cs">
+      <DependentUpon>TemplateReNameForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Indicators.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -141,10 +153,17 @@
     <Content Include="Library\K12.Presentation.xml" />
     <Content Include="Library\SmartSchool.API.PlugIn.dll" />
     <Content Include="Library\SmartSchool.API.PlugIn.pdb" />
+    <Content Include="Description_Example.xml" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form\ESL_TemplateSetupManager.resx">
       <DependentUpon>ESL_TemplateSetupManager.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\InsertNewTemplateForm.resx">
+      <DependentUpon>InsertNewTemplateForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\TemplateReNameForm.resx">
+      <DependentUpon>TemplateReNameForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>

@@ -35,7 +35,7 @@ namespace ESL_System.Form
 
         private Dictionary<string, string> oriTemplateDescriptionDict = new Dictionary<string, string>();
 
-        private ButtonItem CurrentItem
+        private ButtonItem currentItem
         {
             get { return _current_item; }
             set { _current_item = value; }
@@ -114,8 +114,8 @@ namespace ESL_System.Form
                     item.Text = "" + dr[1];
                     item.Tag = "" + dr[0];
                     item.OptionGroup = "AssessmentSetup";
-                    item.Click += new EventHandler(AssessmentSetup_Click);
-                    //item.DoubleClick += new EventHandler(AssessmentSetup_DoubleClick);
+                    item.Click += new EventHandler(AssessmentSetup_Click); //點一下 將焦點轉換
+                    item.DoubleClick += new EventHandler(AssessmentSetup_DoubleClick); //連點兩下 進入更名視窗
                     ipList.Items.Add(item);
 
                     // 紀錄原本樣板 Description 資料，作為比較用
@@ -153,7 +153,7 @@ namespace ESL_System.Form
             //將設計範例全部清光，開始抓取table 資料
             advTree1.Nodes.Clear();
 
-            CurrentItem = null;
+            currentItem = null;
             oriTemplateDescriptionDict.Clear(); //將OriData 紀錄全部清光
 
             Loading = true;
@@ -248,12 +248,12 @@ namespace ESL_System.Form
 
         private void AssessmentSetup_Click(object sender, EventArgs e)
         {
-            if (CurrentItem == sender) return;
+            if (currentItem == sender) return;
 
             if (!CanContinue()) return;
 
-            CurrentItem = sender as ButtonItem;
-            SelectAssessmentSetup(CurrentItem);
+            currentItem = sender as ButtonItem;
+            SelectAssessmentSetup(currentItem);
         }
 
         private bool CanContinue()
@@ -264,7 +264,7 @@ namespace ESL_System.Form
 
                 if (dr == DialogResult.Cancel)
                 {
-                    CurrentItem.RaiseClick();
+                    currentItem.RaiseClick();
                     return false;
                 }
                 else if (dr == DialogResult.Yes)
@@ -275,29 +275,28 @@ namespace ESL_System.Form
             return true;
         }
 
-        //private void AssessmentSetup_DoubleClick(object sender, EventArgs e)
-        //{
-        //    //if (!CanContinue()) return;
+        // 點ESL 樣板兩下可以進入 更名視窗
+        private void AssessmentSetup_DoubleClick(object sender, EventArgs e)
+        {
+            if (!CanContinue()) return;
 
-        //    //AssessmentNameEditor editor = new AssessmentNameEditor(CurrentItem.Tag as AssessmentSetupRecord);
-        //    //DialogResult dr = editor.ShowDialog();
+            TemplateReNameForm editor = new TemplateReNameForm(currentItem);
+            DialogResult dr = editor.ShowDialog();
 
-        //    //if (dr == DialogResult.OK)
-        //    //{
-        //    //    try
-        //    //    {
-        //    //        EditTemplate.Rename(CurrentItem.Identity, editor.TemplateName);
-
-        //    //        CurrentItem.TemplateName = editor.TemplateName;
-        //    //        //CourseEntity.Instance.InvokeForeignTableChanged();
-        //    //    }
-        //    //    catch (Exception ex)
-        //    //    {
-        //    //        //CurrentUser.ReportError(ex);
-        //    //        MsgBox.Show(ex.Message);
-        //    //    }
-        //    //}
-        //}
+            //更名過後，畫面renew
+            if (dr == DialogResult.OK)
+            {
+                try
+                {
+                    BeforeLoadAssessmentSetup();
+                    LoadAssessmentSetups();
+                }
+                catch (Exception ex)
+                {                    
+                    MsgBox.Show(ex.Message);
+                }
+            }
+        }
 
         private void HideNavigationBar()
         {
@@ -352,14 +351,22 @@ namespace ESL_System.Form
             // 試別為最上層，其parent 為null ， 需要至advtree1 檢查
             if (node_now.Parent != null)
             {
-                if (node_now.Parent.Nodes.Count == 1)
+                if (node_now.TagString == "string" && node_now.Parent.Nodes.Count == 1) // 指標 項目本來就沒有項目
+                {
+                    menuItems_delete.Enabled = false;
+                }
+                if (node_now.TagString == "assessment" && node_now.Parent.Nodes.Count-2 == 1) // 評量上 項目本來有固定項目 2個
+                {
+                    menuItems_delete.Enabled = false;
+                }
+                if (node_now.TagString == "subject" && node_now.Parent.Nodes.Count-4 == 1) // 科目上 項目本來有固定項目 2個
                 {
                     menuItems_delete.Enabled = false;
                 }
             }
             else
             {
-                if (advTree1.Nodes.Count == 1)
+                if (advTree1.Nodes.Count == 1) 
                 {
                     menuItems_delete.Enabled = false;
                 }
@@ -988,7 +995,7 @@ namespace ESL_System.Form
         //儲存ESL 樣板
         private void btnSave_Click(object sender, EventArgs e)
         {
-            string esl_exam_template_id = "" + CurrentItem.Tag;
+            string esl_exam_template_id = "" + currentItem.Tag;
 
             string description_xml = GetXmlDesriptionInTree();
 
@@ -1352,7 +1359,7 @@ namespace ESL_System.Form
         private void IsDirtyOrNot()
         {
             //檢查是否與原資料相同，若有改變，則顯示"未儲存" 提醒使用者要儲存
-            if (oriTemplateDescriptionDict["" + CurrentItem.Tag] != GetXmlDesriptionInTree())
+            if (oriTemplateDescriptionDict["" + currentItem.Tag] != GetXmlDesriptionInTree())
             {
                 lblIsDirty.Visible = true;
             }
@@ -1420,16 +1427,16 @@ namespace ESL_System.Form
         {
             try
             {
-                if (CurrentItem == null) return;
+                if (currentItem == null) return;
 
-                string msg = "確定要刪除「" + CurrentItem.Text + "」評量設定？\n";
+                string msg = "確定要刪除「" + currentItem.Text + "」評量設定？\n";
                 msg += "刪除後，使用此評量設定的「課程」將會自動變成未設定評量設定狀態。";
 
                 DialogResult dr = MsgBox.Show(msg, Application.ProductName, MessageBoxButtons.YesNo);
 
                 if (dr == DialogResult.Yes)
                 {
-                    string esl_exam_template_id = "" + CurrentItem.Tag;
+                    string esl_exam_template_id = "" + currentItem.Tag;
 
                     UpdateHelper uh = new UpdateHelper();
 
@@ -1457,7 +1464,22 @@ namespace ESL_System.Form
         //新增樣板
         private void btnAddNew_Click(object sender, EventArgs e)
         {
+            InsertNewTemplateForm editor = new InsertNewTemplateForm();
+            DialogResult dr = editor.ShowDialog();
 
+            //新增過後，畫面renew
+            if (dr == DialogResult.OK)
+            {
+                try
+                {
+                    BeforeLoadAssessmentSetup();
+                    LoadAssessmentSetups();
+                }
+                catch (Exception ex)
+                {
+                    MsgBox.Show(ex.Message);
+                }
+            }
         }
     }
 }

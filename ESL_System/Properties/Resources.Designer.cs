@@ -59,5 +59,19 @@ namespace ESL_System.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   查詢類似 &lt;ESLTemplate&gt;
+        ///  &lt;Term Name=&quot;mid-Term&quot; Weight=&quot;50&quot; InputStartTime=&quot;2018/04/16 00:00&quot; InputEndTime=&quot;2018/04/22 23:59&quot;&gt;
+        ///    &lt;Subject Name=&quot;Language Art&quot; Weight=&quot;50&quot;&gt;
+        ///      &lt;Assessment Name=&quot;In-Class Score&quot; Weight=&quot;50&quot; TeacherSequence=&quot;1&quot; Type=&quot;Score&quot;  AllowCustomAssessment=&quot;true&quot; &gt;&lt;/Assessment&gt;
+        ///      &lt;Assessment Name=&quot;Reading Project&quot; Weight=&quot;50&quot; TeacherSequence=&quot;1&quot; Type=&quot;Score&quot;  AllowCustomAssessment=&quot;true&quot; &gt;&lt;/Assessment&gt;
+        ///      &lt;Assessment Name=&quot;Homework Completion&quot; Weight=&quot;0&quot; TeacherSequence=&quot;1&quot; Type=&quot;I [字串的其餘部分已遭截斷]&quot;; 的當地語系化字串。
+        /// </summary>
+        internal static string Description_Example {
+            get {
+                return ResourceManager.GetString("Description_Example", resourceCulture);
+            }
+        }
     }
 }
