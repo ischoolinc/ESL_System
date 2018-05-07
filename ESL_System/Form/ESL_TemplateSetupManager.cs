@@ -77,7 +77,7 @@ namespace ESL_System.Form
             nodeTagCovertDict.Add("term", "試別");
             nodeTagCovertDict.Add("subject", "科目");
             nodeTagCovertDict.Add("assessment", "評量");
-            nodeTagCovertDict.Add("string", "指標"); 
+            nodeTagCovertDict.Add("string", "指標");
             #endregion
 
             //載入資料
@@ -241,6 +241,8 @@ namespace ESL_System.Form
                             }
                             ParseDBxmlToNodeUI(t);
                         }
+
+                        CalculatePercentageToUI(true); //第一次載畫面 =true
                     }
                 }
             }
@@ -292,7 +294,7 @@ namespace ESL_System.Form
                     LoadAssessmentSetups();
                 }
                 catch (Exception ex)
-                {                    
+                {
                     MsgBox.Show(ex.Message);
                 }
             }
@@ -355,18 +357,18 @@ namespace ESL_System.Form
                 {
                     menuItems_delete.Enabled = false;
                 }
-                if (node_now.TagString == "assessment" && node_now.Parent.Nodes.Count-2 == 1) // 評量上 項目本來有固定項目 2個
+                if (node_now.TagString == "assessment" && node_now.Parent.Nodes.Count - 2 == 1) // 評量上 項目本來有固定項目 2個
                 {
                     menuItems_delete.Enabled = false;
                 }
-                if (node_now.TagString == "subject" && node_now.Parent.Nodes.Count-4 == 1) // 科目上 項目本來有固定項目 2個
+                if (node_now.TagString == "subject" && node_now.Parent.Nodes.Count - 4 == 1) // 科目上 項目本來有固定項目 2個
                 {
                     menuItems_delete.Enabled = false;
                 }
             }
             else
             {
-                if (advTree1.Nodes.Count == 1) 
+                if (advTree1.Nodes.Count == 1)
                 {
                     menuItems_delete.Enabled = false;
                 }
@@ -418,6 +420,8 @@ namespace ESL_System.Form
                     default:
                         break;
                 }
+
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
             else
             {
@@ -434,6 +438,7 @@ namespace ESL_System.Form
                 t.Nodes.Add(s_a); //將組裝好的 SubjectNode加入 TermNode
                 t.Expanded = true; //將項目展開
                 advTree1.Nodes.Add(t); //將組裝好的 SubjectNode加入 advTree(最上層)
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
 
             IsDirtyOrNot();// 檢查是否有更動資料
@@ -446,10 +451,12 @@ namespace ESL_System.Form
             if (node_now.Parent != null)
             {
                 node_now.Parent.Nodes.Remove(node_now);
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
             else
             {
                 advTree1.Nodes.Remove(node_now);
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
 
             IsDirtyOrNot();// 檢查是否有更動資料
@@ -513,7 +520,9 @@ namespace ESL_System.Form
             // 選擇老師後 更新項目名稱 評量(XXX,教師一)
             if (node_now.TagString == "teacherKind")
             {
-                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.Parent.Nodes[0].Cells[1].Text + "," + node_now.SelectedCell.Text + ")";
+                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.Parent.Nodes[0].Cells[1].Text + "," + node_now.SelectedCell.Text + ",)";
+
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
 
             // 假若分數指標沒有選項，則會只再 新增"一項" 指標子項目設定
@@ -580,6 +589,8 @@ namespace ESL_System.Form
                     //展開
                     node_now.Expanded = true;
                 }
+
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
             else
             {
@@ -590,6 +601,8 @@ namespace ESL_System.Form
                     node_now.Parent.Nodes[1].Cells[2].Text = hintGuideDict[node_now.Parent.Nodes[1].TagString];
                     node_now.Nodes.Clear();
                 }
+
+                CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
 
             IsDirtyOrNot();// 檢查是否有更動資料
@@ -619,6 +632,8 @@ namespace ESL_System.Form
                         //node_now.StyleSelected = null;
                         node_now.Cells[2].Text = hintGuideDict["" + node_now.Tag]; //輸入規則正確
                         btnSave.Enabled = true;
+
+                        CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
                     }
                     break;
                 // 時間
@@ -992,6 +1007,162 @@ namespace ESL_System.Form
             //advTree1.Nodes.Insert(advTree1.Nodes.Count - 1, new_term_node);
         }
 
+        //將各自含有比例項目 計算百分比後，加到項目名稱後面 ，
+        //2018/5/7 穎驊備註，這個為了要及時顯示個子項目佔的百分比的方法，寫得非。常。爛，僅是能使用的拼裝車
+        //但按照目前顯示子項目的邏輯也只能先暫時這樣寫
+        //因為若要全面改寫 名稱顯示的配對，幾乎要設一另一整套的機制，這時間投入不划算，日後若有問題，可以再考慮改寫。
+        private void CalculatePercentageToUI(bool firstLoad)
+        {
+            bool isFirstLoad = firstLoad;
+
+
+            #region 試別
+            decimal term_total = 0;
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    if (node_subject.Text == "比例:" && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
+                    {
+                        term_total += decimal.Parse(node_subject.Cells[1].Text);
+                    }
+                }
+            }
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    if (node_subject.Text == "比例:" && term_total != 0 && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
+                    {
+                        if (isFirstLoad)
+                        {
+                            // 去掉尾端括弧之後 加上百分比
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / term_total, 2) + "%)";
+                        }
+                        else
+                        {
+                            // 砍到最後一個逗號, 加上百分比
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / term_total, 2) + "%)";
+                        }
+                        
+                    }
+                }
+            }
+            #endregion
+
+            #region 科目
+            //decimal subject_total = 0;
+
+            Dictionary<string, decimal> node_subject_total_Dict = new Dictionary<string, decimal>();
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        if (node_assessment.Text == "比例:" && decimal.TryParse(node_assessment.Cells[1].Text, out decimal i))
+                        {
+                            if (!node_subject_total_Dict.ContainsKey(node_term.Text))
+                            {
+                                node_subject_total_Dict.Add(node_term.Text, 0);
+
+                                node_subject_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
+                            }
+                            else
+                            {
+                                node_subject_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        if (node_assessment.Text == "比例:" && node_subject_total_Dict.ContainsKey(node_term.Text) && node_subject_total_Dict[node_term.Text] !=0 && decimal.TryParse(node_assessment.Cells[1].Text, out decimal i))
+                        {
+                            if (isFirstLoad)
+                            {
+                                // 去掉尾端括弧之後 加上百分比
+                                node_subject.Text = node_subject.Text.Substring(0, node_subject.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_assessment.Cells[1].Text) * 100 / node_subject_total_Dict[node_term.Text], 2) + "%)";
+                            }
+                            else
+                            {
+                                // 砍到最後一個逗號, 加上百分比
+                                node_subject.Text = node_subject.Text.Substring(0, node_subject.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_assessment.Cells[1].Text) * 100 / node_subject_total_Dict[node_term.Text], 2) + "%)";
+                            }
+                            
+                        }
+                    }
+                }
+            }
+            #endregion
+
+            #region 評量            
+            Dictionary<string, decimal> node_assessment_total_Dict = new Dictionary<string, decimal>();
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        foreach (DevComponents.AdvTree.Node node_assessment_sub in node_assessment.Nodes)
+                        {
+                            if (node_assessment_sub.Text == "比例:" && decimal.TryParse(node_assessment_sub.Cells[1].Text,out decimal i))
+                            {
+                                if (!node_assessment_total_Dict.ContainsKey(node_term.Text + "_" + node_subject.Text))
+                                {
+                                    node_assessment_total_Dict.Add(node_term.Text +"_"+ node_subject.Text, 0);
+
+                                    node_assessment_total_Dict[node_term.Text + "_" + node_subject] += decimal.Parse(node_assessment_sub.Cells[1].Text);
+                                }
+                                else
+                                {
+                                    node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text] += decimal.Parse(node_assessment_sub.Cells[1].Text);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        foreach (DevComponents.AdvTree.Node node_assessment_sub in node_assessment.Nodes)
+                        {
+                            if (node_assessment_sub.Text == "比例:" && node_assessment_total_Dict.ContainsKey(node_term.Text + "_" + node_subject.Text) && node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text]!=0 && decimal.TryParse(node_assessment_sub.Cells[1].Text, out decimal i))
+                            {
+                                if (isFirstLoad)
+                                {
+                                    // 去掉尾端括弧之後 加上百分比
+                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text], 2) + "%)";
+                                }
+                                else
+                                {
+                                    // 砍到最後一個逗號, 加上百分比
+                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text], 2) + "%)";
+                                }
+                                
+                            }
+                        }
+                    }
+                }
+            }
+            #endregion
+        }
+
         //儲存ESL 樣板
         private void btnSave_Click(object sender, EventArgs e)
         {
@@ -1149,7 +1320,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_assessment_node = new DevComponents.AdvTree.Node();
 
             // 評量(名稱)
-            new_assessment_node.Text = "評量(請輸入評量名稱,教師一)";
+            new_assessment_node.Text = "評量(請輸入評量名稱,教師一,)";
 
             //Tag
             new_assessment_node.TagString = "assessment";
@@ -1238,7 +1409,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_subjet_node = new DevComponents.AdvTree.Node();
 
             // 科目(名稱)
-            new_subjet_node.Text = "科目(請輸入科目名稱)";
+            new_subjet_node.Text = "科目(請輸入科目名稱,)";
 
             // Tag
             new_subjet_node.TagString = "subject";
@@ -1290,7 +1461,7 @@ namespace ESL_System.Form
             // term node
             DevComponents.AdvTree.Node new_term_node = new DevComponents.AdvTree.Node();
             // 試別(名稱)
-            new_term_node.Text = "試別(請輸入試別名稱)";
+            new_term_node.Text = "試別(請輸入試別名稱,)";
             // Tag
             new_term_node.TagString = "term";
 
