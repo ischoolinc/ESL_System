@@ -675,12 +675,12 @@ namespace ESL_System.Form
                         {
                             if (node_now.Parent.TagString != "assessment" && node_now.Parent.TagString != null)
                             {
-                                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + ")";
+                                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + ",)";
                             }
                             else
                             {
                                 // 加上評分 教師腳色
-                                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + "," + node_now.Parent.Nodes[2].Cells[1].Text + ")";
+                                node_now.Parent.Cells[0].Text = nodeTagCovertDict["" + node_now.Parent.Tag] + "(" + node_now.SelectedCell.Text + "," + node_now.Parent.Nodes[2].Cells[1].Text + ",)";
                             }
                         }
                         btnSave.Enabled = true;
@@ -1320,7 +1320,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_assessment_node = new DevComponents.AdvTree.Node();
 
             // 評量(名稱)
-            new_assessment_node.Text = "評量(請輸入評量名稱,教師一,)";
+            new_assessment_node.Text = "評量(請輸入評量名稱,教師一,0%)";
 
             //Tag
             new_assessment_node.TagString = "assessment";
@@ -1409,7 +1409,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_subjet_node = new DevComponents.AdvTree.Node();
 
             // 科目(名稱)
-            new_subjet_node.Text = "科目(請輸入科目名稱,)";
+            new_subjet_node.Text = "科目(請輸入科目名稱,0%)";
 
             // Tag
             new_subjet_node.TagString = "subject";
@@ -1429,7 +1429,7 @@ namespace ESL_System.Form
 
             //值
             new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入科目名稱"));
-            new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("0"));
 
             //說明
             new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_subject_node_name.Tag]));
@@ -1474,7 +1474,7 @@ namespace ESL_System.Form
             //設定為不能拖曳，避免使用者誤用
             new_term_node.DragDropEnabled = false;
 
-            DevComponents.AdvTree.Node new_term_node_name = new DevComponents.AdvTree.Node("請輸入試別名稱"); //試別名稱
+            DevComponents.AdvTree.Node new_term_node_name = new DevComponents.AdvTree.Node(); //試別名稱
             DevComponents.AdvTree.Node new_term_node_percentage = new DevComponents.AdvTree.Node(); //比例
             DevComponents.AdvTree.Node new_term_node_inputStartTime = new DevComponents.AdvTree.Node(); //輸入開始時間
             DevComponents.AdvTree.Node new_term_node_inputEndTime = new DevComponents.AdvTree.Node(); //輸入結束時間
@@ -1491,8 +1491,8 @@ namespace ESL_System.Form
             new_term_node_inputEndTime.Tag = "time";
 
             //值
-            new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell());
-            new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入試別名稱"));
+            new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("0"));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell());
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell());
 
