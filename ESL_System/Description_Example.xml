@@ -11,13 +11,13 @@
           <Indicator Name ="N" Description ="Not Bad!!"></Indicator>
         </Indicators>
       </Assessment>
-      <Assessment Name="Comment" Weight="0" TeacherSequence="1" Type="Comment"  AllowCustomAssessment="true" ></Assessment>
+      <Assessment Name="Comment" Weight="0" TeacherSequence="1" Type="Comment" InputLimit="200" AllowCustomAssessment="true" ></Assessment>
     </Subject>
     <Subject Name="Science" Weight="50">
       <Assessment Name="In-Class Score" Weight="50" TeacherSequence="2" Type="Score" AllowCustomAssessment="true" ></Assessment>
       <Assessment Name="Reading Project" Weight="50" TeacherSequence="2" Type="Score" AllowCustomAssessment="true" ></Assessment>
       <Assessment Name="Homework Completion" Weight="0" TeacherSequence="2" Type="Indicator" AllowCustomAssessment="true" ></Assessment>
-      <Assessment Name="Comment" Weight="0" TeacherSequence="2" Type="Comment" AllowCustomAssessment="true" ></Assessment>
+      <Assessment Name="Comment" Weight="0" TeacherSequence="2" Type="Comment" InputLimit="200" AllowCustomAssessment="true" ></Assessment>
     </Subject>
   </Term>
 </ESLTemplate>

@@ -220,6 +220,11 @@ namespace ESL_System.Form
                                     a.Type = ele_assessment.Attribute("Type").Value;
                                     a.AllowCustomAssessment = ele_assessment.Attribute("AllowCustomAssessment").Value;
 
+                                    if (a.Type == "Comment") // 假如是 評語類別，多讀一項 輸入限制屬性
+                                    {
+                                        a.InputLimit = ele_assessment.Attribute("InputLimit").Value;
+                                    }
+
                                     a.IndicatorsList = new List<Indicators>();
 
                                     if (ele_assessment.Element("Indicators") != null)
@@ -599,6 +604,28 @@ namespace ESL_System.Form
                 {
                     node_now.Parent.Nodes[1].Enabled = true;
                     node_now.Parent.Nodes[1].Cells[2].Text = hintGuideDict[node_now.Parent.Nodes[1].TagString];
+
+                    if (mi.Text == "評語")
+                    {
+                        node_now.Parent.Nodes[1].Cells[1].Text = "0"; // 切換到評語 則為0
+                        DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
+                        new_assessment_node_inputLimit.Text = "輸入限制";
+                        new_assessment_node_inputLimit.Tag = "integer";
+                        new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell("200")); // 預設限制200 字
+                        new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_inputLimit.Tag]));
+                        new_assessment_node_inputLimit.Cells[0].Editable = false;
+                        new_assessment_node_inputLimit.Cells[2].Editable = false;
+                        new_assessment_node_inputLimit.DragDropEnabled = false;
+
+                        node_now.Parent.Nodes.Add(new_assessment_node_inputLimit);
+                    }
+                    if (mi.Text == "分數" && node_now.Parent.Nodes.Count>5)
+                    {
+                        node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count-1); // 假若從 評語選回 分數 把最後一項 輸入限制刪掉。
+
+                    }
+
+
                     node_now.Nodes.Clear();
                 }
 
@@ -846,14 +873,15 @@ namespace ESL_System.Form
                     DevComponents.AdvTree.Node new_assessment_node_percentage = new DevComponents.AdvTree.Node();   //比例
                     DevComponents.AdvTree.Node new_assessment_node_teacherRole = new DevComponents.AdvTree.Node();  //評分老師
                     DevComponents.AdvTree.Node new_assessment_node_type = new DevComponents.AdvTree.Node(); //評分種類
+                    DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
                     DevComponents.AdvTree.Node new_assessment_node_allowCustomAssessment = new DevComponents.AdvTree.Node(); //是否允許自訂項目
-
-
+                                        
                     //項目
                     new_assessment_node_name.Text = "名稱:";
                     new_assessment_node_percentage.Text = "比例:";
                     new_assessment_node_teacherRole.Text = "評分老師";
                     new_assessment_node_type.Text = "評分種類";
+                    new_assessment_node_inputLimit.Text = "輸入限制";
                     new_assessment_node_allowCustomAssessment.Text = "是否允許自訂項目";
 
                     //node Tag
@@ -861,6 +889,7 @@ namespace ESL_System.Form
                     new_assessment_node_percentage.Tag = "integer";
                     new_assessment_node_teacherRole.Tag = "teacherKind";
                     new_assessment_node_type.Tag = "ScoreKind";
+                    new_assessment_node_inputLimit.Tag = "integer";
                     new_assessment_node_allowCustomAssessment.Tag = "AllowCustom";
 
                     //值
@@ -868,6 +897,7 @@ namespace ESL_System.Form
                     new_assessment_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(a.Weight));
                     new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell(teacherRoleCovertDict[a.TeacherSequence]));
                     new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell(typeCovertDict[a.Type]));
+                    new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell(a.InputLimit));
                     new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell(a.AllowCustomAssessment == "true" ? "是" : "否"));
 
                     //說明
@@ -875,6 +905,7 @@ namespace ESL_System.Form
                     new_assessment_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_percentage.Tag]));
                     new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_teacherRole.Tag]));
                     new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_type.Tag]));
+                    new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_inputLimit.Tag]));
                     new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_assessment_node_allowCustomAssessment.Tag]));
 
                     // 點擊事件 (適用於:teacherKind、ScoreKind、AllowCustom)
@@ -891,6 +922,8 @@ namespace ESL_System.Form
                     new_assessment_node_teacherRole.Cells[2].Editable = false;
                     new_assessment_node_type.Cells[0].Editable = false;
                     new_assessment_node_type.Cells[2].Editable = false;
+                    new_assessment_node_inputLimit.Cells[0].Editable = false;
+                    new_assessment_node_inputLimit.Cells[2].Editable = false;
                     new_assessment_node_allowCustomAssessment.Cells[0].Editable = false;
                     new_assessment_node_allowCustomAssessment.Cells[2].Editable = false;
 
@@ -899,6 +932,7 @@ namespace ESL_System.Form
                     new_assessment_node_percentage.DragDropEnabled = false;
                     new_assessment_node_teacherRole.DragDropEnabled = false;
                     new_assessment_node_type.DragDropEnabled = false;
+                    new_assessment_node_inputLimit.DragDropEnabled = false;
                     new_assessment_node_allowCustomAssessment.DragDropEnabled = false;
 
 
@@ -976,6 +1010,10 @@ namespace ESL_System.Form
                     new_assessment_node.Nodes.Add(new_assessment_node_teacherRole);
                     new_assessment_node.Nodes.Add(new_assessment_node_type);
                     new_assessment_node.Nodes.Add(new_assessment_node_allowCustomAssessment);
+                    if (a.Type == "Comment")// 假如是 評語類別，才多加入
+                    {
+                        new_assessment_node.Nodes.Add(new_assessment_node_inputLimit);
+                    }
 
                     //設定為不能點選編輯，避免使用者誤用
                     new_assessment_node.Cells[0].Editable = false;
@@ -1224,8 +1262,17 @@ namespace ESL_System.Form
                                 element_Assessment.SetAttribute("Weight", assessment_node.Nodes[1].Cells[1].Text);
                                 element_Assessment.SetAttribute("TeacherSequence", teacherRoleCovertRevDict[assessment_node.Nodes[2].Cells[1].Text]);
                                 element_Assessment.SetAttribute("Type", typeCovertRevDict[assessment_node.Nodes[3].Cells[1].Text]);
-                                element_Assessment.SetAttribute("AllowCustomAssessment", assessment_node.Nodes[4].Cells[1].Text == "是" ? "true" : "false");
+                                if (typeCovertRevDict[assessment_node.Nodes[3].Cells[1].Text] == "Comment") // 假如是評語，需要再多存一項 輸入限制(專給Comment 使用)
+                                {
+                                    element_Assessment.SetAttribute("AllowCustomAssessment", assessment_node.Nodes[4].Cells[1].Text == "是" ? "true" : "false");
+                                    element_Assessment.SetAttribute("InputLimit", assessment_node.Nodes[5].Cells[1].Text);
+                                }
+                                else
+                                {
+                                    element_Assessment.SetAttribute("AllowCustomAssessment", assessment_node.Nodes[4].Cells[1].Text == "是" ? "true" : "false");
+                                }
 
+                                                                
                                 //假如 type 有子項目，其代表indicators
                                 if (assessment_node.Nodes[3].Nodes.Count > 0)
                                 {
