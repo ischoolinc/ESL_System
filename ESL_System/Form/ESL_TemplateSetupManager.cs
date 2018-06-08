@@ -261,6 +261,11 @@ namespace ESL_System.Form
 
             currentItem = sender as ButtonItem;
             SelectAssessmentSetup(currentItem);
+
+            //在選取ESL評分樣版後， 將報表樣版設定開關啟動
+            linkLabel1.Enabled = true;
+            linkLabel2.Enabled = true;
+            linkLabel3.Enabled = true;
         }
 
         private bool CanContinue()
@@ -1218,6 +1223,10 @@ namespace ESL_System.Form
 
             lblIsDirty.Visible = false;
 
+            linkLabel1.Enabled = true; // 若有改變儲存，還原。
+            linkLabel2.Enabled = true; // 若有改變儲存，還原。
+            linkLabel3.Enabled = true; // 若有改變儲存，還原。
+
             MsgBox.Show("儲存樣板成功");
 
         }
@@ -1580,10 +1589,18 @@ namespace ESL_System.Form
             if (oriTemplateDescriptionDict["" + currentItem.Tag] != GetXmlDesriptionInTree())
             {
                 lblIsDirty.Visible = true;
+
+                linkLabel1.Enabled = false; // 若有改變尚未儲存，則不給設定報表樣版。
+                linkLabel2.Enabled = false; // 若有改變尚未儲存，則不給設定報表樣版。
+                linkLabel3.Enabled = false; // 若有改變尚未儲存，則不給設定報表樣版。
             }
             else
             {
                 lblIsDirty.Visible = false;
+
+                linkLabel1.Enabled = true; // 若有改變儲存，還原。
+                linkLabel2.Enabled = true; // 若有改變儲存，還原。
+                linkLabel3.Enabled = true; // 若有改變儲存，還原。
             }
         }
 
@@ -1698,6 +1715,40 @@ namespace ESL_System.Form
                     MsgBox.Show(ex.Message);
                 }
             }
+        }
+
+        //期中報表樣板
+        private void linkLabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            ReportTemplateSettingForm rtsf = new ReportTemplateSettingForm();
+
+            rtsf.SourceID = ""+currentItem.Tag;
+            rtsf.SourceType = "期中";
+
+            rtsf.ShowDialog();
+        }
+
+        // 期末報表樣板
+        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            ReportTemplateSettingForm rtsf = new ReportTemplateSettingForm();
+
+            rtsf.SourceID = "" + currentItem.Tag;
+            rtsf.SourceType = "期末";
+
+            rtsf.ShowDialog();
+
+        }
+
+        // 學期報表樣板
+        private void linkLabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            ReportTemplateSettingForm rtsf = new ReportTemplateSettingForm();
+
+            rtsf.SourceID = "" + currentItem.Tag;
+            rtsf.SourceType = "學期";
+
+            rtsf.ShowDialog();
         }
     }
 }

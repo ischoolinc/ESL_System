@@ -73,5 +73,65 @@ namespace ESL_System.Properties {
                 return ResourceManager.GetString("Description_Example", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] FinalReport {
+            get {
+                object obj = ResourceManager.GetObject("FinalReport", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] FinalReport_MailMergeList {
+            get {
+                object obj = ResourceManager.GetObject("FinalReport_MailMergeList", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] MidReport {
+            get {
+                object obj = ResourceManager.GetObject("MidReport", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] MidReport_MailMergeList {
+            get {
+                object obj = ResourceManager.GetObject("MidReport_MailMergeList", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] SemesterReport {
+            get {
+                object obj = ResourceManager.GetObject("SemesterReport", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
+        internal static byte[] SemesterReport_MailMergeList {
+            get {
+                object obj = ResourceManager.GetObject("SemesterReport_MailMergeList", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
     }
 }

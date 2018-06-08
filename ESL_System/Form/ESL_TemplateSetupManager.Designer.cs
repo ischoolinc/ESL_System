@@ -41,6 +41,9 @@
             this.btnDelete = new DevComponents.DotNetBar.ButtonX();
             this.buttonItem4 = new DevComponents.DotNetBar.ButtonItem();
             this.peTemplateName1 = new DevComponents.DotNetBar.PanelEx();
+            this.linkLabel2 = new System.Windows.Forms.LinkLabel();
+            this.linkLabel1 = new System.Windows.Forms.LinkLabel();
+            this.linkLabel3 = new System.Windows.Forms.LinkLabel();
             this.labelX3 = new DevComponents.DotNetBar.LabelX();
             this.lblIsDirty = new DevComponents.DotNetBar.LabelX();
             this.btnSave = new DevComponents.DotNetBar.ButtonX();
@@ -268,13 +271,16 @@
             // 
             this.peTemplateName1.CanvasColor = System.Drawing.SystemColors.Control;
             this.peTemplateName1.ColorSchemeStyle = DevComponents.DotNetBar.eDotNetBarStyle.Office2007;
+            this.peTemplateName1.Controls.Add(this.linkLabel2);
+            this.peTemplateName1.Controls.Add(this.linkLabel1);
+            this.peTemplateName1.Controls.Add(this.linkLabel3);
             this.peTemplateName1.Controls.Add(this.labelX3);
             this.peTemplateName1.Controls.Add(this.lblIsDirty);
             this.peTemplateName1.Controls.Add(this.btnSave);
             this.peTemplateName1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.peTemplateName1.Location = new System.Drawing.Point(156, 656);
+            this.peTemplateName1.Location = new System.Drawing.Point(156, 629);
             this.peTemplateName1.Name = "peTemplateName1";
-            this.peTemplateName1.Size = new System.Drawing.Size(777, 37);
+            this.peTemplateName1.Size = new System.Drawing.Size(777, 64);
             this.peTemplateName1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground;
             this.peTemplateName1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground2;
             this.peTemplateName1.Style.BorderColor.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarDockedBorder;
@@ -283,6 +289,48 @@
             this.peTemplateName1.Style.GradientAngle = 90;
             this.peTemplateName1.Style.MarginLeft = 15;
             this.peTemplateName1.TabIndex = 6;
+            // 
+            // linkLabel2
+            // 
+            this.linkLabel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabel2.AutoSize = true;
+            this.linkLabel2.BackColor = System.Drawing.Color.Transparent;
+            this.linkLabel2.Enabled = false;
+            this.linkLabel2.Location = new System.Drawing.Point(324, 38);
+            this.linkLabel2.Name = "linkLabel2";
+            this.linkLabel2.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel2.TabIndex = 20;
+            this.linkLabel2.TabStop = true;
+            this.linkLabel2.Text = "設定學期報表樣板";
+            this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
+            // 
+            // linkLabel1
+            // 
+            this.linkLabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabel1.AutoSize = true;
+            this.linkLabel1.BackColor = System.Drawing.Color.Transparent;
+            this.linkLabel1.Enabled = false;
+            this.linkLabel1.Location = new System.Drawing.Point(169, 38);
+            this.linkLabel1.Name = "linkLabel1";
+            this.linkLabel1.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel1.TabIndex = 19;
+            this.linkLabel1.TabStop = true;
+            this.linkLabel1.Text = "設定期末報表樣板";
+            this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
+            // 
+            // linkLabel3
+            // 
+            this.linkLabel3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabel3.AutoSize = true;
+            this.linkLabel3.BackColor = System.Drawing.Color.Transparent;
+            this.linkLabel3.Enabled = false;
+            this.linkLabel3.Location = new System.Drawing.Point(16, 38);
+            this.linkLabel3.Name = "linkLabel3";
+            this.linkLabel3.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel3.TabIndex = 18;
+            this.linkLabel3.TabStop = true;
+            this.linkLabel3.Text = "設定期中報表樣板";
+            this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
             // 
             // labelX3
             // 
@@ -295,7 +343,7 @@
             this.labelX3.ForeColor = System.Drawing.SystemColors.ControlText;
             this.labelX3.Location = new System.Drawing.Point(19, 8);
             this.labelX3.Name = "labelX3";
-            this.labelX3.Size = new System.Drawing.Size(511, 23);
+            this.labelX3.Size = new System.Drawing.Size(503, 23);
             this.labelX3.TabIndex = 17;
             this.labelX3.Text = "若需新增刪除，試別、科目、評量、設定指標，可點選項目後，右鍵選擇新增刪除。";
             // 
@@ -308,7 +356,7 @@
             this.lblIsDirty.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
             this.lblIsDirty.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.lblIsDirty.ForeColor = System.Drawing.Color.Red;
-            this.lblIsDirty.Location = new System.Drawing.Point(528, 8);
+            this.lblIsDirty.Location = new System.Drawing.Point(524, 38);
             this.lblIsDirty.Name = "lblIsDirty";
             this.lblIsDirty.Size = new System.Drawing.Size(63, 23);
             this.lblIsDirty.TabIndex = 4;
@@ -320,7 +368,7 @@
             this.btnSave.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnSave.Location = new System.Drawing.Point(647, 8);
+            this.btnSave.Location = new System.Drawing.Point(643, 38);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 23);
             this.btnSave.TabIndex = 3;
@@ -353,7 +401,7 @@
             this.advTree1.NodesConnector = this.nodeConnector1;
             this.advTree1.NodeStyle = this.elementStyle1;
             this.advTree1.PathSeparator = ";";
-            this.advTree1.Size = new System.Drawing.Size(771, 650);
+            this.advTree1.Size = new System.Drawing.Size(771, 629);
             this.advTree1.Styles.Add(this.elementStyle1);
             this.advTree1.Styles.Add(this.elementStyle2);
             this.advTree1.Styles.Add(this.elementStyle3);
@@ -720,7 +768,7 @@
             this.node8.Expanded = true;
             this.node8.Name = "node8";
             this.node8.TagString = "function";
-            this.node8.Text = "<b><font color=\"#ED1C24\">+加入新試別</font></b>";            
+            this.node8.Text = "<b><font color=\"#ED1C24\">+加入新試別</font></b>";
             // 
             // nodeConnector1
             // 
@@ -803,6 +851,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.loading)).EndInit();
             this.panel2.ResumeLayout(false);
             this.peTemplateName1.ResumeLayout(false);
+            this.peTemplateName1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.advTree1)).EndInit();
             this.ResumeLayout(false);
 
@@ -872,5 +921,8 @@
         private DevComponents.DotNetBar.ElementStyle elementStyle2;
         private DevComponents.DotNetBar.ElementStyle elementStyle3;
         private DevComponents.DotNetBar.LabelX labelX3;
+        private System.Windows.Forms.LinkLabel linkLabel2;
+        private System.Windows.Forms.LinkLabel linkLabel1;
+        private System.Windows.Forms.LinkLabel linkLabel3;
     }
 }
