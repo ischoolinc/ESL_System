@@ -361,17 +361,30 @@ namespace ESL_System.Form
 
             int termCounter = 1;
 
+            // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string..Trim().Replace(' ', '_').Replace('"', '_') 
+            // >> 其用意為避免Word 功能變數合併列印時 會有一些奇怪的BUG ，EX: row["Final-Term評量_Science科目_In-Class Score子項目_分數1"] = "YOYO!"; >> 有空格印不出來 
+
             foreach (Term term in termList)
             {                
-                builder.Writeln(term.Name + "評量");
+                builder.Writeln(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "評量");
 
                 builder.StartTable();
+                builder.InsertCell();
+                builder.Write("評量名稱");
+                builder.InsertCell();
+                builder.Write("評量分數");
                 builder.InsertCell();
                 builder.Write("評量比重");
                 builder.EndRow();
 
                 builder.InsertCell();
-                builder.InsertField("MERGEFIELD " + term.Name + "評量_比重" + " \\* MERGEFORMAT ", "«TW" + termCounter + "»");
+                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + termCounter + " \\* MERGEFORMAT ", "«I" + termCounter + "»");
+
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + termCounter + " \\* MERGEFORMAT ", "«TS" + termCounter + "»");
+
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + termCounter+ " \\* MERGEFORMAT ", "«TW" + termCounter + "»");
 
                 termCounter++;
 
@@ -384,15 +397,19 @@ namespace ESL_System.Form
 
                 foreach (Subject subject in term.SubjectList)
                 {
-                    builder.Writeln(term.Name + "評量_" + subject.Name + "科目分數型成績");
+                    builder.Writeln(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "科目分數型成績");
 
                     builder.StartTable();
+                    builder.InsertCell();
+                    builder.Write("科目分數");
                     builder.InsertCell();
                     builder.Write("科目比重");
                     builder.EndRow();
 
                     builder.InsertCell();
-                    builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目" + "_比重" + " \\* MERGEFORMAT ", "«SW" + subjectCounter + "»");
+                    builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + subjectCounter + " \\* MERGEFORMAT ", "«SS" + subjectCounter + "»");
+                    builder.InsertCell();
+                    builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + subjectCounter+ " \\* MERGEFORMAT ", "«SW" + subjectCounter + "»");
 
                     subjectCounter++;
 
@@ -428,13 +445,13 @@ namespace ESL_System.Form
                         }
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目_名稱" + " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
+                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + assessmentCounter+ " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目_比重" + " \\* MERGEFORMAT ", "«AW" + assessmentCounter + "»");
+                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + assessmentCounter+" \\* MERGEFORMAT ", "«AW" + assessmentCounter + "»");
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目_分數" + " \\* MERGEFORMAT ", "«S" + assessmentCounter + "»");
+                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + assessmentCounter+" \\* MERGEFORMAT ", "«S" + assessmentCounter + "»");
 
                         assessmentCounter++;
 
@@ -448,7 +465,7 @@ namespace ESL_System.Form
                     // 處理Indicator
                     if (assessmentContainsIndicator)
                     {
-                        builder.Writeln(term.Name + "評量_" + subject.Name + "科目指標型成績");
+                        builder.Writeln(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "指標型成績");
 
                         builder.StartTable();
                         builder.InsertCell();
@@ -463,9 +480,9 @@ namespace ESL_System.Form
                             if (assessment.Type == "Indicator") // 檢查看有沒有　Indicator　，專為 Indicator 畫張表
                             {
                                 builder.InsertCell();
-                                builder.Write(term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目");
+                                builder.Write(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目");
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目_指標" + " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
+                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_指標" + assessmentCounter+ " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
                                 builder.EndRow();
                                 assessmentCounter++;
                             }
@@ -477,7 +494,7 @@ namespace ESL_System.Form
                     // 處理Comment
                     if (assessmentContainsComment)
                     {
-                        builder.Writeln(term.Name + "評量_" + subject.Name + "科目評語型成績");
+                        builder.Writeln(term.Name + "/" + subject.Name + "評語型成績");
 
                         builder.StartTable();
                         builder.InsertCell();
@@ -492,9 +509,9 @@ namespace ESL_System.Form
                             if (assessment.Type == "Comment") // 檢查看有沒有　Comment　，專為 Comment 畫張表
                             {
                                 builder.InsertCell();
-                                builder.Write(term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目");
+                                builder.Write(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目");
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name + "評量_" + subject.Name + "科目_" + assessment.Name + "子項目_評語" + " \\* MERGEFORMAT ", "«C" + assessmentCounter + "»");
+                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_評語" + assessmentCounter+" \\* MERGEFORMAT ", "«C" + assessmentCounter + "»");
                                 builder.EndRow();
                                 assessmentCounter++;
                             }

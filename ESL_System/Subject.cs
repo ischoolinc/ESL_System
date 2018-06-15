@@ -23,6 +23,11 @@ namespace ESL_System
         /// </summary>
         public List<Assessment> AssessmentList { get; set; }
 
+        /// <summary>
+        /// 子項目總比例
+        /// </summary>
+        public decimal AssessmentTotalWeight { get; set; }
+
 
     }
 }

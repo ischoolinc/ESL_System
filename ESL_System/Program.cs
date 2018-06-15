@@ -25,13 +25,63 @@ namespace ESL_System
             ribbon.Add(new RibbonFeature("ESL評分樣版設定", "ESL評分樣版設定"));
 
             MotherForm.RibbonBarItems["教務作業", "基本設定"]["設定"]["ESL評分樣版設定"].Enable = UserAcl.Current["ESL評分樣版設定"].Executable;
-            
 
             MotherForm.RibbonBarItems["教務作業", "基本設定"]["設定"]["ESL評分樣版設定"].Click += delegate
             {
                 Form.ESL_TemplateSetupManager form = new Form.ESL_TemplateSetupManager();
 
                 form.ShowDialog();
+
+            };
+
+            Catalog ribbon2 = RoleAclSource.Instance["教務作業"]["功能按鈕"];
+            ribbon2.Add(new RibbonFeature("ESL評量分數計算", "ESL評量分數計算"));
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = false;
+
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
+            {
+                if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0)
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = UserAcl.Current["ESL評量分數計算"].Executable;
+                }
+                else
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = false;
+                }
+            };
+
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Click += delegate
+            {
+                Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm();
+
+                if (form.ShowDialog() == System.Windows.Forms.DialogResult.Yes)
+                {
+                    CalculateTermScore cts = new CalculateTermScore(K12.Presentation.NLDPanels.Course.SelectedSource);
+
+                    cts.CalculateESLTermScore(); // 計算ESL 評量 成績
+                }
+
+            };
+
+
+            Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
+            ribbon3.Add(new RibbonFeature("康橋ESL期末成績單", "康橋ESL期末成績單"));
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
+            {
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+            };
+
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Click += delegate
+            { 
+                List<K12.Data.CourseRecord> esl_couse_list = K12.Data.Course.SelectByIDs(K12.Presentation.NLDPanels.Course.SelectedSource);
+
+                ESL_KcbsFinalReportFormNEW form = new ESL_KcbsFinalReportFormNEW(esl_couse_list);
 
             };
 

@@ -33,5 +33,10 @@ namespace ESL_System
         /// </summary>
         public List<Subject> SubjectList { get; set; }
 
+        /// <summary>
+        /// 子項目總比例
+        /// </summary>
+        public decimal SubjectTotalWeight { get; set; }
+
     }
 }
