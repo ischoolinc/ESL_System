@@ -20,6 +20,9 @@ namespace ESL_System
 {
     public partial class ESL_KcbsFinalReportFormNEW : BaseForm
     {
+
+        private FISCA.UDT.AccessHelper _AccessHelper = new FISCA.UDT.AccessHelper();
+
         BackgroundWorker _BW;
 
         List<K12.Data.CourseRecord> esl_couse_list;
@@ -32,6 +35,12 @@ namespace ESL_System
 
 
         Dictionary<string, int> scoreItemSortingDict = new Dictionary<string, int>(); //將樣板的 成績項目做出排序 如:<"Mid-Term",1>,<"Final-Term",2>
+
+        //Dictionary<string, List<string>> courseIndicatorDict = new Dictionary<string, List<string>>();  // 指出該課程有哪些 Assessment 屬於 Indicator 成績
+
+        List<string> IndicatorList = new List<string>();// 暫時用來判斷而者為Indicator 項目 之後需要重新設計 批次的做法
+
+        
 
         public ESL_KcbsFinalReportFormNEW(List<K12.Data.CourseRecord> _esl_couse_list)
         {
@@ -56,6 +65,19 @@ namespace ESL_System
 
         private void DataBuilding(object sender, DoWorkEventArgs e)
         {
+            string qry = "ref_exam_template_id ='" + esl_couse_list[0].RefAssessmentSetupID + "' and schoolyear='" + K12.Data.School.DefaultSchoolYear + "' and semester ='" + K12.Data.School.DefaultSemester + "' and exam ='期末'";
+
+            List<UDT_ReportTemplate> _Configures = _AccessHelper.Select<UDT_ReportTemplate>(qry);
+
+            UDT_ReportTemplate Configure;
+            Document doc = new Document();
+
+            Configure = _Configures.Count > 0 ? _Configures[0] : null; // 理論上只會有一筆
+
+            Configure.Decode(); // 將 stream 轉成 Word
+
+            doc = Configure.Template;
+
 
             _BW.ReportProgress(0);
 
@@ -87,17 +109,14 @@ namespace ESL_System
             int count = 0;
 
             DataTable data = CreateFieldTemplate();
-            
-            data.Columns.Add("123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890"); //test
-            data.Columns.Add("Final-Term評量_Science科目_In-ClassScore子項目_分數1"); //test
-
+                        
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
 
-            string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') AND term ='Final-Term'"; // 這邊先暫訂試別 為Final-Term ， 之後要動態抓取
+            //string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') AND term ='Final-Term'"; // 這邊先暫訂試別 為Final-Term ， 之後要動態抓取
 
-
+            string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') "; // 2018/6/21 通通都抓了，因為一張成績單上資訊，不只Final的
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(sql);
@@ -129,9 +148,27 @@ namespace ESL_System
 
                     if (scoreDict.ContainsKey(id))
                     {
-                        scoreDict[id].Add(termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + scoreItemSortingDict[indexKey], "" + row["value"]);
 
-                        assessmentCounter++;
+                        if (IndicatorList.Contains(assessmentWord)) // Indicator 子項目成績暫時的處理方式
+                        {
+                            scoreDict[id].Add(termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_指標" + (IndicatorList.IndexOf(assessmentWord) + 1), "" + row["value"]);
+
+                            assessmentCounter++;
+                        }
+                        else if (assessmentWord == "Comments") // 評語的暫時處理方式
+                        {
+                            scoreDict[id].Add(termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_評語1" , "" + row["value"]);
+
+                            assessmentCounter++;
+                        }
+                        else
+                        {
+                            scoreDict[id].Add(termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + scoreItemSortingDict[indexKey], "" + row["value"]);
+
+                            assessmentCounter++;
+                        }
+
+                        
                     }
 
                 }
@@ -216,7 +253,7 @@ namespace ESL_System
             }
 
             // 這邊還是先用 Local 的，因為設定樣板 沒有選擇試別 不好定位
-            Document doc = new Document(new System.IO.MemoryStream(Properties.Resources.FinalReport));
+            //Document doc = new Document(new System.IO.MemoryStream(Properties.Resources.FinalReport));
             //Document doc = new Document();
             doc.MailMerge.Execute(data);
             e.Result = doc;
@@ -337,6 +374,7 @@ namespace ESL_System
                 data.Columns.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + termCounter); // Term 分數本身 先暫時這樣處理之後要有類別整理
 
                 itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + termCounter, term.Name.Trim().Replace(' ', '_').Replace('"', '_')); //Term 名稱 
+                itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + termCounter, term.Weight); //Term 比重 
 
                 scoreItemSortingDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_'), termCounter); //成績子項目 順位的整理
                 
@@ -351,6 +389,7 @@ namespace ESL_System
                     data.Columns.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + subjectCounter); // Subject 分數本身 先暫時這樣處理之後要有類別整理
 
                     itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + subjectCounter, subject.Name.Trim().Replace(' ', '_').Replace('"', '_')); //subject名稱 
+                    itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + subjectCounter, subject.Weight); //subject比重 
 
                     scoreItemSortingDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_'), subjectCounter); //成績子項目 順位的整理
 
@@ -379,6 +418,7 @@ namespace ESL_System
                         data.Columns.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + assessmentCounter);
 
                         itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + assessmentCounter, assessment.Name.Trim().Replace(' ', '_').Replace('"', '_')); //assessment名稱 
+                        itemDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + assessmentCounter, assessment.Weight); //assessment比重
 
                         scoreItemSortingDict.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_'), assessmentCounter); //成績子項目 順位的整理
 
@@ -395,7 +435,12 @@ namespace ESL_System
                             if (assessment.Type == "Indicator") // 檢查看有沒有　Indicator　，專為 Indicator 畫張表
                             {
                                 data.Columns.Add(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_指標" + assessmentCounter);
-                             
+
+                                if (!IndicatorList.Contains(assessment.Name)) // 暫且的整理
+                                {
+                                    IndicatorList.Add(assessment.Name);
+                                }
+                                
                                 assessmentCounter++;
                             }
                         }                        
@@ -476,97 +521,7 @@ namespace ESL_System
         }
 
 
-        //private void SelectAssessmentSetup(K12.Data.SCAttendRecord scar)
-        //{
-        //    string xmlStr = "<root>" + scar.Course.AssessmentSetup.Description + "</root>";
-        //    XElement elmRoot = XElement.Parse(xmlStr);
-
-        //    string id = scar.RefStudentID + "_" + scar.RefCourseID;
-
-        //    //解析讀下來的 descriptiony 資料，打包成物件群 最後交給 ParseDBxmlToNodeUI() 處理
-        //    if (elmRoot != null)
-        //    {
-        //        if (elmRoot.Element("ESLTemplate") != null)
-        //        {
-        //            foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
-        //            {
-        //                if (ele_term.Attribute("Name").Value == "mid-Term")
-        //                {
-        //                    if (!scoreDict[id].ContainsKey("M_W"))
-        //                    {
-        //                        scoreDict[id].Add("M_W", "" + ele_term.Attribute("Weight").Value );
-        //                    }
-        //                }
-
-        //                if (ele_term.Attribute("Name").Value == "final-Term")
-        //                {
-        //                    if (!scoreDict[id].ContainsKey("F_W"))
-        //                    {
-        //                        scoreDict[id].Add("F_W", "" + ele_term.Attribute("Weight").Value );
-        //                    }
-
-
-        //                    foreach (XElement ele_subject in ele_term.Elements("Subject"))
-        //                    {
-                                
-        //                        string string1 = "";
-
-
-        //                        switch ("" + ele_subject.Attribute("Name").Value)
-        //                        {
-        //                            case "Language Art(FET)":
-        //                                string1 = "LA_FET_";
-        //                                break;
-        //                            case "Language Art(CET)":
-        //                                string1 = "LA_CET_";
-        //                                break;
-        //                            case "Science":
-        //                                string1 = "SC_FET_";
-        //                                break;
-        //                            default:
-        //                                break;
-        //                        }
-
-        //                        foreach (XElement ele_assessment in ele_subject.Elements("Assessment"))
-        //                        {
-        //                            string string2 = "";
-
-        //                            switch ("" + ele_assessment.Attribute("Name").Value)
-        //                            {
-        //                                case "In-Class Score":
-        //                                    string2 = "IN_W";
-        //                                    break;
-        //                                case "Reading Project":
-        //                                    string2 = "RAP_W";
-        //                                    break;
-        //                                case "Language Arts Exam":
-        //                                    string2 = "MLAE_W";
-        //                                    break;
-        //                                case "Grammar Exam":
-        //                                    string2 = "MGE_W";
-        //                                    break;
-        //                                case "Project":
-        //                                    string2 = "SA_W";
-        //                                    break;                                  
-        //                                default:
-        //                                    break;
-        //                            }
-
-        //                            if (!scoreDict[id].ContainsKey(string1+string2))
-        //                            {
-        //                                scoreDict[id].Add(string1+string2, "" + ele_assessment.Attribute("Weight").Value );
-        //                            }
-
-        //                        }
-                               
-        //                    }
-        //                }
-        //            }
- 
-        //        }
-        //    }
-
-        //}
+        
 
     }
 }
