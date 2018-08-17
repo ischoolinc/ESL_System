@@ -7,6 +7,7 @@ using FISCA;
 using FISCA.Presentation;
 using K12.Presentation;
 using FISCA.Permission;
+using JHSchool;
 
 
 namespace ESL_System
@@ -65,7 +66,6 @@ namespace ESL_System
 
             };
 
-
             Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
             ribbon3.Add(new RibbonFeature("康橋ESL期末成績單", "康橋ESL期末成績單"));
 
@@ -78,12 +78,26 @@ namespace ESL_System
 
 
             MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Click += delegate
-            { 
+            {
                 List<K12.Data.CourseRecord> esl_couse_list = K12.Data.Course.SelectByIDs(K12.Presentation.NLDPanels.Course.SelectedSource);
 
                 ESL_KcbsFinalReportFormNEW form = new ESL_KcbsFinalReportFormNEW(esl_couse_list);
 
             };
+
+            
+            //Catalog ribbon4 = RoleAclSource.Instance["教務作業"]["功能按鈕"];
+            //ribbon4.Add(new RibbonFeature("ESL期中分班", "ESL期中分班"));
+
+            //RibbonBarButton group = Course.Instance.RibbonBarItems["教務"]["ESL期中分班"];
+            //group.Size = RibbonBarButton.MenuButtonSize.Medium;
+            //group.Image = Properties.Resources.meeting_refresh_64;
+            //group.Enable = UserAcl.Current["ESL期中分班"].Executable;
+            //group.Click += delegate
+            //{
+            //    if (Course.Instance.SelectedList.Count > 0)
+            //        new SwapAttendStudents(Course.Instance.SelectedList.Count).ShowDialog();
+            //};
 
 
         }

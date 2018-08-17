@@ -1227,6 +1227,19 @@ namespace ESL_System.Form
             linkLabel2.Enabled = true; // 若有改變儲存，還原。
             linkLabel3.Enabled = true; // 若有改變儲存，還原。
 
+            
+            // 同步資料的嘗試，通通失敗...  需要問恩正囉...
+
+            //JHSchool.Evaluation.AssessmentSetup.Instance.SyncAllBackground();            
+            //JHSchool.Evaluation.AssessmentSetup.Instance.SyncDataBackground();
+            //JHSchool.Evaluation.AssessmentSetup.Instance.WaitLoadingComplete();
+            //JHSchool.Evaluation.AssessmentSetup.Instance.SyncData();
+            //JHSchool.Evaluation.AssessmentSetup.Instance.SortItems();
+            //JHSchool.Evaluation.AssessmentSetup.TestProgram(); ;
+            //JHSchool.Evaluation.AssessmentSetup.Instance.SetupPresentation();            
+            //JHSchool.Evaluation.TCInstruct.Instance.SyncAllBackground();
+            //JHSchool.Evaluation.ScoreCalcRule.Instance.SyncAllBackground();
+
             MsgBox.Show("儲存樣板成功");
 
         }
@@ -1749,6 +1762,83 @@ namespace ESL_System.Form
             rtsf.SourceType = "學期";
 
             rtsf.ShowDialog();
+        }
+
+        // 當使用者按住  Shift  或是 Alt  在雙擊滑鼠時， 啟動 隱藏的匯入匯出 設定 Xml 功能
+        private void peTemplateName1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            if (Control.ModifierKeys == (Keys.Shift | Keys.Alt))
+            {
+                ExportXmlBtn.Visible = true;
+                importXmlBtn.Visible = true;
+            } 
+        }
+
+
+        // 匯出 設定 Xml 檔案
+        private void ExportXmlBtn_Click(object sender, EventArgs e)
+        {
+            string description_xml = GetXmlDesriptionInTree();
+
+            XmlDocument doc = new XmlDocument();
+            
+            doc.LoadXml(description_xml);
+
+            doc.PreserveWhitespace = true;
+
+            SaveFileDialog saveDialog = new SaveFileDialog();
+
+            //saveDialog.Filter = "*.xml|all Files(*.*)|*.*";
+            saveDialog.Filter = "XML files(.xml)|*.xml|all Files(*.*)|*.*";
+            if (saveDialog.ShowDialog() == DialogResult.OK)
+            {                
+                try
+                {
+                    doc.Save(saveDialog.FileName);                    
+                    System.Diagnostics.Process.Start(saveDialog.FileName);
+                }
+                catch
+                {
+                    MsgBox.Show("路徑無法存取，請確認檔案是否未正確關閉。");
+                }
+            }            
+        }
+
+
+        // 匯入 設定 Xml 檔案
+        private void importXmlBtn_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Title = "選擇檔案";
+            //ofd.Filter = "*.xml|所有檔案 (*.*)|*.* ";
+            ofd.Multiselect = true;
+            if (ofd.ShowDialog() == DialogResult.OK)
+            {
+                string esl_exam_template_id = "" + currentItem.Tag;
+
+                XmlDocument doc = new XmlDocument();
+
+                doc.Load(ofd.FileName);
+
+                string description_xml = doc.OuterXml;
+
+                UpdateHelper uh = new UpdateHelper();
+
+                //依照所選項目儲存
+                string updQuery = "UPDATE exam_template SET description ='" + description_xml + "' WHERE id ='" + esl_exam_template_id + "'";
+
+                //執行sql，更新
+                uh.Execute(updQuery);
+
+                MsgBox.Show("上傳樣板XML設定成功");
+            }
+            else
+            {                
+                MsgBox.Show("未選擇檔案!!");
+            }
+
+
+
         }
     }
 }
