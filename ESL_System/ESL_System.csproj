@@ -232,6 +232,7 @@
     <Content Include="Description_Example.xml">
       <SubType>Designer</SubType>
     </Content>
+    <Content Include="Resource\calc_64.png" />
     <None Include="Resource\meeting_refresh_64.png" />
     <None Include="Resource\loading.gif" />
   </ItemGroup>

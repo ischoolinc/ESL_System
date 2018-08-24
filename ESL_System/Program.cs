@@ -35,25 +35,27 @@ namespace ESL_System
 
             };
 
-            Catalog ribbon2 = RoleAclSource.Instance["教務作業"]["功能按鈕"];
-            ribbon2.Add(new RibbonFeature("ESL評量分數計算", "ESL評量分數計算"));
+            Catalog ribbon2 = RoleAclSource.Instance["課程"]["ESL課程"];
+            ribbon2.Add(new RibbonFeature("ESL評量分數計算", "評量成績結算"));
 
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = false;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Enable = false;
 
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
             {
                 if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0)
                 {
-                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = UserAcl.Current["ESL評量分數計算"].Executable;
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Enable = UserAcl.Current["ESL評量分數計算"].Executable;
                 }
                 else
                 {
-                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Enable = false;
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Enable = false;
                 }
             };
 
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Image = Properties.Resources.calc_64;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Size = RibbonBarButton.MenuButtonSize.Medium;
 
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程評量成績結算"].Click += delegate
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Click += delegate
             {
                 Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm();
 
@@ -67,17 +69,17 @@ namespace ESL_System
             };
 
             Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
-            ribbon3.Add(new RibbonFeature("康橋ESL期末成績單", "康橋ESL期末成績單"));
+            ribbon3.Add(new RibbonFeature("ESL期末成績單", "ESL期末成績單"));
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
 
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
             {
-                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
             };
 
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Click += delegate
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Click += delegate
             {
                 List<K12.Data.CourseRecord> esl_couse_list = K12.Data.Course.SelectByIDs(K12.Presentation.NLDPanels.Course.SelectedSource);
 

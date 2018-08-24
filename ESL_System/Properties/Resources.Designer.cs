@@ -61,6 +61,16 @@ namespace ESL_System.Properties {
         }
         
         /// <summary>
+        ///   查詢類型 System.Drawing.Bitmap 的當地語系化資源。
+        /// </summary>
+        internal static System.Drawing.Bitmap calc_64 {
+            get {
+                object obj = ResourceManager.GetObject("calc_64", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
         ///   查詢類似 &lt;ESLTemplate&gt;
         ///  &lt;Term Name=&quot;mid-Term&quot; Weight=&quot;50&quot; InputStartTime=&quot;2018/04/16 00:00&quot; InputEndTime=&quot;2018/04/22 23:59&quot;&gt;
         ///    &lt;Subject Name=&quot;Language Art&quot; Weight=&quot;50&quot;&gt;

@@ -20,15 +20,15 @@ namespace ESL_System_Kcbs_Report
             Catalog ribbon = RoleAclSource.Instance["課程"]["ESL報表"];
             ribbon.Add(new RibbonFeature("康橋ESL期末成績單", "康橋ESL期末成績單"));
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
 
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
             {
-                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Enable = UserAcl.Current["康橋ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
             };
 
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["康橋ESL期末成績單"].Click += delegate
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Click += delegate
             {
 
                 List<K12.Data.CourseRecord> esl_couse_list = K12.Data.Course.SelectByIDs(K12.Presentation.NLDPanels.Course.SelectedSource);
