@@ -57,13 +57,14 @@ namespace ESL_System
 
             MotherForm.RibbonBarItems["課程", "ESL課程"]["評量成績結算"].Click += delegate
             {
-                Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm();
+                Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm(K12.Presentation.NLDPanels.Course.SelectedSource);
 
                 if (form.ShowDialog() == System.Windows.Forms.DialogResult.Yes)
                 {
-                    CalculateTermScore cts = new CalculateTermScore(K12.Presentation.NLDPanels.Course.SelectedSource);
 
-                    cts.CalculateESLTermScore(); // 計算ESL 評量 成績
+                    CalculateTermScore cts = new CalculateTermScore(K12.Presentation.NLDPanels.Course.SelectedSource, form.target_exam_id);
+
+                    //cts.CalculateESLTermScore(); // 計算ESL 評量 成績
                 }
 
             };

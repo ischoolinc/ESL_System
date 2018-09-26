@@ -32,7 +32,7 @@ namespace ESL_System
 
         private List<ESLScore> eslscoreList = new List<ESLScore>(); // 先暫時這樣儲存 上傳用，之後會想改用scoreUpsertDict
 
-        public CalculateTermScore(List<string> courseIDList)
+        public CalculateTermScore(List<string> courseIDList,string exam_id)
         {
             _courseIDList = courseIDList;
         }
@@ -43,7 +43,16 @@ namespace ESL_System
 
 
             // 2018/06/12 抓取課程且其有ESL 樣板設定規則的，才做後續整理，  在table exam_template 欄位 description 不為空代表其為ESL 的樣板
-            string query = "SELECT course.id,course.course_name,exam_template.description FROM course LEFT JOIN  exam_template ON course.ref_exam_template_id =exam_template.id  WHERE course.id in( " + courseIDs + ") AND  exam_template.description !='' ";
+            string query = @"
+SELECT 
+    course.id
+    ,course.course_name
+    ,exam_template.description 
+FROM course 
+LEFT JOIN  exam_template ON course.ref_exam_template_id =exam_template.id  
+WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NOT NULL  ";
+
+
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
@@ -66,6 +75,11 @@ namespace ESL_System
                     ESLCourseList.Add(record);
                 }
             }
+
+
+
+
+
 
             string ESLcourseIDs = string.Join(",", _courseIDList);// 把真正是ESL 課程的ID 列出來
 
@@ -355,6 +369,15 @@ namespace ESL_System
             //拚SQL
             // 兜資料
             List<string> dataList = new List<string>();
+
+
+            // 沒有新增任何成績資料，代表所選ESL 課程都沒有成績，不需執行SQL
+            if (eslscoreList.Count == 0)
+            {
+                return;
+            }
+
+
             foreach (ESLScore score in eslscoreList)
             {
                 string data = string.Format(@"
@@ -373,7 +396,8 @@ namespace ESL_System
             string Data = string.Join(" UNION ALL", dataList);
 
 
-            string sql = string.Format(@"WITH score_data_row AS(			 
+            string sql = string.Format(@"
+WITH score_data_row AS(			 
                 {0}     
 ),delete_score AS(
 	DELETE
@@ -406,6 +430,10 @@ FROM
 
 
             MsgBox.Show("計算完成!");
+
+
+
+
         }
 
         
