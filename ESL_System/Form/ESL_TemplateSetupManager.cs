@@ -35,6 +35,9 @@ namespace ESL_System.Form
 
         private Dictionary<string, string> oriTemplateDescriptionDict = new Dictionary<string, string>();
 
+        private Dictionary<string, string> examID_NameDict = new Dictionary<string, string>(); // 系統 <examID,exam_name>
+        private Dictionary<string, string> examName_IDDict = new Dictionary<string, string>(); // 系統 <exam_name,examID>
+
         private ButtonItem currentItem
         {
             get { return _current_item; }
@@ -57,6 +60,7 @@ namespace ESL_System.Form
             hintGuideDict.Add("teacherKind", "點選左鍵選取: 教師一、教師二、教師三");
             hintGuideDict.Add("ScoreKind", "點選左鍵選取:分數、指標、評語");
             hintGuideDict.Add("AllowCustom", "點選左鍵選取:是、否");
+            hintGuideDict.Add("Exam", "選擇對應系統評量名稱");
 
             typeCovertDict.Add("Score", "分數");
             typeCovertDict.Add("Indicator", "指標");
@@ -125,6 +129,22 @@ namespace ESL_System.Form
                     }
                 }
             }
+
+
+            query = "select * from exam";
+
+            qh = new QueryHelper();
+            dt = qh.Select(query);
+
+            if (dt.Rows.Count > 0)
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    examID_NameDict.Add("" + dr["id"], "" + dr["exam_name"]);
+                    examName_IDDict.Add("" + dr["exam_name"],"" + dr["id"]);
+                }                
+            }
+
         }
 
         private void Workder_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -198,6 +218,8 @@ namespace ESL_System.Form
                             t.Weight = ele_term.Attribute("Weight").Value;
                             t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
                             t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
+
+                            t.Ref_exam_id = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id") .Value: "" ; // 2018/09/26 穎驊新增，因應要將 ESL 評量導入 成績系統，恩正說，在此加入評量對照
 
                             t.SubjectList = new List<Subject>();
 
@@ -506,6 +528,22 @@ namespace ESL_System.Form
                 new MenuItem("否",MenuItemNew_Click)};
                     LeftMouseClick(menuItems, e);
                     break;
+                case "Exam":
+                    //Declare the menu items and the shortcut menu.
+
+                    List<MenuItem> mList = new List<MenuItem>();
+
+                    foreach (string exam in examName_IDDict.Keys)
+                    {
+                        MenuItem m = new MenuItem(exam, MenuItemNew_Click);
+
+                        mList.Add(m);
+                    }
+
+                    menuItems = mList.ToArray();
+
+                    LeftMouseClick(menuItems, e);
+                    break;
                 default:
                     break;
             }
@@ -762,29 +800,37 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_term_node_percentage = new DevComponents.AdvTree.Node(); //比例
             DevComponents.AdvTree.Node new_term_node_inputStartTime = new DevComponents.AdvTree.Node(); //輸入開始時間
             DevComponents.AdvTree.Node new_term_node_inputEndTime = new DevComponents.AdvTree.Node(); //輸入結束時間
+            DevComponents.AdvTree.Node new_term_node_refExamID = new DevComponents.AdvTree.Node(); //對應系統試別名稱
 
             //項目
             new_term_node_name.Text = "名稱:";
             new_term_node_percentage.Text = "比例:";
             new_term_node_inputStartTime.Text = "成績輸入開始時間:";
             new_term_node_inputEndTime.Text = "成績輸入截止時間:";
+            new_term_node_refExamID.Text = "對應系統試別:";
             //node Tag
             new_term_node_name.Tag = "string";
             new_term_node_percentage.Tag = "integer";
             new_term_node_inputStartTime.Tag = "time";
             new_term_node_inputEndTime.Tag = "time";
+            new_term_node_refExamID.Tag = "Exam";
 
             //值
             new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell(t.Name));
             new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(t.Weight));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell(t.InputStartTime));
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell(t.InputEndTime));
+            new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell(examID_NameDict.ContainsKey(t.Ref_exam_id)?examID_NameDict[t.Ref_exam_id]:""));
 
             //說明
             new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_term_node_name.Tag]));
             new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_term_node_percentage.Tag]));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_term_node_inputStartTime.Tag]));
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_term_node_inputEndTime.Tag]));
+            new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_term_node_refExamID.Tag]));
+
+            //點擊事件
+            new_term_node_refExamID.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
 
             //設定為不能點選編輯，避免使用者誤用
             new_term_node_name.Cells[0].Editable = false;
@@ -795,18 +841,23 @@ namespace ESL_System.Form
             new_term_node_inputStartTime.Cells[2].Editable = false;
             new_term_node_inputEndTime.Cells[0].Editable = false;
             new_term_node_inputEndTime.Cells[2].Editable = false;
+            new_term_node_refExamID.Cells[0].Editable = false;
+            new_term_node_refExamID.Cells[2].Editable = false;
+
 
             //設定為不能拖曳，避免使用者誤用
             new_term_node_name.DragDropEnabled = false;
             new_term_node_percentage.DragDropEnabled = false;
             new_term_node_inputStartTime.DragDropEnabled = false;
             new_term_node_inputEndTime.DragDropEnabled = false;
+            new_term_node_refExamID.DragDropEnabled = false;
 
             //將子node 加入
             new_term_node.Nodes.Add(new_term_node_name);
             new_term_node.Nodes.Add(new_term_node_percentage);
             new_term_node.Nodes.Add(new_term_node_inputStartTime);
             new_term_node.Nodes.Add(new_term_node_inputEndTime);
+            new_term_node.Nodes.Add(new_term_node_refExamID);
 
             // 科目
             foreach (Subject s in t.SubjectList)
@@ -840,7 +891,7 @@ namespace ESL_System.Form
                 //說明
                 new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_subject_node_name.Tag]));
                 new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(hintGuideDict["" + new_subject_node_percentage.Tag]));
-
+            
                 //設定為不能點選編輯，避免使用者誤用
                 new_subject_node_name.Cells[0].Editable = false;
                 new_subject_node_name.Cells[2].Editable = false;
@@ -1264,6 +1315,7 @@ namespace ESL_System.Form
                 element_Term.SetAttribute("Weight", term_node.Nodes[1].Cells[1].Text);
                 element_Term.SetAttribute("InputStartTime", term_node.Nodes[2].Cells[1].Text);
                 element_Term.SetAttribute("InputEndTime", term_node.Nodes[3].Cells[1].Text);
+                element_Term.SetAttribute("Ref_exam_id", examName_IDDict.ContainsKey(term_node.Nodes[4].Cells[1].Text)? examName_IDDict[term_node.Nodes[4].Cells[1].Text]:"");
 
                 foreach (DevComponents.AdvTree.Node subject_node in term_node.Nodes)
                 {

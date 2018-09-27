@@ -77,6 +77,20 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NOT NUL
             }
 
 
+            // 抓取所選取課程，其評分樣版設定試別的順序，以利對應 ESLTerm 的成績 順序
+            query = @"
+SELECT 
+	course.id AS course_id
+	,te_include.ref_exam_id 
+	,exam_name
+FROM course 	
+	LEFT JOIN te_include ON te_include.ref_exam_template_id = course.ref_exam_template_id
+	LEFT JOIN exam ON exam.id = te_include.ref_exam_id
+WHERE course.id IN (" + courseIDs + @")
+ORDER BY course.id,,exam_name.display_order
+";
+
+
 
 
 

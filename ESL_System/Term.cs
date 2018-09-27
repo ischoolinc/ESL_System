@@ -29,6 +29,11 @@ namespace ESL_System
         public string InputEndTime { get; set; }
 
         /// <summary>
+        /// 子項目總比例
+        /// </summary>
+        public string Ref_exam_id { get; set; }
+
+        /// <summary>
         /// 子項目List
         /// </summary>
         public List<Subject> SubjectList { get; set; }
@@ -37,6 +42,10 @@ namespace ESL_System
         /// 子項目總比例
         /// </summary>
         public decimal SubjectTotalWeight { get; set; }
+
+
+
+
 
     }
 }
