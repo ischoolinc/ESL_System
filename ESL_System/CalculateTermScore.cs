@@ -10,31 +10,39 @@ using K12.Data;
 using System.Xml;
 using System.Data;
 using FISCA.Presentation.Controls;
+using K12.Data;
 
 namespace ESL_System
 {
     // 2018/6/12 穎驊新增 用來結算 ESL Term 、Subject 成績用
     class CalculateTermScore
     {
+        private string target_exam_id; //目標試別id
 
         private List<string> _courseIDList;
         private List<ESLCourse> ESLCourseList = new List<ESLCourse>();
+
+        private List<string> targetCourseExam = new List<string>(); //本次須計算的目標課程試別 <courseID + _ + ExamName>
+
 
         private Dictionary<string, List<ESLScore>> scoreDict = new Dictionary<string, List<ESLScore>>(); // 取得原本成績階層結構(Assessment)
         private Dictionary<string, List<ESLScore>> scoreUpsertDict = new Dictionary<string, List<ESLScore>>(); // 計算後要上傳、新增的成績放在這
 
         private Dictionary<string, List<Term>> scoreTemplateDict = new Dictionary<string, List<Term>>(); // 各課程的分數計算規則 
 
-        private Dictionary<string, decimal> scoreRatioDict = new Dictionary<string, decimal>(); // 各課程的分數比例
+        private Dictionary<string, decimal> scoreRatioDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分子
+
+        private Dictionary<string, decimal> scoreRatioTotalDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分母
 
         private Dictionary<string, ESLScore> subjectScoreDict = new Dictionary<string, ESLScore>(); // 計算用的科目成績字典
         private Dictionary<string, ESLScore> termScoreDict = new Dictionary<string, ESLScore>(); // 計算用的評量成績字典
 
         private List<ESLScore> eslscoreList = new List<ESLScore>(); // 先暫時這樣儲存 上傳用，之後會想改用scoreUpsertDict
 
-        public CalculateTermScore(List<string> courseIDList,string exam_id)
+        public CalculateTermScore(List<string> courseIDList, string exam_id)
         {
             _courseIDList = courseIDList;
+            target_exam_id = exam_id;
         }
 
         public void CalculateESLTermScore()
@@ -76,78 +84,6 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NOT NUL
                 }
             }
 
-
-            // 抓取所選取課程，其評分樣版設定試別的順序，以利對應 ESLTerm 的成績 順序
-            query = @"
-SELECT 
-	course.id AS course_id
-	,te_include.ref_exam_id 
-	,exam_name
-FROM course 	
-	LEFT JOIN te_include ON te_include.ref_exam_template_id = course.ref_exam_template_id
-	LEFT JOIN exam ON exam.id = te_include.ref_exam_id
-WHERE course.id IN (" + courseIDs + @")
-ORDER BY course.id,,exam_name.display_order
-";
-
-
-
-
-
-
-            string ESLcourseIDs = string.Join(",", _courseIDList);// 把真正是ESL 課程的ID 列出來
-
-            query = "SELECT* FROM $esl.gradebook_assessment_score WHERE ref_course_id in( " + ESLcourseIDs + ")"; // 抓取這些ESL 的所有成績資料
-            dt = qh.Select(query);
-
-            // 整理 既有的成績資料 (Assessment)
-            if (dt.Rows.Count > 0)
-            {
-                foreach (DataRow dr in dt.Rows)
-                {
-                    // 算是整理成績資料最重要的一行， assessment 欄位 為空，還有濾掉 custom_assessment 成績 代表此成績 是 Subject 或是 Term 成績
-                    if ("" + dr["assessment"] == "" || "" + dr["custom_assessment"] != "")
-                    {
-                        continue;
-                    }
-
-                    if (!scoreDict.ContainsKey("" + dr["ref_course_id"]))
-                    {
-                        ESLScore score = new ESLScore();
-
-                        score.ID = "" + dr["uid"];
-                        score.RefCourseID = "" + dr["ref_course_id"];
-                        score.RefStudentID = "" + dr["ref_student_id"];
-                        score.RefTeacherID = "" + dr["ref_teacher_id"];
-                        score.Term = "" + dr["term"];
-                        score.Subject = "" + dr["subject"];
-                        score.Assessment = "" + dr["assessment"];
-                        score.Custom_Assessment = "" + dr["custom_assessment"];
-                        score.Value = "" + dr["value"];
-
-                        scoreDict.Add("" + dr["ref_course_id"], new List<ESLScore>());
-
-                        scoreDict["" + dr["ref_course_id"]].Add(score);
-                    }
-                    else
-                    {
-                        ESLScore score = new ESLScore();
-
-                        score.ID = "" + dr["uid"];
-                        score.RefCourseID = "" + dr["ref_course_id"];
-                        score.RefStudentID = "" + dr["ref_student_id"];
-                        score.RefTeacherID = "" + dr["ref_teacher_id"];
-                        score.Term = "" + dr["term"];
-                        score.Subject = "" + dr["subject"];
-                        score.Assessment = "" + dr["assessment"];
-                        score.Custom_Assessment = "" + dr["custom_assessment"];
-                        score.Value = "" + dr["value"];
-
-                        scoreDict["" + dr["ref_course_id"]].Add(score);
-                    }
-                }
-            }
-
             // 解析計算規則
             foreach (ESLCourse course in ESLCourseList)
             {
@@ -167,6 +103,12 @@ ORDER BY course.id,,exam_name.display_order
                             t.Weight = ele_term.Attribute("Weight").Value;
                             t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
                             t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
+                            t.Ref_exam_id = ele_term.Attribute("Ref_exam_id").Value;
+
+                            if (target_exam_id == t.Ref_exam_id)
+                            {
+                                targetCourseExam.Add(course.ID + "_" + t.Name);
+                            }
 
                             t.SubjectList = new List<Subject>();
 
@@ -229,6 +171,69 @@ ORDER BY course.id,,exam_name.display_order
                 }
             }
 
+
+
+            string ESLcourseIDs = string.Join(",", _courseIDList);// 把真正是ESL 課程的ID 列出來
+
+            query = "SELECT* FROM $esl.gradebook_assessment_score WHERE ref_course_id in( " + ESLcourseIDs + ")"; // 抓取這些ESL 的所有成績資料
+            dt = qh.Select(query);
+
+            // 整理 既有的成績資料 (Assessment)
+            if (dt.Rows.Count > 0)
+            {
+                foreach (DataRow dr in dt.Rows)
+                {
+                    // 算是整理成績資料最重要的一行， assessment 欄位 為空，還有濾掉 custom_assessment 成績 代表此成績 是 Subject 或是 Term 成績
+                    if ("" + dr["assessment"] == "" || "" + dr["custom_assessment"] != "")
+                    {
+                        continue;
+                    }
+
+                    // 假如本成績資料 非在本次所選的評量，也將其拿掉
+                    if (!targetCourseExam.Contains("" + dr["ref_course_id"] + "_" + "" + dr["term"]))
+                    {
+                        continue;
+                    }
+
+                    if (!scoreDict.ContainsKey("" + dr["ref_course_id"]))
+                    {
+                        ESLScore score = new ESLScore();
+
+                        score.ID = "" + dr["uid"];
+                        score.RefCourseID = "" + dr["ref_course_id"];
+                        score.RefStudentID = "" + dr["ref_student_id"];
+                        score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.Term = "" + dr["term"];
+                        score.Subject = "" + dr["subject"];
+                        score.Assessment = "" + dr["assessment"];
+                        score.Custom_Assessment = "" + dr["custom_assessment"];
+                        score.Value = "" + dr["value"];
+
+                        scoreDict.Add("" + dr["ref_course_id"], new List<ESLScore>());
+
+                        scoreDict["" + dr["ref_course_id"]].Add(score);
+                    }
+                    else
+                    {
+                        ESLScore score = new ESLScore();
+
+                        score.ID = "" + dr["uid"];
+                        score.RefCourseID = "" + dr["ref_course_id"];
+                        score.RefStudentID = "" + dr["ref_student_id"];
+                        score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.Term = "" + dr["term"];
+                        score.Subject = "" + dr["subject"];
+                        score.Assessment = "" + dr["assessment"];
+                        score.Custom_Assessment = "" + dr["custom_assessment"];
+                        score.Value = "" + dr["value"];
+
+                        scoreDict["" + dr["ref_course_id"]].Add(score);
+                    }
+                }
+            }
+
+
+
             //計算成績 比例加減
             foreach (KeyValuePair<string, List<Term>> p in scoreTemplateDict)
             {
@@ -238,7 +243,7 @@ ORDER BY course.id,,exam_name.display_order
 
                     foreach (Subject s in t.SubjectList)
                     {
-                        t.SubjectTotalWeight += decimal.Parse(s.Weight); // 加總比例 之後才可以換算分別比例
+                        //t.SubjectTotalWeight += decimal.Parse(s.Weight); // 加總比例 之後才可以換算分別比例
 
                         s.AssessmentTotalWeight = 0;
 
@@ -246,7 +251,7 @@ ORDER BY course.id,,exam_name.display_order
                         {
                             if (a.Type == "Score") // 只取分數型成績
                             {
-                                s.AssessmentTotalWeight += decimal.Parse(a.Weight); // 加總比例 之後才可以換算分別比例
+                                //s.AssessmentTotalWeight += decimal.Parse(a.Weight); // 加總比例 之後才可以換算分別比例
                             }
                         }
                     }
@@ -268,14 +273,14 @@ ORDER BY course.id,,exam_name.display_order
                             {
                                 key_assessment = p.Key + "_" + t.Name + "_" + s.Name + "_" + a.Name;
 
-                                decimal ratio_assessment = decimal.Parse(a.Weight) / s.AssessmentTotalWeight;
+                                decimal ratio_assessment = decimal.Parse(a.Weight);
 
                                 scoreRatioDict.Add(key_assessment, ratio_assessment);
                             }
                         }
                         key_subject = p.Key + "_" + t.Name + "_" + s.Name;
 
-                        decimal ratio = decimal.Parse(s.Weight) / t.SubjectTotalWeight;
+                        decimal ratio = decimal.Parse(s.Weight);
 
                         scoreRatioDict.Add(key_subject, ratio);
                     }
@@ -288,47 +293,73 @@ ORDER BY course.id,,exam_name.display_order
                 string key_score_assessment = "";
 
                 string key_subject = "";
+                string key_term = "";
 
                 decimal subject_score_partial;
 
                 foreach (ESLScore score in p.Value)
                 {
                     key_score_assessment = p.Key + "_" + score.Term + "_" + score.Subject + "_" + score.Assessment; // 查分數比例的KEY 這些就夠
+
                     key_subject = p.Key + "_" + score.RefStudentID + "_" + score.Term + "_" + score.Subject; // 寫給學生的Subject 成績 還必須要有 studentID 才有獨立性
+
+                    key_term = p.Key + "_" + score.RefStudentID + "_" + score.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
 
                     if (scoreRatioDict.ContainsKey(key_score_assessment))
                     {
                         decimal assementScore;
                         if (decimal.TryParse(score.Value, out assementScore))
                         {
+                            subject_score_partial = Math.Round(assementScore * scoreRatioDict[key_score_assessment], 2, MidpointRounding.ToEven); // 四捨五入到第二位
+
+                            // 處理 subject分母
+                            if (!scoreRatioTotalDict.ContainsKey(key_subject))
+                            {
+                                scoreRatioTotalDict.Add(key_subject, scoreRatioDict[key_score_assessment]);
+                            }
+                            else
+                            {
+                                scoreRatioTotalDict[key_subject] += scoreRatioDict[key_score_assessment];
+                            }
+
+
+                            if (!subjectScoreDict.ContainsKey(key_subject))
+                            {
+                                ESLScore subjectScore = new ESLScore();
+
+                                subjectScore.RefCourseID = score.RefCourseID;
+                                subjectScore.RefStudentID = score.RefStudentID;
+                                subjectScore.RefTeacherID = score.RefTeacherID;
+                                subjectScore.Term = score.Term;
+                                subjectScore.Subject = score.Subject;
+                                subjectScore.Score = subject_score_partial;
+
+                                subjectScoreDict.Add(key_subject, subjectScore);
+                            }
+                            else
+                            {
+                                subjectScoreDict[key_subject].Score += subject_score_partial;
+                            }
                         }
                         else
                         {
-                            assementScore = 0; // 轉失敗(可能沒有輸入)，當0 分
-                        }
-
-                        subject_score_partial = Math.Round(assementScore * scoreRatioDict[key_score_assessment], 2); // 四捨五入到第二位
-
-                        if (!subjectScoreDict.ContainsKey(key_subject))
-                        {
-                            ESLScore subjectScore = new ESLScore();
-
-                            subjectScore.RefCourseID = score.RefCourseID;
-                            subjectScore.RefStudentID = score.RefStudentID;
-                            subjectScore.RefTeacherID = score.RefTeacherID;
-                            subjectScore.Term = score.Term;
-                            subjectScore.Subject = score.Subject;
-                            subjectScore.Score = subject_score_partial;
-
-                            subjectScoreDict.Add(key_subject, subjectScore);
-                        }
-                        else
-                        {
-                            subjectScoreDict[key_subject].Score += subject_score_partial;
+                            //assementScore = 0; // 轉失敗(可能沒有輸入)，當0 分
                         }
                     }
                 }
             }
+
+
+            // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
+            foreach (KeyValuePair<string, ESLScore> score in subjectScoreDict)
+            {
+                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
+
+                subjectScoreDict[score.Key].Score = Math.Round(subjectScoreDict[score.Key].Score / scoreRatioTotalDict[ratioTotalKey],2,MidpointRounding.ToEven);
+
+            }
+
+
 
             //計算成績 依照比例 等量換算成分數 儲存 在 scoreUpsertDict (term 成績)
             foreach (ESLScore subjectScore in subjectScoreDict.Values)
@@ -343,7 +374,20 @@ ORDER BY course.id,,exam_name.display_order
                 {
                     key_term = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
 
-                    term_score_partial = Math.Round(subjectScore.Score * scoreRatioDict[key_score_subject], 2); // 四捨五入到第二位
+                    term_score_partial = Math.Round(subjectScore.Score * scoreRatioDict[key_score_subject], 2,MidpointRounding.ToEven); // 四捨五入到第二位
+
+
+                    // 處理 term 分母
+                    if (!scoreRatioTotalDict.ContainsKey(key_term))
+                    {
+                        scoreRatioTotalDict.Add(key_term, scoreRatioDict[key_score_subject]);
+                    }
+                    else
+                    {
+                        scoreRatioTotalDict[key_term] += scoreRatioDict[key_score_subject];
+                    }
+
+
 
                     if (!termScoreDict.ContainsKey(key_term))
                     {
@@ -364,6 +408,16 @@ ORDER BY course.id,,exam_name.display_order
                 }
             }
 
+            // 計算Term成績後，現在將各自加權後的成績除以各自的的總權重
+            foreach (KeyValuePair<string, ESLScore> score in termScoreDict)
+            {
+                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
+
+                termScoreDict[score.Key].Score = Math.Round(termScoreDict[score.Key].Score / scoreRatioTotalDict[ratioTotalKey],2,MidpointRounding.ToEven);
+
+            }
+
+
 
             //2018/6/14 先暫時這樣整理，之後會想要用 scoreUpsertDict ，資料會比較齊
             foreach (ESLScore score in subjectScoreDict.Values)
@@ -376,6 +430,59 @@ ORDER BY course.id,,exam_name.display_order
                 eslscoreList.Add(score);
             }
 
+
+            // 取的學生修課紀錄
+            List<K12.Data.SCAttendRecord> scaList = SCAttend.SelectByCourseIDs(_courseIDList);
+
+            // 取得舊有評量成績
+            List<SCETakeRecord> scetakeList_Old = SCETake.SelectByCourseAndExam(_courseIDList, target_exam_id);
+
+            List<SCETakeRecord> updateList = new List<SCETakeRecord>();
+            List<SCETakeRecord> insertList = new List<SCETakeRecord>();
+
+
+            // 更新舊評量分數
+            foreach (SCETakeRecord scet in scetakeList_Old)
+            {
+                foreach (ESLScore score in termScoreDict.Values)
+                {
+                    if (scet.RefCourseID == score.RefCourseID && scet.RefStudentID == score.RefStudentID && GetScore(scet) != "" + score.Score)
+                    {
+                        SetScore(scet, "" + score.Score);
+
+                        updateList.Add(scet);
+                    }
+                }
+            }
+
+
+            // 新增 評量分數
+            foreach (SCAttendRecord sca in scaList)
+            {
+                // 沒在舊評量成績 就是本次要新增的項目
+                if (!scetakeList_Old.Any(s => s.RefSCAttendID == sca.ID))
+                {
+                    foreach (ESLScore score in termScoreDict.Values)
+                    {
+                        if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                        {
+                            SCETakeRecord sce = new SCETakeRecord();
+                            sce.RefSCAttendID = sca.ID;
+                            sce.RefExamID = target_exam_id;
+                            sce.RefStudentID = sca.RefStudentID;
+                            sce.RefCourseID = sca.RefCourseID;
+                            SetScore(sce, "" + score.Score);
+                            insertList.Add(sce);
+                        }
+
+                    }
+                }
+
+            }
+
+
+            K12.Data.SCETake.Update(updateList);
+            K12.Data.SCETake.Insert(insertList);
 
 
 
@@ -450,8 +557,35 @@ FROM
 
         }
 
-        
-        
+
+        private string GetScore(SCETakeRecord sce)
+        {
+            XmlElement elem = sce.ToXML().SelectSingleNode("Extension/Extension/Score") as XmlElement;
+
+            string score = elem == null ? string.Empty : elem.InnerText;
+
+            return score;
+        }
+
+
+        private void SetScore(SCETakeRecord sce, string score)
+        {
+            XmlElement root = sce.ToXML();
+            XmlElement elem = root.SelectSingleNode("Extension/Extension/Score") as XmlElement;
+
+            decimal d;
+            decimal.TryParse(score, out d);
+
+            if (elem != null)
+            {
+                elem.InnerText = d + "";
+            }
+
+            sce.Load(root);
+        }
+
+
+
 
     }
 

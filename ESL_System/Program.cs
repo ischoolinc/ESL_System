@@ -64,7 +64,7 @@ namespace ESL_System
 
                     CalculateTermScore cts = new CalculateTermScore(K12.Presentation.NLDPanels.Course.SelectedSource, form.target_exam_id);
 
-                    //cts.CalculateESLTermScore(); // 計算ESL 評量 成績
+                    cts.CalculateESLTermScore(); // 計算ESL 評量 成績
                 }
 
             };
