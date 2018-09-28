@@ -59,13 +59,7 @@ namespace ESL_System
             {
                 Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm(K12.Presentation.NLDPanels.Course.SelectedSource);
 
-                if (form.ShowDialog() == System.Windows.Forms.DialogResult.Yes)
-                {
 
-                    CalculateTermScore cts = new CalculateTermScore(K12.Presentation.NLDPanels.Course.SelectedSource, form.target_exam_id);
-
-                    cts.CalculateESLTermScore(); // 計算ESL 評量 成績
-                }
 
             };
 

@@ -15,31 +15,31 @@ namespace ESL_System.Form
     public partial class CheckCalculateTermForm : BaseForm
     {
         // 本次 ESL 成績要換算成 對應系統的 試別 id
-        public string target_exam_id = "";
+        private string _TargetExamId = "";
 
-        private Dictionary<string, string> examDict = new Dictionary<string, string>();
-        private List<string> _courseIDList;
-        private Dictionary<string, List<string>> course_ExamIDList_Dict = new Dictionary<string, List<string>>(); // 作為檢查該課程的評分樣板是否有該評量 <course_name,List<examID>>
+        private Dictionary<string, string> _ExamDict = new Dictionary<string, string>();
+        private List<string> _CourseIDList;
+        private Dictionary<string, List<string>> _CourseExamIDListDict = new Dictionary<string, List<string>>(); // 作為檢查該課程的評分樣板是否有該評量 <course_name,List<examID>>
 
 
         public CheckCalculateTermForm(List<string> courseIDList)
         {
             InitializeComponent();
-            _courseIDList = courseIDList;
+            _CourseIDList = courseIDList;
 
         }
 
         private void buttonX1_Click(object sender, EventArgs e)
         {
-            target_exam_id = examDict[comboBoxEx1.Text];
+            _TargetExamId = _ExamDict[comboBoxEx1.Text];
 
-            if (target_exam_id == "")
+            if (_TargetExamId == "")
             {
                 MsgBox.Show("請選擇計算試別!");
                 return;
             }
 
-            string courseIDs = string.Join(",", _courseIDList);
+            string courseIDs = string.Join(",", _CourseIDList);
 
             // 抓取課程上樣板，是否真的有設定所選對應試別
             string query = @"
@@ -58,31 +58,31 @@ ORDER BY course.id,ref_exam_id";
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
 
-            course_ExamIDList_Dict.Clear(); // 清空
+            _CourseExamIDListDict.Clear(); // 清空
 
             //整理目前的ESL 課程資料，其評分樣板有的評量
             if (dt.Rows.Count > 0)
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    if (!course_ExamIDList_Dict.ContainsKey("" + dr["course_name"]))
+                    if (!_CourseExamIDListDict.ContainsKey("" + dr["course_name"]))
                     {
-                        course_ExamIDList_Dict.Add("" + dr["course_name"], new List<string>());
-                        course_ExamIDList_Dict["" + dr["course_name"]].Add("" + dr["ref_exam_id"]);
+                        _CourseExamIDListDict.Add("" + dr["course_name"], new List<string>());
+                        _CourseExamIDListDict["" + dr["course_name"]].Add("" + dr["ref_exam_id"]);
 
                     }
                     else
                     {
-                        course_ExamIDList_Dict["" + dr["course_name"]].Add("" + dr["ref_exam_id"]);
+                        _CourseExamIDListDict["" + dr["course_name"]].Add("" + dr["ref_exam_id"]);
                     }
                 }
             }
 
             List<string> errorList = new List<string>();
 
-            foreach (KeyValuePair<string, List<string>> p in course_ExamIDList_Dict)
+            foreach (KeyValuePair<string, List<string>> p in _CourseExamIDListDict)
             {
-                if (!p.Value.Contains(target_exam_id))
+                if (!p.Value.Contains(_TargetExamId))
                 {
                     errorList.Add("所選取課程:「" + p.Key + "」，其評分樣本上無設定試別:「" + comboBoxEx1.Text + "」，請至教務作業/評分樣板設定 修改。");
                 }
@@ -108,7 +108,7 @@ ORDER BY course.id,ref_exam_id";
 
         private void CheckCalculateTermForm_Load(object sender, EventArgs e)
         {
-            string courseIDs = string.Join(",", _courseIDList);
+            string courseIDs = string.Join(",", _CourseIDList);
 
             // 若使用者選取課程沒有 ESL 的樣板設定 則提醒
             string query = @"
@@ -147,14 +147,14 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  "
             qh = new QueryHelper();
             dt = qh.Select(query);
 
-            examDict.Clear(); // 清空
+            _ExamDict.Clear(); // 清空
 
             //整理目前的ESL 課程資料
             if (dt.Rows.Count > 0)
             {
                 foreach (DataRow dr in dt.Rows)
                 {
-                    examDict.Add("" + dr["exam_name"], "" + dr["id"]); // <name,id>
+                    _ExamDict.Add("" + dr["exam_name"], "" + dr["id"]); // <name,id>
                 }
             }
             else
@@ -164,7 +164,7 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  "
             }
 
 
-            foreach (KeyValuePair<string, string> exam in examDict)
+            foreach (KeyValuePair<string, string> exam in _ExamDict)
             {
                 object o = exam.Key;
                 
