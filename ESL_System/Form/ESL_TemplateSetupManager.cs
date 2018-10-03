@@ -60,7 +60,7 @@ namespace ESL_System.Form
             _hintGuideDict.Add("teacherKind", "點選左鍵選取: 教師一、教師二、教師三");
             _hintGuideDict.Add("ScoreKind", "點選左鍵選取:分數、指標、評語");
             _hintGuideDict.Add("AllowCustom", "點選左鍵選取:是、否");
-            _hintGuideDict.Add("Exam", "選擇對應系統評量名稱");
+            _hintGuideDict.Add("Exam", "選擇對應系統評量名稱，不得空白、重覆。");
 
             _typeCovertDict.Add("Score", "分數");
             _typeCovertDict.Add("Indicator", "指標");
@@ -291,6 +291,7 @@ namespace ESL_System.Form
             linkLabel1.Enabled = true;
             linkLabel2.Enabled = true;
             linkLabel3.Enabled = true;
+            btnSave.Enabled = true;
         }
 
         private bool CanContinue()
@@ -346,7 +347,7 @@ namespace ESL_System.Form
 
             lblIsDirty.Visible = false;
             advTree1.Enabled = true;
-            btnSave.Enabled = true;
+
 
             Loading = false;
         }
@@ -576,6 +577,15 @@ namespace ESL_System.Form
                 CalculatePercentageToUI(false);// 加上百分比資料 非第一次載入 =false
             }
 
+            // 選擇試別後  檢驗規則
+            if (node_now.TagString == "Exam")
+            {
+                DevComponents.AdvTree.CellEditEventArgs _e = new DevComponents.AdvTree.CellEditEventArgs(node_now.Cells[2], DevComponents.AdvTree.eTreeAction.Mouse, "");
+
+                advTree1_AfterCellEditComplete(advTree1, _e);
+            }
+
+
             // 假若分數指標沒有選項，則會只再 新增"一項" 指標子項目設定
             if (mi.Text == "指標")
             {
@@ -759,6 +769,23 @@ namespace ESL_System.Form
                         btnSave.Enabled = true;
                     }
                     break;
+                // 試別
+                case "Exam":
+                    if (node_now.SelectedCell.Text == "" || CheckDuplicated())
+                    {
+                        //node_now.Style = DevComponents.AdvTree.NodeStyles.Red;
+                        //node_now.StyleSelected = DevComponents.AdvTree.NodeStyles.Red;
+                        node_now.Cells[2].Text = "<b><font color=\"#ED1C24\">" + _hintGuideDict["" + node_now.Tag] + "</font></b>"; //輸入規則錯誤，顯示紅字
+                        btnSave.Enabled = false;
+                    }
+                    else
+                    {
+                        //node_now.Style = null;
+                        //node_now.StyleSelected = null;
+                        node_now.Cells[2].Text = _hintGuideDict["" + node_now.Tag]; //輸入規則正確
+                        btnSave.Enabled = true;
+                    }
+                    break;
                 default:
                     break;
             }
@@ -766,6 +793,9 @@ namespace ESL_System.Form
             IsDirtyOrNot();// 檢查是否有更動資料
 
         }
+
+
+
 
         private void LeftMouseClick(MenuItem[] menuItems, MouseEventArgs e)
         {
@@ -830,7 +860,21 @@ namespace ESL_System.Form
             new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_percentage.Tag]));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_inputStartTime.Tag]));
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_inputEndTime.Tag]));
-            new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_refExamID.Tag]));
+
+
+            //試別有值才給存，無值，標紅色
+            if (new_term_node_refExamID.Cells[1].Text != "")
+            {
+                new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_refExamID.Tag]));
+                btnSave.Enabled = true;
+            }
+            else
+            {
+                new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell("<b><font color=\"#ED1C24\">" + _hintGuideDict["" + new_term_node_refExamID.Tag] + "</font></b>")); //輸入規則錯誤，顯示紅字                
+                btnSave.Enabled = false;
+            }
+
+
 
             //點擊事件
             new_term_node_refExamID.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
@@ -1102,6 +1146,9 @@ namespace ESL_System.Form
             //不用Add 改用Insert ，是因為可以指定位子，讓加入新試別功能可以永遠在最後一項。
             advTree1.Nodes.Add(new_term_node);
             //advTree1.Nodes.Insert(advTree1.Nodes.Count - 1, new_term_node);
+
+
+
         }
 
         //將各自含有比例項目 計算百分比後，加到項目名稱後面 ，
@@ -1273,22 +1320,78 @@ namespace ESL_System.Form
 
             UpdateHelper uh = new UpdateHelper();
 
-            string updQuery;
+            Dictionary<string, string> examWeightDict = GetExamIDWeightDict(elmRoot);
 
+            List<string> rawdataList = new List<string>();
 
-
-
-            // 看本次是否有 評量成績設定， 如果有，強制將 評量成績改為100 % (平時評量0%)
-            if (CheckExamSetting(elmRoot))
+            foreach (string examID in examWeightDict.Keys)
             {
-                //依照所選項目儲存
-                 updQuery = "UPDATE exam_template SET description ='" + description_xml + "',extension ='<Extension><ScorePercentage>100</ScorePercentage></Extension>' WHERE id ='" + esl_exam_template_id + "'";                                
+                string insertdata = string.Format(@"
+                    SELECT
+                        NULL :: BIGINT AS id
+                        ,{0}:: INTEGER AS ref_exam_template_id                  
+                        ,{1}:: INTEGER AS ref_exam_id
+                        ,1  :: BIT AS use_score
+                        ,1  :: BIT AS use_text
+                        ,{2}:: REAL AS weight
+                        ,1  :: BIT AS open_ta
+                        ,1  :: BIT AS input_required
+                        ,'<Extension><UseScore>是</UseScore><UseEffort>否</UseEffort><UseText>否</UseText><UseAssignmentScore>否</UseAssignmentScore></Extension>'  :: TEXT AS extension
+                        ,'INSERT' :: TEXT AS action
+                  ", esl_exam_template_id, examID, examWeightDict[examID]);
+                rawdataList.Add(insertdata);
+
+
             }
-            else
-            {
-                //依照所選項目儲存
-                updQuery = "UPDATE exam_template SET description ='" + description_xml + "' WHERE id ='" + esl_exam_template_id + "'";                                
-            }
+
+            string rawData = string.Join(" UNION ALL", rawdataList);
+
+            string updQuery = @"DELETE 
+                FROM te_include
+                WHERE ref_exam_template_id = "+ esl_exam_template_id;
+
+            uh.Execute(updQuery);
+
+            updQuery = "WITH ";
+
+            updQuery += string.Format(@"raw_data AS( {0} )", rawData);
+
+            updQuery += string.Format(@"                
+                ,insert_data AS
+                (   -- 新增 
+                INSERT INTO te_include(
+                    ref_exam_template_id
+                    ,ref_exam_id
+                    ,use_score   
+                    ,use_text
+                    ,weight
+                    ,open_ta   
+                    ,input_required
+                    ,extension
+                )
+                SELECT         
+                    raw_data.ref_exam_template_id:: INTEGER AS ref_exam_template_id   
+                    ,raw_data.ref_exam_id:: INTEGER AS ref_exam_id   
+                    ,raw_data.use_score::BIT AS use_score   
+                    ,raw_data.use_text::BIT AS use_text   
+                    ,raw_data.weight::REAL AS weight   
+                    ,raw_data.open_ta::BIT AS open_ta   
+                    ,raw_data.input_required::BIT AS input_required   
+                    ,raw_data.extension::TEXT AS extension       
+                FROM
+                    raw_data
+                WHERE raw_data.action ='INSERT'                                    
+                )
+  ", esl_exam_template_id);
+
+            updQuery += string.Format(@"
+                UPDATE exam_template 
+                    SET description = '" + description_xml + "'" +
+                    ", extension = '<Extension><ScorePercentage>100</ScorePercentage></Extension>' " +
+                "WHERE id = '" + esl_exam_template_id + "'");
+
+
+            //updQuery = "UPDATE exam_template SET description ='" + description_xml + "',extension ='<Extension><ScorePercentage>100</ScorePercentage></Extension>' WHERE id ='" + esl_exam_template_id + "'";
 
             //執行sql，更新
             uh.Execute(updQuery);
@@ -1620,29 +1723,49 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_term_node_percentage = new DevComponents.AdvTree.Node(); //比例
             DevComponents.AdvTree.Node new_term_node_inputStartTime = new DevComponents.AdvTree.Node(); //輸入開始時間
             DevComponents.AdvTree.Node new_term_node_inputEndTime = new DevComponents.AdvTree.Node(); //輸入結束時間
+            DevComponents.AdvTree.Node new_term_node_refExamID = new DevComponents.AdvTree.Node(); //對應系統試別名稱
 
             //項目
             new_term_node_name.Text = "名稱:";
             new_term_node_percentage.Text = "比例:";
             new_term_node_inputStartTime.Text = "成績輸入開始時間:";
             new_term_node_inputEndTime.Text = "成績輸入截止時間:";
+            new_term_node_refExamID.Text = "對應系統試別:";
+
             //node Tag
             new_term_node_name.Tag = "string";
             new_term_node_percentage.Tag = "integer";
             new_term_node_inputStartTime.Tag = "time";
             new_term_node_inputEndTime.Tag = "time";
+            new_term_node_refExamID.Tag = "Exam";
 
             //值
             new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入試別名稱"));
             new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("0"));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell());
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell());
+            new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell());
 
             //說明
             new_term_node_name.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_name.Tag]));
             new_term_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_percentage.Tag]));
             new_term_node_inputStartTime.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_inputStartTime.Tag]));
             new_term_node_inputEndTime.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_inputEndTime.Tag]));
+
+            //試別有值才給存，無值，標紅色
+            if (new_term_node_refExamID.Cells[1].Text != "")
+            {
+                new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_term_node_refExamID.Tag]));
+                btnSave.Enabled = true;
+            }
+            else
+            {
+                new_term_node_refExamID.Cells.Add(new DevComponents.AdvTree.Cell("<b><font color=\"#ED1C24\">" + _hintGuideDict["" + new_term_node_refExamID.Tag] + "</font></b>")); //輸入規則錯誤，顯示紅字                
+                btnSave.Enabled = false;
+            }
+
+            //點擊事件
+            new_term_node_refExamID.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
 
             //設定為不能點選編輯，避免使用者誤用
             new_term_node_name.Cells[0].Editable = false;
@@ -1653,18 +1776,22 @@ namespace ESL_System.Form
             new_term_node_inputStartTime.Cells[2].Editable = false;
             new_term_node_inputEndTime.Cells[0].Editable = false;
             new_term_node_inputEndTime.Cells[2].Editable = false;
+            new_term_node_refExamID.Cells[0].Editable = false;
+            new_term_node_refExamID.Cells[2].Editable = false;
 
             //設定為不能拖曳，避免使用者誤用
             new_term_node_name.DragDropEnabled = false;
             new_term_node_percentage.DragDropEnabled = false;
             new_term_node_inputStartTime.DragDropEnabled = false;
             new_term_node_inputEndTime.DragDropEnabled = false;
+            new_term_node_refExamID.DragDropEnabled = false;
 
             //將子node 加入
             new_term_node.Nodes.Add(new_term_node_name);
             new_term_node.Nodes.Add(new_term_node_percentage);
             new_term_node.Nodes.Add(new_term_node_inputStartTime);
             new_term_node.Nodes.Add(new_term_node_inputEndTime);
+            new_term_node.Nodes.Add(new_term_node_refExamID);
 
             return new_term_node;
         }
@@ -1726,6 +1853,17 @@ namespace ESL_System.Form
                     foreach (DevComponents.AdvTree.Node node2 in node.Nodes)
                     {
                         if (node2.Text == "名稱:")
+                        {
+                            if (!checkDuplicatedList.Contains(node2.Cells[1].Text))
+                            {
+                                checkDuplicatedList.Add(node2.Cells[1].Text);
+                            }
+                            else
+                            {
+                                duplicated = true;
+                            }
+                        }
+                        if (node2.Text == "對應系統試別:")
                         {
                             if (!checkDuplicatedList.Contains(node2.Cells[1].Text))
                             {
@@ -1912,12 +2050,13 @@ namespace ESL_System.Form
         }
 
 
-        // 確認本次 ESL設定樣板 是否有 任何系統評量設定
-        private bool CheckExamSetting(XElement elmRoot)
-        {
-            bool hasExamSetting = false;
 
-            string Ref_exam_id = "";
+
+        // 自 評分樣版設定抓取 試別id 對應的比重
+        private Dictionary<string, string> GetExamIDWeightDict(XElement elmRoot)
+        {
+            Dictionary<string, string> dict = new Dictionary<string, string>();
+            
 
             if (elmRoot != null)
             {
@@ -1925,17 +2064,26 @@ namespace ESL_System.Form
                 {
                     foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
                     {
-                        
-                        Ref_exam_id = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id").Value : "";
+                        string refExamId = "";
+                        string weight = "";
 
+                        refExamId = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id").Value : "";
+                        weight = ele_term.Attribute("Weight") != null ? ele_term.Attribute("Weight").Value : "";
+
+                        if (!dict.ContainsKey(refExamId))
+                        {
+                            dict.Add(refExamId, weight);
+                        }
                     }
                 }
             }
 
-            hasExamSetting = Ref_exam_id != "" ? true : false;
 
-            return hasExamSetting;
+
+
+            return dict;
         }
+
 
     }
 }

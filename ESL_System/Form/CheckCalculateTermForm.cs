@@ -98,6 +98,10 @@ ORDER BY course.id,ref_exam_id";
             }
 
 
+            CalculateTermExamScore ctes = new CalculateTermExamScore(_CourseIDList, _TargetExamId);
+
+            ctes.CalculateESLTermScore();
+
             this.DialogResult = DialogResult.Yes;
         }
 

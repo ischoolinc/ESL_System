@@ -41,6 +41,8 @@
             this.btnDelete = new DevComponents.DotNetBar.ButtonX();
             this.buttonItem4 = new DevComponents.DotNetBar.ButtonItem();
             this.peTemplateName1 = new DevComponents.DotNetBar.PanelEx();
+            this.importXmlBtn = new DevComponents.DotNetBar.ButtonX();
+            this.ExportXmlBtn = new DevComponents.DotNetBar.ButtonX();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
             this.linkLabel1 = new System.Windows.Forms.LinkLabel();
             this.linkLabel3 = new System.Windows.Forms.LinkLabel();
@@ -94,8 +96,6 @@
             this.elementStyle1 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle2 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle3 = new DevComponents.DotNetBar.ElementStyle();
-            this.ExportXmlBtn = new DevComponents.DotNetBar.ButtonX();
-            this.importXmlBtn = new DevComponents.DotNetBar.ButtonX();
             this.npLeft.SuspendLayout();
             this.navigationPanePanel1.SuspendLayout();
             this.ipList.SuspendLayout();
@@ -295,6 +295,32 @@
             this.peTemplateName1.TabIndex = 6;
             this.peTemplateName1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.peTemplateName1_MouseDoubleClick);
             // 
+            // importXmlBtn
+            // 
+            this.importXmlBtn.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
+            this.importXmlBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.importXmlBtn.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
+            this.importXmlBtn.Location = new System.Drawing.Point(665, 9);
+            this.importXmlBtn.Name = "importXmlBtn";
+            this.importXmlBtn.Size = new System.Drawing.Size(99, 23);
+            this.importXmlBtn.TabIndex = 22;
+            this.importXmlBtn.Text = "匯入設定XML";
+            this.importXmlBtn.Visible = false;
+            this.importXmlBtn.Click += new System.EventHandler(this.importXmlBtn_Click);
+            // 
+            // ExportXmlBtn
+            // 
+            this.ExportXmlBtn.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
+            this.ExportXmlBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.ExportXmlBtn.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
+            this.ExportXmlBtn.Location = new System.Drawing.Point(560, 9);
+            this.ExportXmlBtn.Name = "ExportXmlBtn";
+            this.ExportXmlBtn.Size = new System.Drawing.Size(99, 23);
+            this.ExportXmlBtn.TabIndex = 21;
+            this.ExportXmlBtn.Text = "匯出設定XML";
+            this.ExportXmlBtn.Visible = false;
+            this.ExportXmlBtn.Click += new System.EventHandler(this.ExportXmlBtn_Click);
+            // 
             // linkLabel2
             // 
             this.linkLabel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -373,6 +399,7 @@
             this.btnSave.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
+            this.btnSave.Enabled = false;
             this.btnSave.Location = new System.Drawing.Point(643, 38);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 23);
@@ -835,32 +862,6 @@
             this.elementStyle3.PaddingRight = 1;
             this.elementStyle3.PaddingTop = 1;
             this.elementStyle3.TextColor = System.Drawing.Color.Black;
-            // 
-            // ExportXmlBtn
-            // 
-            this.ExportXmlBtn.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
-            this.ExportXmlBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.ExportXmlBtn.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.ExportXmlBtn.Location = new System.Drawing.Point(560, 9);
-            this.ExportXmlBtn.Name = "ExportXmlBtn";
-            this.ExportXmlBtn.Size = new System.Drawing.Size(99, 23);
-            this.ExportXmlBtn.TabIndex = 21;
-            this.ExportXmlBtn.Text = "匯出設定XML";
-            this.ExportXmlBtn.Visible = false;
-            this.ExportXmlBtn.Click += new System.EventHandler(this.ExportXmlBtn_Click);
-            // 
-            // importXmlBtn
-            // 
-            this.importXmlBtn.AccessibleRole = System.Windows.Forms.AccessibleRole.PushButton;
-            this.importXmlBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.importXmlBtn.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.importXmlBtn.Location = new System.Drawing.Point(665, 9);
-            this.importXmlBtn.Name = "importXmlBtn";
-            this.importXmlBtn.Size = new System.Drawing.Size(99, 23);
-            this.importXmlBtn.TabIndex = 22;
-            this.importXmlBtn.Text = "匯入設定XML";
-            this.importXmlBtn.Visible = false;
-            this.importXmlBtn.Click += new System.EventHandler(this.importXmlBtn_Click);
             // 
             // ESL_TemplateSetupManager
             // 

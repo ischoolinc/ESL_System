@@ -59,7 +59,7 @@ namespace ESL_System
             {
                 Form.CheckCalculateTermForm form = new Form.CheckCalculateTermForm(K12.Presentation.NLDPanels.Course.SelectedSource);
 
-
+                form.ShowDialog();
 
             };
 

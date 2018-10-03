@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Assessment.cs" />
+    <Compile Include="CalculateTermExamScore.cs" />
     <Compile Include="CalculateTermScore.cs" />
     <Compile Include="ESLCourse.cs" />
     <Compile Include="ESLScore.cs" />

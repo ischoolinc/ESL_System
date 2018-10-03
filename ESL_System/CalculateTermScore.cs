@@ -15,7 +15,7 @@ using K12.Data;
 namespace ESL_System
 {
     // 2018/6/12 穎驊新增 用來結算 ESL Term 、Subject 成績用
-    class CalculateTermScore
+    class CalculateTermScore_Old
     {
         private string target_exam_id; //目標試別id
 
@@ -39,7 +39,7 @@ namespace ESL_System
 
         private List<ESLScore> _eslscoreList = new List<ESLScore>(); // 先暫時這樣儲存 上傳用，之後會想改用scoreUpsertDict
 
-        public CalculateTermScore(List<string> courseIDList, string exam_id)
+        public CalculateTermScore_Old(List<string> courseIDList, string exam_id)
         {
             _courseIDList = courseIDList;
             target_exam_id = exam_id;
