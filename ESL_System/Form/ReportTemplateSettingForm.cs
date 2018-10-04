@@ -444,6 +444,12 @@ namespace ESL_System.Form
                             assessmentContainsComment = true;
                         }
 
+                        if (assessment.Type != "Score") //  非分數型成績 跳過 不寫入
+                        {
+                            continue;
+                        }
+
+
                         builder.InsertCell();
                         builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + assessmentCounter+ " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
 
