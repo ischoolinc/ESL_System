@@ -292,17 +292,24 @@ namespace ESL_System.Form
                 row["教師二"] = scar.Course.Teachers.Count > 1 ? scar.Course.Teachers.Find(x => x.Sequence == 2).TeacherName : "";
                 row["教師三"] = scar.Course.Teachers.Count > 2 ? scar.Course.Teachers.Find(x => x.Sequence == 3).TeacherName : "";
 
-
-                foreach (KeyValuePair<string, string> p in _itemDict[scar.RefCourseID])
+                if (_itemDict.ContainsKey(scar.RefCourseID))
                 {
-                    row[p.Key] = p.Value;
+                    foreach (KeyValuePair<string, string> p in _itemDict[scar.RefCourseID])
+                    {
+                        row[p.Key] = p.Value;
+                    }
                 }
 
 
-                foreach (KeyValuePair<string, string> p in _scoreDict[id])
+                if (_scoreDict.ContainsKey(id))
                 {
-                    row[p.Key] = p.Value;
+                    foreach (KeyValuePair<string, string> p in _scoreDict[id])
+                    {
+                        row[p.Key] = p.Value;
+                    }
                 }
+
+         
 
                 data.Rows.Add(row);
 
