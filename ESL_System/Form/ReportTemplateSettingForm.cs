@@ -342,7 +342,8 @@ namespace ESL_System.Form
                     "學生中文姓名",
                     "教師一",
                     "教師二",
-                    "教師三"
+                    "教師三",
+                    "電子報表辨識編號"
                 })
             {
                 builder.InsertCell();
@@ -378,15 +379,18 @@ namespace ESL_System.Form
                 builder.EndRow();
 
                 builder.InsertCell();
-                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + termCounter + " \\* MERGEFORMAT ", "«I" + termCounter + "»");
+                //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + termCounter + " \\* MERGEFORMAT ", "«I" + termCounter + "»");
+                builder.Write(term.Name);
 
                 builder.InsertCell();
-                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + termCounter + " \\* MERGEFORMAT ", "«TS" + termCounter + "»");
+                //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + termCounter + " \\* MERGEFORMAT ", "«TS" + termCounter + "»");
+                builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數" + " \\* MERGEFORMAT ", "«TS»");
 
                 builder.InsertCell();
-                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + termCounter+ " \\* MERGEFORMAT ", "«TW" + termCounter + "»");
+                //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + termCounter+ " \\* MERGEFORMAT ", "«TW" + termCounter + "»");
+                builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數" + " \\* MERGEFORMAT ", "«TW»");
 
-                termCounter++;
+                //termCounter++;
 
                 builder.EndRow();
                 builder.EndTable();
@@ -401,17 +405,22 @@ namespace ESL_System.Form
 
                     builder.StartTable();
                     builder.InsertCell();
+                    builder.Write("科目名稱");
+                    builder.InsertCell();
                     builder.Write("科目分數");
                     builder.InsertCell();
-                    builder.Write("科目比重");
+                    builder.Write("科目比重");                    
                     builder.EndRow();
 
-                    builder.InsertCell();
-                    builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + subjectCounter + " \\* MERGEFORMAT ", "«SS" + subjectCounter + "»");
-                    builder.InsertCell();
-                    builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + subjectCounter+ " \\* MERGEFORMAT ", "«SW" + subjectCounter + "»");
 
-                    subjectCounter++;
+                    builder.InsertCell();
+                    builder.Write(subject.Name);
+                    builder.InsertCell();
+                    builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數" + " \\* MERGEFORMAT ", "«SS»");
+                    builder.InsertCell();
+                    builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重" + " \\* MERGEFORMAT ", "«SW»");
+
+                    //subjectCounter++;
 
                     builder.EndRow();
                     builder.EndTable();
@@ -451,13 +460,16 @@ namespace ESL_System.Form
 
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + assessmentCounter+ " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
+                        //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "名稱" + assessmentCounter + " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
+                        builder.Write(assessment.Name);
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + assessmentCounter+" \\* MERGEFORMAT ", "«AW" + assessmentCounter + "»");
+                        //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "比重" + assessmentCounter + " \\* MERGEFORMAT ", "«AW" + assessmentCounter + "»");
+                        builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重"  + " \\* MERGEFORMAT ", "«AW»");
 
                         builder.InsertCell();
-                        builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + assessmentCounter+" \\* MERGEFORMAT ", "«S" + assessmentCounter + "»");
+                        //builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "分數" + assessmentCounter + " \\* MERGEFORMAT ", "«S" + assessmentCounter + "»");
+                        builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"  + " \\* MERGEFORMAT ", "«AS»");
 
                         assessmentCounter++;
 
@@ -486,11 +498,11 @@ namespace ESL_System.Form
                             if (assessment.Type == "Indicator") // 檢查看有沒有　Indicator　，專為 Indicator 畫張表
                             {
                                 builder.InsertCell();
-                                builder.Write(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目");
+                                builder.Write(assessment.Name);
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_指標" + assessmentCounter+ " \\* MERGEFORMAT ", "«I" + assessmentCounter + "»");
+                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標" + " \\* MERGEFORMAT ", "«I»");
                                 builder.EndRow();
-                                assessmentCounter++;
+                                //assessmentCounter++;
                             }
                         }
                         builder.EndTable();
@@ -515,9 +527,9 @@ namespace ESL_System.Form
                             if (assessment.Type == "Comment") // 檢查看有沒有　Comment　，專為 Comment 畫張表
                             {
                                 builder.InsertCell();
-                                builder.Write(term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目");
+                                builder.Write(assessment.Name);
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "子項目_評語" + assessmentCounter+" \\* MERGEFORMAT ", "«C" + assessmentCounter + "»");
+                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語" +" \\* MERGEFORMAT ", "«C»");
                                 builder.EndRow();
                                 assessmentCounter++;
                             }

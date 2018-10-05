@@ -127,6 +127,12 @@
     <Compile Include="CalculateTermScore.cs" />
     <Compile Include="ESLCourse.cs" />
     <Compile Include="ESLScore.cs" />
+    <Compile Include="Form\PrintESLReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\PrintESLReportForm.Designer.cs">
+      <DependentUpon>PrintESLReportForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form\ESL_KcbsFinalReportFormNEW.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -238,6 +244,9 @@
     <None Include="Resource\loading.gif" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="Form\PrintESLReportForm.resx">
+      <DependentUpon>PrintESLReportForm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form\ESL_KcbsFinalReportFormNEW.resx">
       <DependentUpon>ESL_KcbsFinalReportFormNEW.cs</DependentUpon>
     </EmbeddedResource>

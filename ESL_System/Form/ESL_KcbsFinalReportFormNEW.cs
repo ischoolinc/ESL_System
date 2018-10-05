@@ -471,7 +471,7 @@ namespace ESL_System
 
         private void ReportBuilding(object sender, RunWorkerCompletedEventArgs e)
         {
-            MotherForm.SetStatusBarMessage(" ESL康橋期末成績單產生完成");
+            MotherForm.SetStatusBarMessage(" ESL成績單產生完成");
 
             Document doc = (Document)e.Result;
             doc.MailMerge.DeleteFields();
@@ -504,7 +504,7 @@ namespace ESL_System
 
             SaveFileDialog sd = new SaveFileDialog();
             sd.Title = "另存新檔";
-            sd.FileName = "ESL康橋期末成績單.docx";
+            sd.FileName = "ESL成績單.docx";
             sd.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
             if (sd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {

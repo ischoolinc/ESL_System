@@ -64,37 +64,28 @@ namespace ESL_System
             };
 
             Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
-            ribbon3.Add(new RibbonFeature("ESL期末成績單", "ESL期末成績單"));
+            ribbon3.Add(new RibbonFeature("ESL成績單", "ESL報表"));
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
 
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
             {
-                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Enable = UserAcl.Current["ESL期末成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
             };
 
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL期末成績單"].Click += delegate
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Click += delegate
             {
-                List<K12.Data.CourseRecord> esl_couse_list = K12.Data.Course.SelectByIDs(K12.Presentation.NLDPanels.Course.SelectedSource);
+                List<string> esl_couse_list = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
-                ESL_KcbsFinalReportFormNEW form = new ESL_KcbsFinalReportFormNEW(esl_couse_list);
+                Form.PrintESLReportForm printform = new Form.PrintESLReportForm(esl_couse_list);
+
+                printform.ShowDialog();
 
             };
 
             
-            //Catalog ribbon4 = RoleAclSource.Instance["教務作業"]["功能按鈕"];
-            //ribbon4.Add(new RibbonFeature("ESL期中分班", "ESL期中分班"));
 
-            //RibbonBarButton group = Course.Instance.RibbonBarItems["教務"]["ESL期中分班"];
-            //group.Size = RibbonBarButton.MenuButtonSize.Medium;
-            //group.Image = Properties.Resources.meeting_refresh_64;
-            //group.Enable = UserAcl.Current["ESL期中分班"].Executable;
-            //group.Click += delegate
-            //{
-            //    if (Course.Instance.SelectedList.Count > 0)
-            //        new SwapAttendStudents(Course.Instance.SelectedList.Count).ShowDialog();
-            //};
 
 
         }

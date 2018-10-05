@@ -29,7 +29,7 @@ namespace ESL_System
         public string InputEndTime { get; set; }
 
         /// <summary>
-        /// 子項目總比例
+        /// 參考試別id
         /// </summary>
         public string Ref_exam_id { get; set; }
 

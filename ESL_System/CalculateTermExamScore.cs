@@ -66,10 +66,7 @@ namespace ESL_System
             _worker.ProgressChanged += new ProgressChangedEventHandler(Worker_ProgressChanged);
             _worker.WorkerReportsProgress = true;
 
-
             _worker.RunWorkerAsync();
-
-
           
         }
 
