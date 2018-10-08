@@ -18,9 +18,9 @@ namespace ESL_System
         [FISCA.MainMethod()]
         public static void Main()
         {
-            FISCA.UDT.AccessHelper _AccessHelper = new FISCA.UDT.AccessHelper();
+            FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
 
-            _AccessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
+            accessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
 
             Catalog ribbon = RoleAclSource.Instance["教務作業"]["功能按鈕"];
             ribbon.Add(new RibbonFeature("ESL評分樣版設定", "ESL評分樣版設定"));
@@ -76,15 +76,47 @@ namespace ESL_System
 
             MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Click += delegate
             {
-                List<string> esl_couse_list = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
-                Form.PrintESLReportForm printform = new Form.PrintESLReportForm(esl_couse_list);
+                Form.PrintESLReportForm printform = new Form.PrintESLReportForm(eslCouseList);
 
                 printform.ShowDialog();
 
             };
 
-            
+
+            Catalog ribbon4 = RoleAclSource.Instance["課程"]["ESL課程"];
+            ribbon4.Add(new RibbonFeature("ESL課程成績輸入狀況", "成績輸入狀況"));
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Enable = false;
+
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
+            {
+                if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0)
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Enable = UserAcl.Current["ESL課程成績輸入狀況"].Executable;
+                }
+                else
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Enable = false;
+                }
+            };
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Image = Properties.Resources.calc_64;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Size = RibbonBarButton.MenuButtonSize.Medium;
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["成績輸入狀況"].Click += delegate
+            {
+
+                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+
+                Form.ESLCourseScoreStatusForm form = new Form.ESLCourseScoreStatusForm(eslCouseList);
+
+                form.ShowDialog();
+
+            };
+
+
 
 
 

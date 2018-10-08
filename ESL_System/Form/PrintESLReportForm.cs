@@ -19,12 +19,12 @@ namespace ESL_System.Form
 
         private List<string> _courseIDList;
 
-        private BackgroundWorker _worker;
-
         private List<K12.Data.CourseRecord> _eslCouseList;
 
         private List<string> _refAssessmentSetupIDList;
 
+        private BackgroundWorker _worker;
+        
         // 依照樣板編號 分類 各自的 樣板
         private Dictionary<string, Document> _documentDict;
 
@@ -34,13 +34,9 @@ namespace ESL_System.Form
         // 儲放ESL 成績單 科目、比重設定 的dict 其結構為 <courseID,<key,value>>
         private Dictionary<string, Dictionary<string, string>> _itemDict = new Dictionary<string, Dictionary<string, string>>();
 
-
         // 儲放每一個評分樣版 對應的 功能變數欄位 <assessmentSetupID,DataTable>
         private Dictionary<string, DataTable> _assessmentSetupDataTableDict = new Dictionary<string, DataTable>();
-
-        // 儲放每一個學生的修課 對應的 功能變數欄位 <studentID_courseID,DataTable>
-        private Dictionary<string, DataTable> _scoreDataTableDict = new Dictionary<string, DataTable>();
-
+        
         // 評分樣版 id 對應的修課課程id 對照
         private Dictionary<string, string> _assessmentSetupIDPairDict = new Dictionary<string, string>();
 
@@ -218,12 +214,12 @@ namespace ESL_System.Form
                     if (_scoreDict.ContainsKey(id))
                     {
                         // 指標型成績
-                        if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + "_" + termWord + "_" + subjectWord + "_" + assessmentWord))
+                        if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
                             _scoreDict[id].Add("評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標", "" + row["value"]);
                         }
                         // 評語型成績
-                        else if (_commentList.Contains("" + row["ref_course_id"] + "_" + "_" + termWord + "_" + subjectWord + "_" + assessmentWord))
+                        else if (_commentList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
                             _scoreDict[id].Add("評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語", "" + row["value"]);
                         }
@@ -259,18 +255,6 @@ namespace ESL_System.Form
             #endregion
 
 
-
-            //// 配對學生 與 其功能變數關係
-            //foreach (K12.Data.SCAttendRecord scar in scList)
-            //{
-            //    string id = scar.RefStudentID + "_" + scar.RefCourseID;
-
-            //    string assessmentSetID = _courseIDPairDict[scar.RefCourseID];
-
-            //    _scoreDataTableDict.Add(id, _assessmentSetupDataTableDict[assessmentSetID]);
-            //}
-
-
             foreach (K12.Data.SCAttendRecord scar in scList)
             {
                 string id = scar.RefStudentID + "_" + scar.RefCourseID;
@@ -294,18 +278,18 @@ namespace ESL_System.Form
 
                 if (_itemDict.ContainsKey(scar.RefCourseID))
                 {
-                    foreach (KeyValuePair<string, string> p in _itemDict[scar.RefCourseID])
+                    foreach (string mergeKey in _itemDict[scar.RefCourseID].Keys)
                     {
-                        row[p.Key] = p.Value;
+                        row[mergeKey] = _itemDict[scar.RefCourseID][mergeKey];
                     }
                 }
 
 
                 if (_scoreDict.ContainsKey(id))
                 {
-                    foreach (KeyValuePair<string, string> p in _scoreDict[id])
+                    foreach (string mergeKey  in _scoreDict[id].Keys)
                     {
-                        row[p.Key] = p.Value;
+                        row[mergeKey] = _scoreDict[id][mergeKey];
                     }
                 }
 
@@ -531,6 +515,10 @@ namespace ESL_System.Form
 
         private DataTable GetMergeField(List<Term> termList, string assessmentSetupIDs)
         {
+            // 計算權重用的字典(因為使用者在介面設定的權重數值 不一定就是想在報表上顯示的)
+            // 目前康橋報表希望能夠將，每一個Subject、assessment 的比重 換算成為對於期中考的比例
+            Dictionary<string, float> weightCalDict = new Dictionary<string, float>();
+
             DataTable dataTable = new DataTable();
 
             #region 固定變數
@@ -568,27 +556,84 @@ namespace ESL_System.Form
                     _itemDict[_assessmentSetupIDPairDict[assessmentSetupIDs]].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", term.Weight);  //term 比重 
                 }
 
+                // 計算比重用，先整理 Term 、 Subject  的 總和
+                foreach (Subject subject in term.SubjectList)
+                {
+                    // Term
+                    if (!weightCalDict.ContainsKey(term.Name + "_SubjectTotal") )
+                    {
+                        if (float.TryParse(subject.Weight, out float f))
+                        {
+                            weightCalDict.Add(term.Name + "_SubjectTotal", f);
+                        }
+                    }
+                    else
+                    {
+                        if (float.TryParse(subject.Weight, out float f))
+                        {
+                            weightCalDict[term.Name + "_SubjectTotal"] += f;
+                        }
+                    }
+
+                    // Subject
+                    if (!weightCalDict.ContainsKey(term.Name + "_" + subject.Name))
+                    {
+                        if (float.TryParse(subject.Weight, out float f))
+                        {
+                            weightCalDict.Add(term.Name + "_" + subject.Name, f);
+                        }
+                    }
+
+                }
 
                 foreach (Subject subject in term.SubjectList)
                 {
                     dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重");
                     dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"); // Subject 分數本身 先暫時這樣處理之後要有類別整理
 
-                    _itemDict[_assessmentSetupIDPairDict[assessmentSetupIDs]].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", subject.Weight); //subject比重 
+
+                    string subjectWieght = "" + Math.Round((float.Parse(subject.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"]), 2, MidpointRounding.ToEven);
+                    
+                    _itemDict[_assessmentSetupIDPairDict[assessmentSetupIDs]].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", subjectWieght); //subject比重 
+
+                    // 計算比重用，先整理 Assessment  的 總和
+                    foreach (Assessment assessment in subject.AssessmentList)
+                    {                   
+                        if (!weightCalDict.ContainsKey(term.Name + "_" + subject.Name + "_AssessmentTotal"))
+                        {
+                            if (float.TryParse(assessment.Weight, out float f))
+                            {
+                                weightCalDict.Add(term.Name + "_" + subject.Name + "_AssessmentTotal", f);
+                            }
+                        }
+                        else
+                        {
+                            if (float.TryParse(assessment.Weight, out float f))
+                            {
+                                weightCalDict[term.Name + "_" + subject.Name + "_AssessmentTotal"] += f;
+                            }
+                        }
+                    }
+
 
 
                     foreach (Assessment assessment in subject.AssessmentList)
-                    {
-                        dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重");
-                        dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數");
+                    {                        
+                        if (assessment.Type == "Score") //分數型成績 才增加
+                        {
+                            dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重");
+                            dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數");
 
-                        _itemDict[_assessmentSetupIDPairDict[assessmentSetupIDs]].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", assessment.Weight); //assessment比重 
+                            string assessmentWieght = ""+ Math.Round((weightCalDict[term.Name + "_" + subject.Name] * float.Parse(assessment.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"] * weightCalDict[term.Name + "_" + subject.Name + "_AssessmentTotal"]), 2, MidpointRounding.ToEven);
 
+                            _itemDict[_assessmentSetupIDPairDict[assessmentSetupIDs]].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", assessmentWieght); //assessment比重 
+
+                        }
                         if (assessment.Type == "Indicator") // 檢查看有沒有　　Indicator　，有的話另外存List 做對照
                         {
                             dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標");
 
-                            string key = _assessmentSetupIDPairDict[assessmentSetupIDs] + "_" + term.Name + "_" + subject.Name + "_" + assessment.Name;
+                            string key = _assessmentSetupIDPairDict[assessmentSetupIDs] + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_');
 
                             // 作為對照 key 為 courseID_termName_subjectName_assessment_Name
                             if (!_indicatorList.Contains(key))
@@ -601,7 +646,7 @@ namespace ESL_System.Form
                         {
                             dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語");
 
-                            string key = _assessmentSetupIDPairDict[assessmentSetupIDs] + "_" + term.Name + "_" + subject.Name + "_" + assessment.Name;
+                            string key = _assessmentSetupIDPairDict[assessmentSetupIDs] + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_');
 
                             // 作為對照 key 為 courseID_termName_subjectName_assessment_Name
                             if (!_commentList.Contains(key))
