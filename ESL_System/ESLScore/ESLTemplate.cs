@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ESL_System
 {
-    class ESLTemplate
+    public class ESLTemplate
     {
 
         /// <summary>

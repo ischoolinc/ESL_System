@@ -99,11 +99,14 @@
             this.chCourseName});
             this.listView.FullRowSelect = true;
             this.listView.Location = new System.Drawing.Point(6, 75);
+            this.listView.MultiSelect = false;
             this.listView.Name = "listView";
             this.listView.Size = new System.Drawing.Size(992, 575);
             this.listView.TabIndex = 4;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
+            this.listView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView_ItemSelectionChanged);
+            this.listView.DoubleClick += new System.EventHandler(this.listView_DoubleClick);
             // 
             // chCourseName
             // 
@@ -121,6 +124,7 @@
             this.btnExport.Size = new System.Drawing.Size(138, 23);
             this.btnExport.TabIndex = 5;
             this.btnExport.Text = "匯出到 Excel";
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // btnClose
             // 
