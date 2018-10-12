@@ -21,6 +21,15 @@ namespace ESL_System.Form
         private string _targetSubjectName;
         private string _targetAssessmentName;
 
+        // 目標分數種類(Score、Indicator、Comment)
+        private string _targetScoreType;
+
+        // 指標性評語 可以使用項目
+        private List<Indicators> _targetIndicatorList = new List<Indicators>();
+
+        // 評語型項目 字數上限
+        private string _commentLimit;
+
         private ESLTemplate _eslTemplate;
 
         private Dictionary<string, List<ESLScore>> _scoreDict = new Dictionary<string, List<ESLScore>>();
@@ -29,8 +38,7 @@ namespace ESL_System.Form
 
         private BackgroundWorker _worker;
 
-
-
+       
         public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, List<K12.Data.SCAttendRecord> scaList)
         {
             InitializeComponent();
@@ -39,6 +47,8 @@ namespace ESL_System.Form
             _targetTermName = targetTermName;
 
             _eslTemplate = eslTemplate;
+
+            
 
             _scoreDict = scoreDict;
 
@@ -51,6 +61,37 @@ namespace ESL_System.Form
 
         }
 
+        public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, string targetSubjectName, string targetAssessmentName, List<K12.Data.SCAttendRecord> scaList)
+        {
+            InitializeComponent();
+
+            _targetCourseName = targetCourseName;
+            _targetTermName = targetTermName;
+            _targetSubjectName = targetSubjectName;
+            _targetAssessmentName = targetAssessmentName;
+
+            _eslTemplate = eslTemplate;
+
+            _targetScoreType = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).Type;
+
+            _targetIndicatorList = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).IndicatorsList;
+
+            _commentLimit = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).InputLimit;
+
+            _scoreDict = scoreDict;
+
+            _scaList = scaList;
+
+            labelX1.Text = _targetCourseName + "/" + _targetSubjectName + "/" + _targetAssessmentName ; // 課程名稱 / 科目名稱 / 評量名稱
+
+            cboSubject.Visible = false;
+            cboAssessment.Visible = false;
+            labelX2.Visible = false;
+            labelX3.Visible = false;
+
+            FillScore();
+        }
+
         private void cboSubject_SelectedIndexChanged(object sender, EventArgs e)
         {
             cboAssessment.Enabled = true;
@@ -61,6 +102,7 @@ namespace ESL_System.Form
 
         private void cboAssessment_SelectedIndexChanged(object sender, EventArgs e)
         {
+            _targetAssessmentName = "" + cboAssessment.SelectedItem;
             FillScore();
         }
 
@@ -101,8 +143,7 @@ namespace ESL_System.Form
         {
             dataGridViewX1.Rows.Clear();
 
-            _targetAssessmentName = "" + cboAssessment.SelectedItem;
-
+           
             List<ESLScore> eslScoreList = new List<ESLScore>();
 
             foreach (ESLScore scoreItem in _scoreDict[_targetSubjectName])
@@ -149,19 +190,13 @@ namespace ESL_System.Form
             cboSubject.SuspendLayout();
             cboAssessment.SuspendLayout();
             dataGridViewX1.SuspendLayout();
-            buttonX1.SuspendLayout();
-            buttonX2.SuspendLayout();
-
+            buttonX1.Enabled = false;
+           
             _worker.RunWorkerAsync();
 
-
-
         }
 
-        private void buttonX2_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
+
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -214,10 +249,11 @@ namespace ESL_System.Form
                     ,'{3}'::TEXT AS term
                     ,'{4}'::TEXT AS subject
                     ,'{5}'::TEXT AS assessment
-                    ,'{6}'::TEXT AS value
-                    ,'{7}'::INTEGER AS uid
+                    ,'{6}'::TEXT AS custom_assessment
+                    ,'{7}'::TEXT AS value
+                    ,'{8}'::INTEGER AS uid
                     ,'UPDATE'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,score.Value, score.ID);
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value, score.ID);
 
                 dataList.Add(data);
             }
@@ -232,10 +268,11 @@ namespace ESL_System.Form
                     ,'{3}'::TEXT AS term
                     ,'{4}'::TEXT AS subject
                     ,'{5}'::TEXT AS assessment
-                    ,'{6}'::TEXT AS value
-                    ,'{7}'::INTEGER AS uid
+                    ,'{6}'::TEXT AS custom_assessment
+                    ,'{7}'::TEXT AS value
+                    ,'{8}'::INTEGER AS uid
                     ,'INSERT'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,score.Value, 0);  // insert 給 uid = 0
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value, 0);  // insert 給 uid = 0
 
                 dataList.Add(data);
             }
@@ -255,6 +292,7 @@ WITH score_data_row AS(
         ,term = score_data_row.term
         ,subject = score_data_row.subject
         ,assessment = score_data_row.assessment
+        ,custom_assessment = score_data_row.custom_assessment
         ,value = score_data_row.value
     FROM 
         score_data_row    
@@ -269,6 +307,7 @@ INSERT INTO $esl.gradebook_assessment_score(
 	,term
 	,subject
     ,assessment
+    ,custom_assessment
 	,value
 )
 SELECT 
@@ -278,6 +317,7 @@ SELECT
 	,score_data_row.term::TEXT AS term	
 	,score_data_row.subject::TEXT AS subject	
     ,score_data_row.assessment::TEXT AS assessment	
+    ,score_data_row.custom_assessment::TEXT AS custom_assessment
 	,score_data_row.value::TEXT AS value	
 FROM
 	score_data_row
@@ -303,9 +343,8 @@ WHERE action ='INSERT'", Data);
             // 繼續 畫面控制項
             cboSubject.ResumeLayout();
             cboAssessment.ResumeLayout();
-            dataGridViewX1.ResumeLayout();
-            buttonX1.ResumeLayout();
-            buttonX2.ResumeLayout();
+            dataGridViewX1.ResumeLayout();            
+            buttonX1.Enabled = true;
 
             MsgBox.Show("上傳完成!");
         }
@@ -315,8 +354,73 @@ WHERE action ='INSERT'", Data);
             FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
         }
 
+        private void dataGridViewX1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
+        {
 
 
+            DataGridViewCell cell = dataGridViewX1.Rows[e.RowIndex].Cells[e.ColumnIndex];
 
+            cell.ErrorText = String.Empty;
+
+            if (_targetScoreType == "Score")
+            {
+                int i = 0;
+
+                if (!int.TryParse("" + e.FormattedValue, out i))
+                {
+                    cell.ErrorText = "請輸入數值。";
+
+                }
+            }
+            if (_targetScoreType == "Indicator")
+            {
+                if (_targetIndicatorList.Find(indicator => indicator.Name == "" + e.FormattedValue) ==null)
+                {
+                    List<string> indicatorList = new List<string>();
+
+                    string indicators = "";
+
+                    foreach (Indicators indicator in _targetIndicatorList)
+                    {
+                        indicatorList.Add(indicator.Name);
+                    }
+
+                    indicators = string.Join("、", indicatorList);
+
+                    cell.ErrorText = "請輸入" + indicators + "之一的文字";
+                }
+
+
+            }
+            if (_targetScoreType == "Comment")
+            {
+                if (e.FormattedValue.ToString().Length > int.Parse(_commentLimit))
+                {
+                    cell.ErrorText = "請輸入小於" + _commentLimit + "字數的評語";
+                }
+            }
+
+
+        }
+
+        private void dataGridViewX1_CellValidated(object sender, DataGridViewCellEventArgs e)
+        {
+            foreach (DataGridViewRow row in dataGridViewX1.Rows)
+            {
+                //只檢查分數欄，有錯誤就不給存
+                DataGridViewCell cell = dataGridViewX1.Rows[row.Index].Cells[5];
+
+                if (cell.ErrorText != String.Empty)
+                {
+                    buttonX1.Enabled = false;
+                }
+                else
+                {
+                    buttonX1.Enabled = true;
+                }
+
+            }
+
+        }
     }
 }

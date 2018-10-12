@@ -12,6 +12,7 @@ using System.Data;
 using FISCA.Data;
 using System.Xml.Linq;
 using System.ComponentModel;
+using FISCA.Presentation.Controls;
 
 namespace ESL_System.Form
 {
@@ -19,6 +20,9 @@ namespace ESL_System.Form
     {
 
         private List<CourseListViewItem> _courseListViewItemList;
+
+        private List<CourseDataGridViewRow> _courseDataGridViewRowList;
+
         private List<string> _CourseIDList;
         private List<ESLCourse> _ESLCourseList = new List<ESLCourse>();
 
@@ -30,8 +34,14 @@ namespace ESL_System.Form
         // 目標試別(Term)名稱
         private string _targetTermName;
 
-        // 目標課程ID (listItem tag)
+        // 目標課程ID (listItem tag 、DataGridViewRow Tag)
         private string _targetCourseID;
+
+        // 目標科目名稱 (DataGridViewColumn tag)
+        string _targetSubjectName;
+
+        // 目標評量名稱 (DataGridViewCell tag)
+        string _targetAssessmentName; 
 
         //  ESL 課程ID 與 課程名稱 的對照
         private Dictionary<string, string> _ESLCourseIDNameDict = new Dictionary<string, string>();
@@ -250,6 +260,7 @@ namespace ESL_System.Form
 
             _targetTermName = "" + cboExam.SelectedItem;
 
+            #region ListView 舊介面
             // 清內容
             listView.Items.Clear();
 
@@ -257,6 +268,9 @@ namespace ESL_System.Form
             listView.Columns.Clear();
 
             listView.Columns.Add("課程名稱", 200);
+
+            listView.Columns.Add("填寫完畢項目", 130);
+
 
             // 依目前 所選樣板、試別 動態產生 listView 表頭
             foreach (Term term in _ESLTemplateDict[_targetTemplateID].TermList)
@@ -267,17 +281,78 @@ namespace ESL_System.Form
                     {
                         foreach (Assessment assessment in subject.AssessmentList)
                         {
-                            listView.Columns.Add(subject.Name + "_" + assessment.Name, (subject.Name.Length + assessment.Name.Length) * 9);
+                            listView.Columns.Add(subject.Name + " / " + assessment.Name, (subject.Name.Length + assessment.Name.Length) * 9);
                         }
                     }
                 }
             }
+            #endregion
+
+
+            #region DataGridView  新介面
+            // 清內容
+            dataGridViewX1.Rows.Clear();
+
+            // 清表頭
+            dataGridViewX1.Columns.Clear();
+
+            // 課程名稱表頭
+            DataGridViewColumn colCourseName = new DataGridViewColumn();
+
+            colCourseName.CellTemplate = new DataGridViewTextBoxCell();
+            colCourseName.Name = "colCourseName";
+            colCourseName.HeaderText = "課程名稱";
+            colCourseName.ReadOnly = true;
+            colCourseName.Width = 200;
+            dataGridViewX1.Columns.Add(colCourseName);
+
+            // 填寫完畢項目表頭
+            DataGridViewColumn colTotalStatus = new DataGridViewColumn();
+
+            colTotalStatus.CellTemplate = new DataGridViewTextBoxCell();
+            colTotalStatus.Name = "colTotalStatus";
+            colTotalStatus.HeaderText = "填寫完畢項目";
+            colTotalStatus.ReadOnly = true;
+            colTotalStatus.Width = 130;
+            dataGridViewX1.Columns.Add(colTotalStatus);
+
+
+            // 依目前 所選樣板、試別 動態產生 DataGridView 表頭
+            foreach (Term term in _ESLTemplateDict[_targetTemplateID].TermList)
+            {
+                if (term.Name == _targetTermName)
+                {
+                    foreach (Subject subject in term.SubjectList)
+                    {
+                        foreach (Assessment assessment in subject.AssessmentList)
+                        {
+
+                            DataGridViewColumn col = new DataGridViewColumn();
+
+                            col.CellTemplate = new DataGridViewTextBoxCell();
+                            col.Name = "Col_" + subject.Name + "_" + assessment.Name;
+                            col.HeaderText = subject.Name + " / " + assessment.Name;
+                            col.ReadOnly = true;
+                            col.Width = (subject.Name.Length + assessment.Name.Length) * 9;
+
+                            col.Tag = subject.Name; // 將subject 資訊 tag 放在col
+
+                            dataGridViewX1.Columns.Add(col);
+                        }
+                    }
+                }
+            } 
+            #endregion
+
 
             // 暫停畫面控制項
+            chkDisplayNotFinish.Enabled = false;
             cboTemplate.SuspendLayout();
             cboExam.SuspendLayout();
             listView.SuspendLayout();
-            
+            dataGridViewX1.SuspendLayout();
+
+
             _worker.RunWorkerAsync();
 
 
@@ -310,7 +385,7 @@ namespace ESL_System.Form
 
             #region 建立應有成績名單
 
-            
+
 
             _scoreDict.Clear(); // 每次重抓都把成績Dict 清乾淨
 
@@ -325,7 +400,7 @@ namespace ESL_System.Form
                     continue;
                 }
 
-                _worker.ReportProgress(10 + 50 * ( scaCount++/ _scaList.Count), "取得修課學生資料...");
+                _worker.ReportProgress(10 + 50 * (scaCount++ / _scaList.Count), "取得修課學生資料...");
 
                 // 目標樣板設定
                 List<Term> termList = _ESLTemplateDict[_targetTemplateID].TermList;
@@ -494,9 +569,10 @@ namespace ESL_System.Form
 
             int scoreCount = 0;
 
+            // 舊的填寫 ListView 方式
             foreach (string courseID in _scoreDict.Keys)
             {
-                
+
                 _worker.ReportProgress(60 + 30 * (scoreCount++ / _scoreDict.Keys.Count), "取得學生成績資料...");
 
                 // 假如該課程 為採用目前所選 樣板
@@ -511,7 +587,24 @@ namespace ESL_System.Form
                 }
             }
 
+            // 填 DataGridView
+            _courseDataGridViewRowList = new List< CourseDataGridViewRow>();
 
+            foreach (string courseID in _scoreDict.Keys)
+            {
+
+                _worker.ReportProgress(60 + 30 * (scoreCount++ / _scoreDict.Keys.Count), "取得學生成績資料...");
+
+                // 假如該課程 為採用目前所選 樣板
+                if (_ESLCourseIDExamTermIDDict[courseID] == _targetTemplateID)
+                {
+                    CourseDataGridViewRow row = new CourseDataGridViewRow(_ESLCourseIDNameDict[courseID], _scoreDict[courseID], _ESLTemplateDict[_targetTemplateID], _targetTermName);
+
+                    row.Tag = courseID; // 用課程ID 當作 Tag
+
+                    _courseDataGridViewRowList.Add(row);
+                }
+            }
         }
 
 
@@ -523,10 +616,28 @@ namespace ESL_System.Form
         {
             if (list.Count <= 0) return;
 
+
             listView.SuspendLayout();
             listView.Items.Clear();
             listView.Items.AddRange(list.ToArray());
             listView.ResumeLayout();
+
+        }
+
+
+        /// <summary>
+        /// 將課程填入 DataGridView
+        /// </summary>
+        private void FillCourses(List<CourseDataGridViewRow> list)
+        {
+            if (list.Count <= 0) return;
+
+
+            dataGridViewX1.SuspendLayout();
+            dataGridViewX1.Rows.Clear();
+            dataGridViewX1.Rows.AddRange(list.ToArray());
+            dataGridViewX1.ResumeLayout();
+
         }
 
 
@@ -549,6 +660,7 @@ namespace ESL_System.Form
         private void chkDisplayNotFinish_CheckedChanged(object sender, EventArgs e)
         {
             FillCourses(GetDisplayList());
+            FillCourses(GetDisplayDataGridViewList());
         }
 
         /// <summary>
@@ -573,6 +685,29 @@ namespace ESL_System.Form
             }
         }
 
+
+        /// <summary>
+        /// 取得要顯示的 CourseListViewItemList
+        /// </summary>
+        /// <returns></returns>
+        private List<CourseDataGridViewRow> GetDisplayDataGridViewList()
+        {
+            if (chkDisplayNotFinish.Checked == true)
+            {
+                List<CourseDataGridViewRow> list = new List<CourseDataGridViewRow>();
+                foreach (CourseDataGridViewRow item in _courseDataGridViewRowList)
+                {
+                    if (item.IsFinish) continue;
+                    list.Add(item);
+                }
+                return list;
+            }
+            else
+            {
+                return _courseDataGridViewRowList;
+            }
+        }
+
         /// <summary>
         /// 按下「匯出到 Excel」時觸發
         /// </summary>
@@ -580,63 +715,65 @@ namespace ESL_System.Form
         /// <param name="e"></param>
         private void btnExport_Click(object sender, EventArgs e)
         {
-            if (listView.Items.Count <= 0) return;
+            Workbook book = new Workbook();
+            book.Worksheets.Clear();
+            Worksheet ws = book.Worksheets[book.Worksheets.Add()];
+            ws.Name = "ESL課程成績輸入檢視.xls";
 
-            saveFileDialog1.FileName = string.Format("ESL課程成績輸入檢視");
-            if (saveFileDialog1.ShowDialog() == DialogResult.OK)
+            int index = 0;
+            Dictionary<string, int> map = new Dictionary<string, int>();
+
+            #region 建立標題
+            for (int i = 0; i < dataGridViewX1.Columns.Count; i++)
             {
-                Workbook book = new Workbook();
-                book.Worksheets.Clear();
-                Worksheet ws = book.Worksheets[book.Worksheets.Add()];
-                ws.Name = string.Format("ESL課程成績輸入檢視");
+                DataGridViewColumn col = dataGridViewX1.Columns[i];
+                ws.Cells[index, i].PutValue(col.HeaderText);
+                map.Add(col.HeaderText, i);
+            }
+            index++;
+            #endregion
 
-                #region 加入 Header
+            #region 填入內容
+            foreach (DataGridViewRow row in dataGridViewX1.Rows)
+            {
+                if (row.IsNewRow) continue;
 
-                int row = 0;
-
-                // 依序 填入目前表頭
-                foreach (ColumnHeader header in listView.Columns)
+                foreach (DataGridViewCell cell in row.Cells)
                 {
-                    ws.Cells[row, header.Index].PutValue(header.Text);
+                    int column = map[cell.OwningColumn.HeaderText];
+                    ws.Cells[index, column].PutValue("" + cell.Value);
                 }
+                index++;
+            }
+            #endregion
 
-
-
-
-                #endregion
-
-                #region 加入每一筆課程輸入狀況
-
-                listView.SuspendLayout();
-
-
-
-                foreach (CourseListViewItem item in listView.Items)
-                {
-                    row++;
-
-                    int col = 0;
-
-                    foreach (CourseListViewItem.ListViewSubItem subItem in item.SubItems)
-                    {
-                        ws.Cells[row, col++].PutValue(subItem.Text);
-                    }
-
-                }
-                listView.ResumeLayout();
-
-                #endregion
-
-                ws.AutoFitColumns();
+            SaveFileDialog sd = new SaveFileDialog();
+            sd.FileName = "ESL課程成績輸入檢視";
+            sd.Filter = "Excel檔案(*.xlsx)|*.xlsx";
+            if (sd.ShowDialog() == DialogResult.OK)
+            {
+                DialogResult result = new DialogResult();
 
                 try
                 {
-                    book.Save(saveFileDialog1.FileName + ".Xlsx");
-                    Framework.MsgBox.Show("匯出完成。");
+                    book.Save(sd.FileName, SaveFormat.Xlsx);
+                    result = MsgBox.Show("檔案儲存完成，是否開啟檔案?", "是否開啟", MessageBoxButtons.YesNo);
                 }
                 catch (Exception ex)
                 {
-                    Framework.MsgBox.Show("匯出失敗。" + ex.Message);
+                    MsgBox.Show("儲存失敗。" + ex.Message);
+                }
+
+                if (result == DialogResult.Yes)
+                {
+                    try
+                    {
+                        System.Diagnostics.Process.Start(sd.FileName);
+                    }
+                    catch (Exception ex)
+                    {
+                        MsgBox.Show("開啟檔案發生失敗:" + ex.Message, "錯誤", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
                 }
             }
         }
@@ -653,7 +790,7 @@ namespace ESL_System.Form
         }
 
         /// <summary>
-        /// 每一筆課程的評量狀況
+        /// 每一筆課程的評量狀況 (listView)
         /// </summary>
         private class CourseListViewItem : ListViewItem
         {
@@ -744,6 +881,41 @@ namespace ESL_System.Form
                 }
 
                 // 依目前 所選樣板、試別 對出 與表頭 相應的內容
+
+                // 數出總項目 未填寫完畢項目
+                foreach (Term term in ESLTemplateDict.TermList)
+                {
+                    if (term.Name == targetTermName)
+                    {
+                        int total = 0;
+                        int scoreCount = 0;
+
+
+                        foreach (Subject subject in term.SubjectList)
+                        {
+                            foreach (Assessment assessment in subject.AssessmentList)
+                            {
+                                total++;
+
+                                int assessmentTotal = assessmentTotalCountDict[subject.Name + "_" + assessment.Name];
+                                int assessmentScoreCount = assessmentCountDict[subject.Name + "_" + assessment.Name];
+
+                                // 子項目 總數 等於 有分數 的數量，就是 完成
+                                if (assessmentTotal == assessmentScoreCount)
+                                {
+                                    scoreCount++;
+                                }
+                            }
+                        }
+
+                        string ScoreField = string.Format("{0}/{1}", scoreCount, total);
+
+                        // 填總項目 已完成 數量
+                        this.SubItems.Add(ScoreField).ForeColor = (total == scoreCount) ? Color.Black : Color.Red;
+                    }
+                }
+
+                // 子項目 每一個學生分數的填寫 狀態
                 foreach (Term term in ESLTemplateDict.TermList)
                 {
                     if (term.Name == targetTermName)
@@ -775,6 +947,181 @@ namespace ESL_System.Form
 
 
 
+            }
+
+
+        }
+
+
+        /// <summary>
+        /// 每一筆課程的評量狀況 (DataGridView)
+        /// </summary>
+        private class CourseDataGridViewRow : DataGridViewRow
+        {
+            //  已輸入人數 / 總人數 (教師名稱)
+            private const string Format = "{0}/{1} ({2})";
+
+            private bool _is_finish;
+            public bool IsFinish { get { return _is_finish; } }
+
+
+            // 紀錄每一個 subject_assessment 的 分子
+            private Dictionary<string, int> assessmentCountDict = new Dictionary<string, int>();
+
+            // 紀錄每一個 subject_assessment 的 total 分母
+            private Dictionary<string, int> assessmentTotalCountDict = new Dictionary<string, int>();
+
+            // 紀錄每一個 subject_assessment 與老師名字的配對
+            private Dictionary<string, string> assessmentTeacherNametDict = new Dictionary<string, string>();
+
+
+            //每一次 傳一筆 Course 有的 subjectDict 進來，還有目前 template ，targetTermName
+            public CourseDataGridViewRow(string courseName, Dictionary<string, List<ESLScore>> subjectDict, ESLTemplate ESLTemplateDict, string targetTermName)
+            {
+                _is_finish = true;
+
+                // 數出 個項目的 輸入情況
+                foreach (Term term in ESLTemplateDict.TermList)
+                {
+                    if (term.Name == targetTermName)
+                    {
+                        foreach (Subject subject in term.SubjectList)
+                        {
+                            foreach (Assessment assessment in subject.AssessmentList)
+                            {
+                                foreach (string subjectName in subjectDict.Keys)
+                                {
+                                    if (subject.Name == subjectName)
+                                    {
+                                        foreach (ESLScore scoreItem in subjectDict[subjectName])
+                                        {
+                                            if (assessment.Name == scoreItem.Assessment)
+                                            {
+                                                // 有值 才加分子
+                                                if (scoreItem.HasValue)
+                                                {
+                                                    // 子項目 分子
+                                                    if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
+                                                    {
+                                                        assessmentCountDict.Add(subject.Name + "_" + assessment.Name, 1);
+                                                    }
+                                                    else
+                                                    {
+                                                        assessmentCountDict[subject.Name + "_" + assessment.Name]++;
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    // 子項目 分子
+                                                    if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
+                                                    {
+                                                        assessmentCountDict.Add(subject.Name + "_" + assessment.Name, 0);
+                                                    }
+
+                                                }
+
+                                                // 子項目 分母
+                                                if (!assessmentTotalCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
+                                                {
+                                                    assessmentTotalCountDict.Add(subject.Name + "_" + assessment.Name, 1);
+                                                }
+                                                else
+                                                {
+                                                    assessmentTotalCountDict[subject.Name + "_" + assessment.Name]++;
+                                                }
+
+                                                // 子項目 老師名稱
+                                                if (!assessmentTeacherNametDict.ContainsKey(subject.Name + "_" + assessment.Name))
+                                                {
+                                                    assessmentTeacherNametDict.Add(subject.Name + "_" + assessment.Name, scoreItem.RefTeacherName);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // 依目前 所選樣板、試別 對出 與表頭 相應的內容
+
+                DataGridViewCell courseNameCell = new DataGridViewTextBoxCell();
+                courseNameCell.Value = courseName;
+                this.Cells.Add(courseNameCell);
+
+                // 數出總項目 未填寫完畢項目
+                foreach (Term term in ESLTemplateDict.TermList)
+                {
+                    if (term.Name == targetTermName)
+                    {
+                        int total = 0;
+                        int scoreCount = 0;
+
+
+                        foreach (Subject subject in term.SubjectList)
+                        {
+                            foreach (Assessment assessment in subject.AssessmentList)
+                            {
+                                total++;
+
+                                int assessmentTotal = assessmentTotalCountDict[subject.Name + "_" + assessment.Name];
+                                int assessmentScoreCount = assessmentCountDict[subject.Name + "_" + assessment.Name];
+
+                                // 子項目 總數 等於 有分數 的數量，就是 完成
+                                if (assessmentTotal == assessmentScoreCount)
+                                {
+                                    scoreCount++;
+                                }
+                            }
+                        }
+
+                        string ScoreField = string.Format("{0}/{1}", scoreCount, total);
+
+                        // 填總項目 已完成 數量
+
+                        DataGridViewCell cell = new DataGridViewTextBoxCell();
+                        cell.Value = ScoreField;
+
+                        DataGridViewCellStyle style = new DataGridViewCellStyle();
+                        style.ForeColor = (total == scoreCount) ? Color.Black : Color.Red;
+                        cell.Style = style;
+
+                        this.Cells.Add(cell);
+                    }
+                }
+
+                // 子項目 每一個學生分數的填寫 狀態
+                foreach (Term term in ESLTemplateDict.TermList)
+                {
+                    if (term.Name == targetTermName)
+                    {
+                        foreach (Subject subject in term.SubjectList)
+                        {
+                            foreach (Assessment assessment in subject.AssessmentList)
+                            {
+                                int total = assessmentTotalCountDict[subject.Name + "_" + assessment.Name];
+                                int scoreCount = assessmentCountDict[subject.Name + "_" + assessment.Name];
+                                string ScoreField = string.Format(Format, scoreCount, total, assessmentTeacherNametDict[subject.Name + "_" + assessment.Name]);
+
+                                if (total != scoreCount)
+                                {
+                                    _is_finish = false;
+                                }
+
+                                DataGridViewCell cell = new DataGridViewTextBoxCell();
+                                cell.Value = ScoreField;
+
+                                DataGridViewCellStyle style = new DataGridViewCellStyle();
+                                style.ForeColor = (total == scoreCount) ? Color.Black : Color.Red;
+                                cell.Style = style;
+                                cell.Tag = assessment.Name;
+
+                                this.Cells.Add(cell);
+                            }
+                        }
+                    }
+                }                
             }
 
 
@@ -833,13 +1180,16 @@ namespace ESL_System.Form
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            // 繼續 畫面控制項         
+            // 繼續 畫面控制項       
+            chkDisplayNotFinish.Enabled = true;
             cboTemplate.ResumeLayout();
             cboExam.ResumeLayout();
             listView.ResumeLayout();
+            dataGridViewX1.ResumeLayout();
 
             listView.Sort(); // 排序
             FillCourses(GetDisplayList()); //填畫面
+            FillCourses(GetDisplayDataGridViewList());
 
             FISCA.Presentation.MotherForm.SetStatusBarMessage("取得ESL課程教師輸入狀態完成");
             
@@ -850,6 +1200,26 @@ namespace ESL_System.Form
             FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
         }
 
+
+        private void dataGridViewX1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            if (e.Button != MouseButtons.Left) return;
+            if (e.ColumnIndex < 0) return;
+            if (e.RowIndex < 0) return;
+            DataGridViewCell cell = dataGridViewX1.Rows[e.RowIndex].Cells[e.ColumnIndex];
+
+            _targetCourseID = "" + cell.OwningRow.Tag; //  targetTermName
+            _targetSubjectName = "" + cell.OwningColumn.Tag; //  targetSubjectName
+            _targetAssessmentName = "" + cell.Tag; //  targetAssessmentName
+
+            if (_targetSubjectName == "" || _targetAssessmentName == "") return;
+
+            Form.ESLScoreInputForm inputForm = new ESLScoreInputForm(_ESLCourseIDNameDict[_targetCourseID], _ESLTemplateDict[_targetTemplateID], _scoreDict[_targetCourseID], _targetTermName, _targetSubjectName, _targetAssessmentName, _scaList);
+
+            inputForm.ShowDialog();
+
+            RefreshListView(); // 更改完成績後，重整畫面
+        }
     }
 }
 

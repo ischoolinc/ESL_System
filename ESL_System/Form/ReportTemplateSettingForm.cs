@@ -334,6 +334,8 @@ namespace ESL_System.Form
             builder.Write("變數");
             builder.EndRow();
             foreach (string key in new string[]{
+                    "學年度",
+                    "學期",
                     "學號",
                     "年級",
                     "英文課程名稱",

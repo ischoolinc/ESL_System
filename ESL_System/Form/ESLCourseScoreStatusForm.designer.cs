@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.labelX3 = new DevComponents.DotNetBar.LabelX();
             this.cboExam = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.chkDisplayNotFinish = new System.Windows.Forms.CheckBox();
@@ -39,6 +40,10 @@
             this.btnRefresh = new DevComponents.DotNetBar.ButtonX();
             this.cboTemplate = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.labelX1 = new DevComponents.DotNetBar.LabelX();
+            this.dataGridViewX1 = new DevComponents.DotNetBar.Controls.DataGridViewX();
+            this.ColCourseName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.ColTotalStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewX1)).BeginInit();
             this.SuspendLayout();
             // 
             // labelX3
@@ -87,9 +92,7 @@
             // 
             // listView
             // 
-            this.listView.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
+            this.listView.Anchor = System.Windows.Forms.AnchorStyles.None;
             // 
             // 
             // 
@@ -98,13 +101,15 @@
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.chCourseName});
             this.listView.FullRowSelect = true;
-            this.listView.Location = new System.Drawing.Point(6, 75);
+            this.listView.ImeMode = System.Windows.Forms.ImeMode.Off;
+            this.listView.Location = new System.Drawing.Point(6, 364);
             this.listView.MultiSelect = false;
             this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(992, 575);
+            this.listView.Size = new System.Drawing.Size(992, 51);
             this.listView.TabIndex = 4;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
+            this.listView.Visible = false;
             this.listView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView_ItemSelectionChanged);
             this.listView.DoubleClick += new System.EventHandler(this.listView_DoubleClick);
             // 
@@ -119,7 +124,7 @@
             this.btnExport.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.btnExport.BackColor = System.Drawing.Color.Transparent;
             this.btnExport.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnExport.Location = new System.Drawing.Point(6, 657);
+            this.btnExport.Location = new System.Drawing.Point(6, 452);
             this.btnExport.Name = "btnExport";
             this.btnExport.Size = new System.Drawing.Size(138, 23);
             this.btnExport.TabIndex = 5;
@@ -132,7 +137,7 @@
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.BackColor = System.Drawing.Color.Transparent;
             this.btnClose.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnClose.Location = new System.Drawing.Point(923, 657);
+            this.btnClose.Location = new System.Drawing.Point(923, 452);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.TabIndex = 6;
@@ -150,7 +155,7 @@
             this.btnRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnRefresh.BackColor = System.Drawing.Color.Transparent;
             this.btnRefresh.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnRefresh.Location = new System.Drawing.Point(826, 657);
+            this.btnRefresh.Location = new System.Drawing.Point(826, 452);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(90, 23);
             this.btnRefresh.TabIndex = 6;
@@ -184,11 +189,57 @@
             this.labelX1.TabIndex = 8;
             this.labelX1.Text = "請選擇樣板";
             // 
+            // dataGridViewX1
+            // 
+            this.dataGridViewX1.AllowUserToAddRows = false;
+            this.dataGridViewX1.AllowUserToDeleteRows = false;
+            this.dataGridViewX1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dataGridViewX1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridViewX1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.ColCourseName,
+            this.ColTotalStatus});
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewX1.DefaultCellStyle = dataGridViewCellStyle2;
+            this.dataGridViewX1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.dataGridViewX1.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(215)))), ((int)(((byte)(229)))));
+            this.dataGridViewX1.ImeMode = System.Windows.Forms.ImeMode.Off;
+            this.dataGridViewX1.Location = new System.Drawing.Point(12, 84);
+            this.dataGridViewX1.MultiSelect = false;
+            this.dataGridViewX1.Name = "dataGridViewX1";
+            this.dataGridViewX1.ReadOnly = true;
+            this.dataGridViewX1.RowTemplate.Height = 24;
+            this.dataGridViewX1.Size = new System.Drawing.Size(980, 362);
+            this.dataGridViewX1.TabIndex = 9;
+            this.dataGridViewX1.CellMouseDoubleClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.dataGridViewX1_CellMouseDoubleClick);
+            // 
+            // ColCourseName
+            // 
+            this.ColCourseName.HeaderText = "課程名稱";
+            this.ColCourseName.Name = "ColCourseName";
+            this.ColCourseName.ReadOnly = true;
+            this.ColCourseName.Width = 200;
+            // 
+            // ColTotalStatus
+            // 
+            this.ColTotalStatus.HeaderText = "填寫完畢項目";
+            this.ColTotalStatus.Name = "ColTotalStatus";
+            this.ColTotalStatus.ReadOnly = true;
+            this.ColTotalStatus.Width = 130;
+            // 
             // ESLCourseScoreStatusForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1004, 686);
+            this.ClientSize = new System.Drawing.Size(1004, 481);
+            this.Controls.Add(this.dataGridViewX1);
             this.Controls.Add(this.cboTemplate);
             this.Controls.Add(this.labelX1);
             this.Controls.Add(this.btnRefresh);
@@ -204,6 +255,7 @@
             this.Name = "ESLCourseScoreStatusForm";
             this.Text = "ESL課程成績輸入狀況";
             this.Load += new System.EventHandler(this.ESLCourseScoreStatusForm_Load);
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridViewX1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -221,5 +273,8 @@
         private DevComponents.DotNetBar.ButtonX btnRefresh;
         private DevComponents.DotNetBar.Controls.ComboBoxEx cboTemplate;
         private DevComponents.DotNetBar.LabelX labelX1;
+        private DevComponents.DotNetBar.Controls.DataGridViewX dataGridViewX1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColCourseName;
+        private System.Windows.Forms.DataGridViewTextBoxColumn ColTotalStatus;
     }
 }
