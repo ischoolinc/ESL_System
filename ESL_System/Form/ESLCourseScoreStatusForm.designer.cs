@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             this.labelX3 = new DevComponents.DotNetBar.LabelX();
             this.cboExam = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.chkDisplayNotFinish = new System.Windows.Forms.CheckBox();
@@ -43,7 +43,9 @@
             this.dataGridViewX1 = new DevComponents.DotNetBar.Controls.DataGridViewX();
             this.ColCourseName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ColTotalStatus = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.picLoading = new System.Windows.Forms.PictureBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewX1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLoading)).BeginInit();
             this.SuspendLayout();
             // 
             // labelX3
@@ -200,14 +202,14 @@
             this.dataGridViewX1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColCourseName,
             this.ColTotalStatus});
-            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle2.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewX1.DefaultCellStyle = dataGridViewCellStyle2;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewX1.DefaultCellStyle = dataGridViewCellStyle4;
             this.dataGridViewX1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.dataGridViewX1.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(215)))), ((int)(((byte)(229)))));
             this.dataGridViewX1.ImeMode = System.Windows.Forms.ImeMode.Off;
@@ -234,11 +236,28 @@
             this.ColTotalStatus.ReadOnly = true;
             this.ColTotalStatus.Width = 130;
             // 
+            // picLoading
+            // 
+            this.picLoading.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.picLoading.BackColor = System.Drawing.Color.Transparent;
+            this.picLoading.Image = global::ESL_System.Properties.Resources.loading;
+            this.picLoading.InitialImage = null;
+            this.picLoading.Location = new System.Drawing.Point(473, 227);
+            this.picLoading.Name = "picLoading";
+            this.picLoading.Size = new System.Drawing.Size(44, 46);
+            this.picLoading.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+            this.picLoading.TabIndex = 10;
+            this.picLoading.TabStop = false;
+            this.picLoading.Visible = false;
+            // 
             // ESLCourseScoreStatusForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1004, 481);
+            this.Controls.Add(this.picLoading);
             this.Controls.Add(this.dataGridViewX1);
             this.Controls.Add(this.cboTemplate);
             this.Controls.Add(this.labelX1);
@@ -256,6 +275,7 @@
             this.Text = "ESL課程成績輸入狀況";
             this.Load += new System.EventHandler(this.ESLCourseScoreStatusForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewX1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.picLoading)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -276,5 +296,6 @@
         private DevComponents.DotNetBar.Controls.DataGridViewX dataGridViewX1;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColCourseName;
         private System.Windows.Forms.DataGridViewTextBoxColumn ColTotalStatus;
+        private System.Windows.Forms.PictureBox picLoading;
     }
 }

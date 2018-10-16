@@ -66,7 +66,7 @@ namespace ESL_System.Form
         {
             InitializeComponent();
             _CourseIDList = eslCouseList;
-
+            
             _worker = new BackgroundWorker();
             _worker.DoWork += new DoWorkEventHandler(Worker_DoWork);
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
@@ -77,12 +77,14 @@ namespace ESL_System.Form
 
             FillCboTemplate();
 
-
+            picLoading.Visible = false;
 
         }
 
         private void GetESLTemplate()
         {
+            picLoading.Visible = true;
+
             string courseIDs = string.Join(",", _CourseIDList);
 
             #region 取得ESL 課程資料
@@ -229,6 +231,7 @@ namespace ESL_System.Form
 
         private void FillCboTemplate()
         {
+            picLoading.Visible = true;
 
             cboTemplate.Items.Clear();
 
@@ -256,6 +259,8 @@ namespace ESL_System.Form
         /// </summary>
         private void RefreshListView()
         {
+            picLoading.Visible = true;
+
             if (cboExam.SelectedItem == null) return;
 
             _targetTermName = "" + cboExam.SelectedItem;
@@ -1181,6 +1186,7 @@ namespace ESL_System.Form
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             // 繼續 畫面控制項       
+            picLoading.Visible = false;
             chkDisplayNotFinish.Enabled = true;
             cboTemplate.ResumeLayout();
             cboExam.ResumeLayout();

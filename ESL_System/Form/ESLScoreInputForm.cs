@@ -15,10 +15,16 @@ namespace ESL_System.Form
 {
     public partial class ESLScoreInputForm : FISCA.Presentation.Controls.BaseForm
     {
-
+        // 目標課程名稱
         private string _targetCourseName;
+
+        // 目標評量名稱
         private string _targetTermName;
+
+        // 目標科目名稱
         private string _targetSubjectName;
+
+        // 目標評量名稱
         private string _targetAssessmentName;
 
         // 目標分數種類(Score、Indicator、Comment)
@@ -30,15 +36,18 @@ namespace ESL_System.Form
         // 評語型項目 字數上限
         private string _commentLimit;
 
+        // 目前本課程的 ESL 評分樣版
         private ESLTemplate _eslTemplate;
 
+        // ESL 分數 <subjectName,List<ESL分數>w2>
         private Dictionary<string, List<ESLScore>> _scoreDict = new Dictionary<string, List<ESLScore>>();
 
+        // 修課學生 List
         private List<K12.Data.SCAttendRecord> _scaList;
 
         private BackgroundWorker _worker;
 
-       
+       // 舊版的輸入介面 還要選擇 科目、評量
         public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, List<K12.Data.SCAttendRecord> scaList)
         {
             InitializeComponent();
@@ -61,6 +70,7 @@ namespace ESL_System.Form
 
         }
 
+        // 新版會依照 使用者點選的評分項目 直接顯示對應的分數項目
         public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, string targetSubjectName, string targetAssessmentName, List<K12.Data.SCAttendRecord> scaList)
         {
             InitializeComponent();
@@ -72,23 +82,44 @@ namespace ESL_System.Form
 
             _eslTemplate = eslTemplate;
 
+            // 對出 目前的 評量的 分數類型
             _targetScoreType = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).Type;
 
+            // 對出 目前的 指標型分數 可以用的 指標
             _targetIndicatorList = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).IndicatorsList;
-
+             
+            // 對出 目前的 評語型分數 可以輸入的字數上限
             _commentLimit = _eslTemplate.TermList.Find(t => t.Name == _targetTermName).SubjectList.Find(s => s.Name == _targetSubjectName).AssessmentList.Find(a => a.Name == _targetAssessmentName).InputLimit;
 
             _scoreDict = scoreDict;
 
             _scaList = scaList;
 
-            labelX1.Text = _targetCourseName + "/" + _targetSubjectName + "/" + _targetAssessmentName ; // 課程名稱 / 科目名稱 / 評量名稱
+            labelX1.Text = _targetCourseName + " / " + _targetSubjectName + " / " + _targetAssessmentName; // 課程名稱 / 科目名稱 / 評量名稱
+
+            // 不同的分數型態 有不同的表頭
+            switch (_targetScoreType)
+            {
+                case "Score":
+                    ColScore.HeaderText = "分數";
+                    break;
+                case "Indicator":
+                    ColScore.HeaderText = "指標";
+                    break;
+                case "Comment":
+                    ColScore.HeaderText = "評語";
+                    break;
+                default:
+                    ColScore.HeaderText = "分數";
+                    break;
+            }
 
             cboSubject.Visible = false;
             cboAssessment.Visible = false;
             labelX2.Visible = false;
             labelX3.Visible = false;
 
+            // 填入分數
             FillScore();
         }
 
@@ -156,12 +187,12 @@ namespace ESL_System.Form
 
                     K12.Data.SCAttendRecord scar = _scaList.Find(sca => sca.RefStudentID == scoreItem.RefStudentID && sca.RefCourseID == scoreItem.RefCourseID);
 
-                    row.Cells[0].Value = scar.Student.Class != null ? scar.Student.Class.Name : "";
-                    row.Cells[1].Value = scar.Student != null ? "" + scar.Student.SeatNo : "";
-                    row.Cells[2].Value = scar.Student != null ? "" + scar.Student.Name : "";
-                    row.Cells[3].Value = scar.Student != null ? "" + scar.Student.StudentNumber : "";
-                    row.Cells[4].Value = scoreItem.RefTeacherName;
-                    row.Cells[5].Value = scoreItem.HasValue ? scoreItem.Value : "";
+                    row.Cells[0].Value = scar.Student.Class != null ? scar.Student.Class.Name : ""; // 學生班級
+                    row.Cells[1].Value = scar.Student != null ? "" + scar.Student.SeatNo : "";  // 學生座號
+                    row.Cells[2].Value = scar.Student != null ? "" + scar.Student.Name : "";      // 學生姓名
+                    row.Cells[3].Value = scar.Student != null ? "" + scar.Student.StudentNumber : "";  // 學生學號
+                    row.Cells[4].Value = scoreItem.RefTeacherName;  // 本項目老師姓名
+                    row.Cells[5].Value = scoreItem.HasValue ? scoreItem.Value : "";  // 本項目分數
 
                     row.Tag =  scoreItem.RefStudentID;  // row tag 用studentID 就夠
 
@@ -170,7 +201,7 @@ namespace ESL_System.Form
                 }
             }
 
-            // 依   學號 排序
+            // 依   學號 排序 (同Web 的成績輸入介面)
             dataGridViewX1.Sort(ColStudentNumber, ListSortDirection.Ascending);
 
         }
@@ -193,13 +224,13 @@ namespace ESL_System.Form
             buttonX1.Enabled = false;
            
             _worker.RunWorkerAsync();
-
         }
 
 
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
+            _worker.ReportProgress(30,"整理成績資料...");
 
             //拚SQL
             // 兜資料
@@ -208,13 +239,14 @@ namespace ESL_System.Form
             List<ESLScore> updateESLscoreList = new List<ESLScore>(); // 最後要update ESLscoreList
             List<ESLScore> insertESLscoreList = new List<ESLScore>(); // 最後要indert ESLscoreList
 
+            int i = 0;
 
             foreach (DataGridViewRow row in dataGridViewX1.Rows)
-            {               
+            {
                 foreach (ESLScore scoreItem in _scoreDict[_targetSubjectName])
                 {
                     // 評量相同 、 學生ID 相同 則為該成績
-                    if (scoreItem.Assessment == _targetAssessmentName && scoreItem.RefStudentID == ""+ row.Tag)
+                    if (scoreItem.Assessment == _targetAssessmentName && scoreItem.RefStudentID == "" + row.Tag)
                     {
                         // 本來有成績， 但值不同了 加入 更新名單
                         if (scoreItem.HasValue && scoreItem.Value != "" + row.Cells[5].Value)
@@ -225,19 +257,20 @@ namespace ESL_System.Form
                         }
 
                         // 本來沒成績， 本次新填的值 ，加入新增名單
-                        if (!scoreItem.HasValue && "" + row.Cells[5].Value !="")
+                        if (!scoreItem.HasValue && "" + row.Cells[5].Value != "")
                         {
                             scoreItem.Value = "" + row.Cells[5].Value; // 新分數
 
-                            scoreItem.HasValue = true; 
+                            scoreItem.HasValue = true;
 
                             insertESLscoreList.Add(scoreItem);
                         }
                     }
                 }
+
+                _worker.ReportProgress(30 + (i++ * 60 / dataGridViewX1.Rows.Count) , "整理成績資料...");
+
             }
-
-
 
             foreach (ESLScore score in updateESLscoreList)
             {
@@ -334,8 +367,6 @@ WHERE action ='INSERT'", Data);
 
             _worker.ReportProgress(100, "ESL 評量成績上傳完成。");
 
-
-
         }
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -351,12 +382,16 @@ WHERE action ='INSERT'", Data);
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage(""+e.UserState, e.ProgressPercentage);
         }
 
         private void dataGridViewX1_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
-
+            // 只驗第五格 分數、指標、評語 欄位
+            if (e.ColumnIndex != 5)
+            {
+                return;
+            }
 
             DataGridViewCell cell = dataGridViewX1.Rows[e.RowIndex].Cells[e.ColumnIndex];
 
@@ -413,6 +448,7 @@ WHERE action ='INSERT'", Data);
                 if (cell.ErrorText != String.Empty)
                 {
                     buttonX1.Enabled = false;
+                    return; // 有一個錯誤，就不給存，跳出檢查迴圈。
                 }
                 else
                 {

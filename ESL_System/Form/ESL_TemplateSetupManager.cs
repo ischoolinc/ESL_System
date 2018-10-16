@@ -38,6 +38,9 @@ namespace ESL_System.Form
         private Dictionary<string, string> _examID_NameDict = new Dictionary<string, string>(); // 系統 <examID,exam_name>
         private Dictionary<string, string> _examName_IDDict = new Dictionary<string, string>(); // 系統 <exam_name,examID>
 
+        // 是否都有設定系統識別對照 ，若有沒有設定，則不給存檔
+        private bool _allHasExam = true;
+
         private ButtonItem currentItem
         {
             get { return _current_item; }
@@ -221,7 +224,7 @@ namespace ESL_System.Form
                             t.Weight = ele_term.Attribute("Weight").Value;
                             t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
                             t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
-
+                            
                             t.Ref_exam_id = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id").Value : ""; // 2018/09/26 穎驊新增，因應要將 ESL 評量導入 成績系統，恩正說，在此加入評量對照
 
                             t.SubjectList = new List<Subject>();

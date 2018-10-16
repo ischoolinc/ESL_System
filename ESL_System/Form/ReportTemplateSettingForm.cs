@@ -97,15 +97,24 @@ namespace ESL_System.Form
 
                 if (SourceType == "期中")
                 {
-                    Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.MidReport));
+                    //Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.MidReport));
+                    // 2018/10/15 穎驊註記，不再帶出預設定的樣板，因為每間學校不一樣，跑出別的設定很奇怪， 
+                    // 沒設定的話 就給她空的
+                    Configure.Template = new Document();
                 }
                 if (SourceType == "期末")
                 {
-                    Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.FinalReport));
+                    //Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.FinalReport));
+                    // 2018/10/15 穎驊註記，不再帶出預設定的樣板，因為每間學校不一樣，跑出別的設定很奇怪， 
+                    // 沒設定的話 就給她空的
+                    Configure.Template = new Document();
                 }
                 if (SourceType == "學期")
                 {
-                    Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.SemesterReport));
+                    //Configure.Template = new Document(new System.IO.MemoryStream(Properties.Resources.SemesterReport));
+                    // 2018/10/15 穎驊註記，不再帶出預設定的樣板，因為每間學校不一樣，跑出別的設定很奇怪， 
+                    // 沒設定的話 就給她空的
+                    Configure.Template = new Document();
                 }
 
                 Configure.Encode(); // 將Word 轉成 stream
