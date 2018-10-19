@@ -224,7 +224,7 @@ namespace ESL_System.Form
                             t.Weight = ele_term.Attribute("Weight").Value;
                             t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
                             t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
-                            
+
                             t.Ref_exam_id = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id").Value : ""; // 2018/09/26 穎驊新增，因應要將 ESL 評量導入 成績系統，恩正說，在此加入評量對照
 
                             t.SubjectList = new List<Subject>();
@@ -294,7 +294,11 @@ namespace ESL_System.Form
             linkLabel1.Enabled = true;
             linkLabel2.Enabled = true;
             linkLabel3.Enabled = true;
-            btnSave.Enabled = true;
+
+
+            // 假若有 term 沒有設定 對應 Exam 則不給存檔(通常發生在第一次新增樣板時)
+            _allHasExam = AllTermHasRefExamID();
+            btnSave.Enabled = _allHasExam;
         }
 
         private bool CanContinue()
@@ -583,6 +587,10 @@ namespace ESL_System.Form
             // 選擇試別後  檢驗規則
             if (node_now.TagString == "Exam")
             {
+                // 檢查是否所有 term項目都有 對應Exam ，若沒有齊 則不給存
+                _allHasExam = AllTermHasRefExamID();
+                btnSave.Enabled = _allHasExam;
+
                 DevComponents.AdvTree.CellEditEventArgs _e = new DevComponents.AdvTree.CellEditEventArgs(node_now.Cells[2], DevComponents.AdvTree.eTreeAction.Mouse, "");
 
                 advTree1_AfterCellEditComplete(advTree1, _e);
@@ -1351,7 +1359,7 @@ namespace ESL_System.Form
 
             string updQuery = @"DELETE 
                 FROM te_include
-                WHERE ref_exam_template_id = "+ esl_exam_template_id;
+                WHERE ref_exam_template_id = " + esl_exam_template_id;
 
             uh.Execute(updQuery);
 
@@ -2059,7 +2067,7 @@ namespace ESL_System.Form
         private Dictionary<string, string> GetExamIDWeightDict(XElement elmRoot)
         {
             Dictionary<string, string> dict = new Dictionary<string, string>();
-            
+
 
             if (elmRoot != null)
             {
@@ -2085,6 +2093,35 @@ namespace ESL_System.Form
 
 
             return dict;
+        }
+
+
+        private bool AllTermHasRefExamID()
+        {
+            bool allTermHasRefExamID = true;
+
+            string description_xml = "";
+
+            XmlDocument doc = new XmlDocument();
+
+            XmlElement root = doc.DocumentElement;
+
+            //string.Empty makes cleaner code
+            XmlElement element_ESLTemplate = doc.CreateElement(string.Empty, "ESLTemplate", string.Empty);
+            doc.AppendChild(element_ESLTemplate);
+
+            // 只要有一個 term 沒有設定，就擋下
+            foreach (DevComponents.AdvTree.Node term_node in advTree1.Nodes)
+            {
+                XmlElement element_Term = doc.CreateElement(string.Empty, "Term", string.Empty);
+
+                if (!_examName_IDDict.ContainsKey(term_node.Nodes[4].Cells[1].Text))
+                {
+                    allTermHasRefExamID = false;
+                }                
+            }
+
+            return allTermHasRefExamID;
         }
 
 

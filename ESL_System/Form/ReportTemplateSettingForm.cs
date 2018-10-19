@@ -511,7 +511,7 @@ namespace ESL_System.Form
                                 builder.InsertCell();
                                 builder.Write(assessment.Name);
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標" + " \\* MERGEFORMAT ", "«I»");
+                                builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標" + " \\* MERGEFORMAT ", "«I»");
                                 builder.EndRow();
                                 //assessmentCounter++;
                             }
@@ -540,7 +540,7 @@ namespace ESL_System.Form
                                 builder.InsertCell();
                                 builder.Write(assessment.Name);
                                 builder.InsertCell();
-                                builder.InsertField("MERGEFIELD " + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語" +" \\* MERGEFORMAT ", "«C»");
+                                builder.InsertField("MERGEFIELD " + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語" +" \\* MERGEFORMAT ", "«C»");
                                 builder.EndRow();
                                 assessmentCounter++;
                             }
