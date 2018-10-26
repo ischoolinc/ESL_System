@@ -283,7 +283,10 @@ namespace ESL_System.Form
                 {
                     foreach (string mergeKey in _itemDict[scar.RefCourseID].Keys)
                     {
-                        row[mergeKey] = _itemDict[scar.RefCourseID][mergeKey];
+                        if (row.Table.Columns.Contains(mergeKey))
+                        {
+                            row[mergeKey] = _itemDict[scar.RefCourseID][mergeKey];
+                        }                        
                     }
                 }
 
@@ -292,7 +295,10 @@ namespace ESL_System.Form
                 {
                     foreach (string mergeKey  in _scoreDict[id].Keys)
                     {
-                        row[mergeKey] = _scoreDict[id][mergeKey];
+                        if (row.Table.Columns.Contains(mergeKey))
+                        {
+                            row[mergeKey] = _scoreDict[id][mergeKey];
+                        }                        
                     }
                 }
 

@@ -422,6 +422,10 @@ namespace ESL_System.Form
                             {
                                 foreach (Assessment assessment in subject.AssessmentList)
                                 {
+
+                                    // 取得授課教師
+                                    CourseTeacherRecord teacher = scaRecord.Course.Teachers.Find(t => t.Sequence == int.Parse(assessment.TeacherSequence));
+
                                     ESLScore scoreItem = new ESLScore();
 
                                     scoreItem.Term = term.Name;
@@ -430,10 +434,10 @@ namespace ESL_System.Form
 
                                     scoreItem.RefCourseID = scaRecord.RefCourseID;
                                     scoreItem.RefStudentID = scaRecord.RefStudentID;
-                                    scoreItem.RefTeacherID = scaRecord.Course.Teachers.Find(teacher => teacher.Sequence == int.Parse(assessment.TeacherSequence)).TeacherID; // 教師ID
+                                    scoreItem.RefTeacherID = teacher != null ? teacher.TeacherID : ""; // 教師ID
 
-                                    scoreItem.RefCourseName = scaRecord.Course.Name;
-                                    scoreItem.RefTeacherName = scaRecord.Course.Teachers[int.Parse(assessment.TeacherSequence) - 1].TeacherName; // 教師名稱
+                                    scoreItem.RefCourseName = scaRecord.Course.Name;                                    
+                                    scoreItem.RefTeacherName = teacher != null ? teacher.TeacherName : ""; ; // 教師名稱
                                     scoreItem.RefStudentName = scaRecord.Student.Name;
 
                                     scoreItem.HasValue = false; // 一開始都先當 教師沒有輸入成績，等到取得成績後 再回填scoreItem
@@ -463,6 +467,9 @@ namespace ESL_System.Form
                             {
                                 foreach (Assessment assessment in subject.AssessmentList)
                                 {
+                                    // 取得授課教師
+                                    CourseTeacherRecord teacher = scaRecord.Course.Teachers.Find(t => t.Sequence == int.Parse(assessment.TeacherSequence));
+
                                     ESLScore scoreItem = new ESLScore();
 
                                     scoreItem.Term = term.Name;
@@ -471,10 +478,10 @@ namespace ESL_System.Form
 
                                     scoreItem.RefCourseID = scaRecord.RefCourseID;
                                     scoreItem.RefStudentID = scaRecord.RefStudentID;
-                                    scoreItem.RefTeacherID = scaRecord.Course.Teachers.Find(teacher => teacher.Sequence == int.Parse(assessment.TeacherSequence)).TeacherID; // 教師ID
+                                    scoreItem.RefTeacherID = teacher != null ? teacher.TeacherID : ""; // 教師ID
 
                                     scoreItem.RefCourseName = scaRecord.Course.Name;
-                                    scoreItem.RefTeacherName = scaRecord.Course.Teachers[int.Parse(assessment.TeacherSequence) - 1].TeacherName; // 教師名稱
+                                    scoreItem.RefTeacherName = teacher != null ? teacher.TeacherName : ""; ; // 教師名稱
                                     scoreItem.RefStudentName = scaRecord.Student.Name;
 
                                     scoreItem.HasValue = false; // 一開始都先當 教師沒有輸入成績，等到取得成績後 再回填scoreItem
