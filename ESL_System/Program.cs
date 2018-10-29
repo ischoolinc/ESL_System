@@ -118,13 +118,13 @@ namespace ESL_System
 
 
             Catalog ribbon5 = RoleAclSource.Instance["學生"]["報表"];
-            ribbon5.Add(new RibbonFeature("ESL個人成績單", "ESL個人成績單"));
+            ribbon5.Add(new RibbonFeature("1C389099-FBA2-4C4B-9C0C-0FD7CB18EBC3", "ESL個人成績單"));
 
-            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["ESL個人成績單"].Enable = UserAcl.Current["ESL個人成績單"].Executable && K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0;
+            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["ESL個人成績單"].Enable = UserAcl.Current["1C389099-FBA2-4C4B-9C0C-0FD7CB18EBC3"].Executable && K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0;
 
             K12.Presentation.NLDPanels.Student.SelectedSourceChanged += delegate
             {
-                MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["ESL個人成績單"].Enable = UserAcl.Current["ESL個人成績單"].Executable && (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0);
+                MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["ESL個人成績單"].Enable = UserAcl.Current["1C389099-FBA2-4C4B-9C0C-0FD7CB18EBC3"].Executable && (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0);
             };
 
 

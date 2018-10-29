@@ -2003,10 +2003,24 @@ namespace ESL_System.Form
             string description_xml = GetXmlDesriptionInTree();
 
             XmlDocument doc = new XmlDocument();
-
+            
             doc.LoadXml(description_xml);
-
+           
             doc.PreserveWhitespace = true;
+
+            // 重新 排版 xml 使使用者 較易閱讀、編排
+            System.IO.StringWriter sw = new System.IO.StringWriter();
+            using (System.Xml.XmlTextWriter writer = new System.Xml.XmlTextWriter(sw))
+            {
+                writer.Indentation = 2;  // the Indentation
+                writer.Formatting = System.Xml.Formatting.Indented;
+                doc.WriteContentTo(writer);
+                writer.Close();
+            }
+
+            // 重新載入
+            doc.RemoveAll();
+            doc.LoadXml(sw.ToString());
 
             SaveFileDialog saveDialog = new SaveFileDialog();
 

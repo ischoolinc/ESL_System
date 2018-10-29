@@ -59,6 +59,7 @@
             this.linklabel1.TabIndex = 29;
             this.linklabel1.TabStop = true;
             this.linklabel1.Text = "檢視套印樣板";
+            this.linklabel1.Visible = false;
             this.linklabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linklabel1_LinkClicked);
             // 
             // linklabel2
@@ -72,6 +73,7 @@
             this.linklabel2.TabIndex = 30;
             this.linklabel2.TabStop = true;
             this.linklabel2.Text = "變更套印樣板";
+            this.linklabel2.Visible = false;
             this.linklabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linklabel2_LinkClicked);
             // 
             // btnPrint
