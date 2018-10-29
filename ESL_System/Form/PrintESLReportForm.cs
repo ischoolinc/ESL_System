@@ -263,7 +263,7 @@ namespace ESL_System.Form
                 string assessmentSetID = _courseIDPairDict[scar.RefCourseID];
 
                 DataTable data = _assessmentSetupDataTableDict[assessmentSetID];
-
+                
                 DataRow row = data.NewRow();
                 row["電子報表辨識編號"] = "系統編號{" + scar.Student.ID + "}"; // 學生系統編號
 
@@ -385,11 +385,8 @@ namespace ESL_System.Form
                     MessageBox.Show("檔案儲存失敗");
                 }
             }
-
             
-
             this.Close();
-
         }
 
 

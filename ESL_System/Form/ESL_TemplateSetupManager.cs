@@ -2047,7 +2047,7 @@ namespace ESL_System.Form
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Title = "選擇檔案";
             //ofd.Filter = "*.xml|所有檔案 (*.*)|*.* ";
-            ofd.Multiselect = true;
+            ofd.Multiselect = false;
             if (ofd.ShowDialog() == DialogResult.OK)
             {
                 string esl_exam_template_id = "" + currentItem.Tag;

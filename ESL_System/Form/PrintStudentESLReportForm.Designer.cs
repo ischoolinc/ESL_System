@@ -40,7 +40,7 @@
             this.linklabel3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel3.AutoSize = true;
             this.linklabel3.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel3.Location = new System.Drawing.Point(196, 312);
+            this.linklabel3.Location = new System.Drawing.Point(196, 27);
             this.linklabel3.Name = "linklabel3";
             this.linklabel3.Size = new System.Drawing.Size(112, 17);
             this.linklabel3.TabIndex = 31;
@@ -53,7 +53,7 @@
             this.linklabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel1.AutoSize = true;
             this.linklabel1.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel1.Location = new System.Drawing.Point(12, 312);
+            this.linklabel1.Location = new System.Drawing.Point(12, 27);
             this.linklabel1.Name = "linklabel1";
             this.linklabel1.Size = new System.Drawing.Size(86, 17);
             this.linklabel1.TabIndex = 29;
@@ -67,7 +67,7 @@
             this.linklabel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel2.AutoSize = true;
             this.linklabel2.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel2.Location = new System.Drawing.Point(104, 312);
+            this.linklabel2.Location = new System.Drawing.Point(104, 27);
             this.linklabel2.Name = "linklabel2";
             this.linklabel2.Size = new System.Drawing.Size(86, 17);
             this.linklabel2.TabIndex = 30;
@@ -82,7 +82,7 @@
             this.btnPrint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPrint.BackColor = System.Drawing.Color.Transparent;
             this.btnPrint.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnPrint.Location = new System.Drawing.Point(341, 308);
+            this.btnPrint.Location = new System.Drawing.Point(345, 23);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(75, 23);
             this.btnPrint.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -96,7 +96,7 @@
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.BackColor = System.Drawing.Color.Transparent;
             this.btnClose.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnClose.Location = new System.Drawing.Point(434, 308);
+            this.btnClose.Location = new System.Drawing.Point(438, 23);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -108,7 +108,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(518, 338);
+            this.ClientSize = new System.Drawing.Size(522, 53);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnPrint);
             this.Controls.Add(this.linklabel3);
