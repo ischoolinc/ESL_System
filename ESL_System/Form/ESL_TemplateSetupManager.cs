@@ -107,7 +107,7 @@ namespace ESL_System.Form
         private void Workder_DoWork(object sender, DoWorkEventArgs e)
         {
             // 2018/05/01 穎華重要備註， 在table exam_template 欄位 description 不為空代表其為ESL 的樣板
-            string query = "select * from exam_template where description !=''";
+            string query = "select * from exam_template where description !='' ORDER BY name";
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);

@@ -310,6 +310,12 @@ namespace ESL_System.Form
                 dataList.Add(data);
             }
 
+            if (dataList.Count == 0)
+            {
+                return;
+            }
+                
+
             string Data = string.Join(" UNION ALL", dataList);
 
 
