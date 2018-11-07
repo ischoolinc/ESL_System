@@ -188,6 +188,7 @@
       <DependentUpon>TemplateReNameForm.cs</DependentUpon>
     </Compile>
     <Compile Include="ESLScore\Indicators.cs" />
+    <Compile Include="Global.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -198,6 +199,7 @@
     <Compile Include="ESLScore\Subject.cs" />
     <Compile Include="ESLScore\Term.cs" />
     <Compile Include="UDT\UDT_ReportTemplate.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Library\Aspose.Cells.dll" />

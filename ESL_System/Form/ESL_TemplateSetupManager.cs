@@ -2066,7 +2066,19 @@ namespace ESL_System.Form
                 //執行sql，更新
                 uh.Execute(updQuery);
 
-                MsgBox.Show("上傳樣板XML設定成功");
+                // 重整畫面
+                try
+                {
+                    MsgBox.Show("上傳樣板XML設定成功");
+                    BeforeLoadAssessmentSetup();
+                    LoadAssessmentSetups();
+                }
+                catch (Exception ex)
+                {
+                    MsgBox.Show(ex.Message);
+                }
+
+                
             }
             else
             {

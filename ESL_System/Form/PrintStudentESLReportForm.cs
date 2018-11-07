@@ -39,6 +39,22 @@ namespace ESL_System.Form
         // 紀錄成績 為 評語型comment 的 key值
         private List<string> _commentList = new List<string>();
 
+        // 缺曠區間統計
+        Dictionary<string, Dictionary<string, int>> _AttendanceDict = new Dictionary<string, Dictionary<string, int>>();
+
+        // 獎懲統計
+        Dictionary<string, Dictionary<string, int>> _DisciplineCountDict = new Dictionary<string, Dictionary<string, int>>();
+
+        // 開始日期
+        private DateTime _BeginDate;
+        // 結束日期
+        private DateTime _EndDate;
+
+
+        private List<string> _typeList = new List<string>();
+        private List<string> _absenceList = new List<string>();
+
+
         private Document _doc;
 
         private DataTable _mergeDataTable = new DataTable();
@@ -52,11 +68,45 @@ namespace ESL_System.Form
             _bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(_worker_RunWorkerCompleted);
             _bw.ProgressChanged += new ProgressChangedEventHandler(_worker_ProgressChanged);
             _bw.WorkerReportsProgress = true;
+
+            // 預設都為今天
+            dtBegin.Value = DateTime.Now;
+            dtEnd.Value = DateTime.Now;
+
+             
+            // 缺曠資料
+            foreach (PeriodMappingInfo info in PeriodMapping.SelectAll())
+            {
+                if (!_typeList.Contains(info.Type))
+                    _typeList.Add(info.Type);
+            }
+            
+            foreach (AbsenceMappingInfo info in AbsenceMapping.SelectAll())
+            {
+                if (!_absenceList.Contains(info.Name))
+                    _absenceList.Add(info.Name);
+            }
+
         }
 
         // 列印
         private void btnPrint_Click(object sender, EventArgs e)
         {
+            if (dtBegin.IsEmpty || dtEnd.IsEmpty)
+            {
+                FISCA.Presentation.Controls.MsgBox.Show("日期區間必須輸入!");
+                return;
+            }
+
+            if (dtBegin.Value > dtEnd.Value)
+            {
+                FISCA.Presentation.Controls.MsgBox.Show("開始日期必須小於或等於結束日期!!");
+                return;
+            }
+
+            _BeginDate = dtBegin.Value;
+            _EndDate = dtEnd.Value;
+
             // 關閉畫面控制項
             btnPrint.Enabled = false;
             btnClose.Enabled = false;
@@ -146,6 +196,58 @@ namespace ESL_System.Form
                     "學生中文姓名",
                     "電子報表辨識編號"
                 })
+            {
+                builder.InsertCell();
+                builder.Write(key);
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + key + " \\* MERGEFORMAT ", "«" + key + "»");
+                builder.EndRow();
+            }
+
+            builder.EndTable();
+
+            builder.Writeln();
+            #endregion
+
+
+            #region 日常生活表現統計
+
+            builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
+            // 固定變數，不分　期中、期末、學期  (使用大字粗體)
+            builder.Writeln("日常生活表現統計");
+
+            builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
+
+            builder.StartTable();
+            builder.InsertCell();
+            builder.Write("項目");
+            builder.InsertCell();
+            builder.Write("變數");
+            builder.EndRow();
+
+            List<string> itemList = new List<string>();
+
+            itemList.Add("區間開始日期");
+            itemList.Add("區間結束日期");
+            itemList.Add("大功區間統計");
+            itemList.Add("小功區間統計");
+            itemList.Add("嘉獎區間統計");
+            itemList.Add("大過區間統計");
+            itemList.Add("小過區間統計");
+            itemList.Add("警告區間統計");
+         
+
+            // 缺曠欄位
+            foreach (var type in _typeList)
+            {
+                foreach (var absence in _absenceList)
+                {
+                    itemList.Add(type + absence);
+                }
+            }
+
+            foreach (string key in itemList
+                )
             {
                 builder.InsertCell();
                 builder.Write(key);
@@ -539,8 +641,6 @@ namespace ESL_System.Form
             studentIDList = K12.Presentation.NLDPanels.Student.SelectedSource;
 
 
-
-
             #region 取得本學期有設定ESL 評分樣版的課程清單
             QueryHelper qh = new QueryHelper();
 
@@ -790,6 +890,15 @@ namespace ESL_System.Form
             #endregion
 
 
+            #region 取得 缺曠獎懲
+            // 缺曠資料區間統計
+            _AttendanceDict = Utility.GetAttendanceCountByDate(studentList, _BeginDate, _EndDate);
+
+            // 獎懲資料
+            _DisciplineCountDict = Utility.GetDisciplineCountByDate(studentIDList, _BeginDate, _EndDate);
+
+            #endregion
+
 
 
             foreach (StudentRecord stuRecord in studentList)
@@ -809,7 +918,38 @@ namespace ESL_System.Form
                 row["學生英文姓名"] = stuRecord.EnglishName;
                 row["學生中文姓名"] = stuRecord.Name;
 
-                
+                row["區間開始日期"] = _BeginDate.ToShortDateString();
+                row["區間結束日期"] = _EndDate.ToShortDateString();
+
+
+                // 傳入 ID當 Key
+                // row["缺曠紀錄"] = StudRec.ID;                
+                //缺曠套印
+                foreach (var type in _typeList)
+                {
+                    foreach (var absence in _absenceList)
+                    {
+                        row[type + absence] = "0";
+                    }
+                }
+                if (_AttendanceDict.ContainsKey(stuRecord.ID))
+                {
+                    foreach (var absentKey in _AttendanceDict[stuRecord.ID].Keys)
+                    {
+                        row[absentKey] = _AttendanceDict[stuRecord.ID][absentKey];
+                    }
+                }
+                // 獎懲區間統計值
+                if (_DisciplineCountDict.ContainsKey(stuRecord.ID))
+                {
+                    foreach (string str in Global.GetDisciplineNameList())
+                    {
+                        string key = str + "區間統計";
+                        if (_DisciplineCountDict[stuRecord.ID].ContainsKey(str))
+                            row[key] = _DisciplineCountDict[stuRecord.ID][str];
+                    }
+                }
+
                 //foreach (string mergeKey in _itemDict.Keys)
                 //{
                 //    if (row.Table.Columns.Contains(mergeKey))
@@ -937,9 +1077,31 @@ namespace ESL_System.Form
             dataTable.Columns.Add("年級");
             dataTable.Columns.Add("原班級名稱");
             dataTable.Columns.Add("學生英文姓名");
-            dataTable.Columns.Add("學生中文姓名");        
+            dataTable.Columns.Add("學生中文姓名");
             dataTable.Columns.Add("電子報表辨識編號");
+
+            dataTable.Columns.Add("區間開始日期");
+            dataTable.Columns.Add("區間結束日期");
+
+            
             #endregion
+
+
+            // 獎懲名稱
+            foreach (string str in Global.GetDisciplineNameList())
+            {
+                dataTable.Columns.Add(str + "區間統計");
+            }
+
+            // 缺曠欄位
+            foreach (var type in _typeList)
+            {
+                foreach (var absence in _absenceList)
+                {
+                    dataTable.Columns.Add(type + absence);
+                }
+            }
+
 
 
             // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string.Trim().Replace(' ', '_').Replace('"', '_') 

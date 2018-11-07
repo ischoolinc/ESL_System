@@ -22,20 +22,25 @@ namespace ESL_System.Form
         public class Item
         {
             public string Name;
-            public string Value;
-            public Item(string name, string value)
+            public string DescriptionValue;
+            public string ExtensionValue;
+            public Item(string name, string descriptionValue,string extensionValue)
             {
-                Name = name; Value = value;
+                Name = name;
+                DescriptionValue = descriptionValue;
+                ExtensionValue = extensionValue;
             }
             public override string ToString()
-            {
-                // Generates the text shown in the combo box
+            {                
                 return Name;
             }
             public string GetDescriptionString()
-            {
-                // Generates the text shown in the combo box
-                return Value;
+            {                
+                return DescriptionValue;
+            }
+            public string GetExtensionValue()
+            {                
+                return ExtensionValue;
             }
         }
 
@@ -46,7 +51,7 @@ namespace ESL_System.Form
             txtTemplateName.Text = "請輸入新ESL 樣板名稱";
 
             // 2018/05/01 穎驊重要備註， 在table exam_template 欄位 description 不為空代表其為ESL 的樣板
-            string query = "select * from exam_template where description !=''";
+            string query = "select * from exam_template where description !='' ORDER BY name ";
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
@@ -55,7 +60,7 @@ namespace ESL_System.Form
             {
                 foreach (DataRow dr in dt.Rows)
                 {                                                            
-                    cboExistTemplates.Items.Add(new Item("" + dr[1], "" + dr[5])); // dr[5] 為description 內容
+                    cboExistTemplates.Items.Add(new Item("" + dr["name"], "" + dr["description"],"" + dr["extension"])); 
                 }
             }
                             
@@ -72,12 +77,14 @@ namespace ESL_System.Form
             }
 
             string desciption = "";
+            string extension = "";
 
-            if( cboExistTemplates.SelectedIndex != 0)// 不是選第一個 "不複製"
+            if ( cboExistTemplates.SelectedIndex != 0)// 不是選第一個 "不複製"
             {
                 Item i = (Item) cboExistTemplates.SelectedItem; // 將 Object SelectedItem 轉型成 Item 處理
 
                 desciption = "" + i.GetDescriptionString();
+                extension = "" + i.GetExtensionValue(); 
             }
             else
             {
@@ -90,7 +97,7 @@ namespace ESL_System.Form
             UpdateHelper uh = new UpdateHelper();
 
             //依照所選項目新增 (allow_upload 此項固定為 0 且型別 為 bit)
-            string updQuery = "INSERT INTO exam_template (name, allow_upload, description) VALUES('"+ txtTemplateName.Text +"',0::bit,'"+ desciption +"')";
+            string updQuery = "INSERT INTO exam_template (name, allow_upload, description,extension) VALUES('"+ txtTemplateName.Text +"',0::bit,'"+ desciption + "','" + extension + "')";
 
             //執行sql，更新
             uh.Execute(updQuery);
