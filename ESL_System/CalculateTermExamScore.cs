@@ -115,6 +115,14 @@ namespace ESL_System
             }
             #endregion
 
+            #region 取得課程(老師資料)
+
+            List<K12.Data.CourseRecord> courseList = K12.Data.Course.SelectByIDs(_courseIDList);
+
+
+
+            #endregion
+
             _worker.ReportProgress(10, "取得解析ESL課程樣板...");
 
             #region 解析ESL 課程 計算規則
@@ -254,6 +262,20 @@ namespace ESL_System
             {
                 foreach (DataRow dr in dt.Rows)
                 {
+                    CourseRecord eslcourse = courseList.Find(c => c.ID == ("" + dr["ref_course_id"]));
+
+                    if (eslcourse != null)
+                    {
+                        CourseTeacherRecord teacher = eslcourse.Teachers.Find(t => t.TeacherID == ("" + dr["ref_teacher_id"]));
+
+                        if (teacher == null)
+                        {
+                            continue;  // 在目前的ESL 課程找不到這個老師，代表本成績 是舊的老師所打，要跳過此成績。
+                        }
+
+                    }
+
+
                     if (!_scoreAssessmentOriDict.ContainsKey("" + dr["ref_student_id"]))
                     {
                         ESLScore score = new ESLScore();
@@ -450,7 +472,7 @@ namespace ESL_System
 
                                 subjectScore.RefCourseID = score.RefCourseID;
                                 subjectScore.RefStudentID = score.RefStudentID;
-                                subjectScore.RefTeacherID = score.RefTeacherID;
+                                //subjectScore.RefTeacherID = score.RefTeacherID; //subject 不需教師ID
                                 subjectScore.Term = score.Term;
                                 subjectScore.Subject = score.Subject;
                                 subjectScore.Score = subject_score_partial;
@@ -513,7 +535,7 @@ namespace ESL_System
 
                         termScore.RefCourseID = subjectScore.RefCourseID;
                         termScore.RefStudentID = subjectScore.RefStudentID;
-                        termScore.RefTeacherID = subjectScore.RefTeacherID;
+                        //termScore.RefTeacherID = subjectScore.RefTeacherID;  //term 成績 不需要有 RefTeacherID
                         termScore.Term = subjectScore.Term;
                         termScore.Score = term_score_partial;
 
@@ -705,14 +727,13 @@ namespace ESL_System
                 string data = string.Format(@"
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
-                    ,'{1}'::BIGINT AS ref_course_id
-                    ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,'{4}'::TEXT AS subject
-                    ,'{5}'::TEXT AS value
-                    ,'{6}'::INTEGER AS uid
+                    ,'{1}'::BIGINT AS ref_course_id                    
+                    ,'{2}'::TEXT AS term
+                    ,{3} AS subject
+                    ,'{4}'::TEXT AS value
+                    ,'{5}'::INTEGER AS uid
                     ,'UPDATE'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject, score.Score, score.ID);
+                ", score.RefStudentID, score.RefCourseID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
 
                 dataList.Add(data);
             }
@@ -723,13 +744,12 @@ namespace ESL_System
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
-                    ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,'{4}'::TEXT AS subject
-                    ,'{5}'::TEXT AS value
-                    ,{6}::INTEGER AS uid
+                    ,'{2}'::TEXT AS term
+                    ,{3} AS subject
+                    ,'{4}'::TEXT AS value
+                    ,{5}::INTEGER AS uid
                     ,'INSERT'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject, score.Score, 0);  // insert 給 uid = 0
+                ", score.RefStudentID, score.RefCourseID, score.Term, score.Subject !=null? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
 
                 dataList.Add(data);
             }
@@ -745,7 +765,6 @@ WITH score_data_row AS(
     SET
         ref_student_id = score_data_row.ref_student_id
         ,ref_course_id = score_data_row.ref_course_id
-        ,ref_teacher_id = score_data_row.ref_teacher_id
         ,term = score_data_row.term
         ,subject = score_data_row.subject
         ,value = score_data_row.value
@@ -758,7 +777,6 @@ WITH score_data_row AS(
 INSERT INTO $esl.gradebook_assessment_score(
 	ref_student_id	
 	,ref_course_id
-	,ref_teacher_id
 	,term
 	,subject
 	,value
@@ -766,7 +784,6 @@ INSERT INTO $esl.gradebook_assessment_score(
 SELECT 
 	score_data_row.ref_student_id::BIGINT AS ref_student_id	
 	,score_data_row.ref_course_id::BIGINT AS ref_course_id	
-	,score_data_row.ref_teacher_id::BIGINT AS ref_teacher_id	
 	,score_data_row.term::TEXT AS term	
 	,score_data_row.subject::TEXT AS subject	
 	,score_data_row.value::TEXT AS value	
