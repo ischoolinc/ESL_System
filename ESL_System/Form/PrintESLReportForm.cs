@@ -187,7 +187,7 @@ namespace ESL_System.Form
 
             string student_ids = string.Join("','", studentIDList);
 
-            string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') "; // 2018/6/21 通通都抓了，因為一張成績單上資訊，不只Final的
+            string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') ORDER BY last_update "; // 2018/6/21 通通都抓了，因為一張成績單上資訊，不只Final的
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(sql);
@@ -217,17 +217,43 @@ namespace ESL_System.Form
                         // 指標型成績
                         if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
-                            _scoreDict[id].Add("評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標", "" + row["value"]);
+                            string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標";
+                            if (_scoreDict[id].ContainsKey(key))
+                            {
+                                _scoreDict[id][key] = "" + row["value"]; //重覆項目，後來時間的蓋過前面
+                            }
+                            else
+                            {
+                                _scoreDict[id].Add(key, "" + row["value"]);
+                            }
+
                         }
                         // 評語型成績
                         else if (_commentList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
-                            _scoreDict[id].Add("評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語", "" + row["value"]);
+                            string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語";
+                            if (_scoreDict[id].ContainsKey(key))
+                            {
+                                _scoreDict[id][key] = "" + row["value"]; //重覆項目，後來時間的蓋過前面
+                            }
+                            else
+                            {
+                                _scoreDict[id].Add(key, "" + row["value"]);
+                            }
                         }
                         // 分數型成績
                         else
-                        {
-                            _scoreDict[id].Add("評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數", "" + row["value"]);
+                        {                            
+                            string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數";
+                            if (_scoreDict[id].ContainsKey(key))
+                            {
+                                _scoreDict[id][key] = "" + row["value"]; //重覆項目，後來時間的蓋過前面
+                            }
+                            else
+                            {
+                                _scoreDict[id].Add(key, "" + row["value"]);
+                            }
+
                         }                        
                     }
                 }
