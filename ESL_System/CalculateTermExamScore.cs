@@ -639,7 +639,7 @@ namespace ESL_System
             {
                 string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
 
-                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], _decimalPlace, MidpointRounding.ToEven);
+                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], _decimalPlace, MidpointRounding.AwayFromZero);
             }
 
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
@@ -647,7 +647,7 @@ namespace ESL_System
             {
                 string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
 
-                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.ToEven);                
+                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);                
             }
 
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
