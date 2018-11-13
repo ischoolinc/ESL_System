@@ -210,7 +210,37 @@ namespace ESL_System.Form
         // 儲存
         private void buttonX1_Click(object sender, EventArgs e)
         {
+            // 輸入分數 超過 界線提醒
+            bool outRangeWarning = false;
 
+            if (_targetScoreType == "Score")
+            {
+                decimal i = 0;
+
+                foreach (DataGridViewRow row in dataGridViewX1.Rows)
+                {
+                    //只檢查分數欄， 其值 若 超出 0~100 的範圍 跳出提醒視窗 是否繼續儲存
+                    DataGridViewCell cell = dataGridViewX1.Rows[row.Index].Cells[5];
+
+                    if (decimal.TryParse("" + cell.Value, out i))
+                    {
+                        if (i < 0 || i > 100)
+                        {
+                            outRangeWarning = true;
+                        }
+                    }
+                }
+            }
+
+            // 若畫面上有分數超過範圍，則跳出提醒視窗， 讓使用者決定是否要繼續儲存。
+            if (outRangeWarning)
+            {
+                if (MsgBox.Show("表格上有分數成績不在0~100範圍內，請問是否繼續儲存?", "警告!", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == DialogResult.Cancel)
+                {
+                    return;
+                }
+            }
+            
             _worker = new BackgroundWorker();
             _worker.DoWork += new DoWorkEventHandler(Worker_DoWork);
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
@@ -333,6 +363,7 @@ WITH score_data_row AS(
         ,assessment = score_data_row.assessment
         ,custom_assessment = score_data_row.custom_assessment
         ,value = score_data_row.value
+        ,last_update = NOW()
     FROM 
         score_data_row    
     WHERE $esl.gradebook_assessment_score.uid = score_data_row.uid  
@@ -405,12 +436,11 @@ WHERE action ='INSERT'", Data);
 
             if (_targetScoreType == "Score")
             {
-                int i = 0;
+                decimal i = 0;
 
-                if (!int.TryParse("" + e.FormattedValue, out i))
+                if (!decimal.TryParse("" + e.FormattedValue, out i))
                 {
-                    cell.ErrorText = "請輸入數值。";
-
+                    cell.ErrorText = "請輸入數值。";                    
                 }
             }
             if (_targetScoreType == "Indicator")

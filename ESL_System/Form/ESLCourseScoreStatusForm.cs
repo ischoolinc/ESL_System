@@ -77,6 +77,7 @@ namespace ESL_System.Form
 
             FillCboTemplate();
 
+            chkDisplayNotFinish.Enabled = false;
             picLoading.Visible = false;
 
         }
@@ -1194,11 +1195,12 @@ namespace ESL_System.Form
         {
             // 繼續 畫面控制項       
             picLoading.Visible = false;
-            chkDisplayNotFinish.Enabled = true;
+            chkDisplayNotFinish.Enabled = true;            
             cboTemplate.ResumeLayout();
             cboExam.ResumeLayout();
             listView.ResumeLayout();
             dataGridViewX1.ResumeLayout();
+
 
             listView.Sort(); // 排序
             FillCourses(GetDisplayList()); //填畫面

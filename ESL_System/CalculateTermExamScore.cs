@@ -40,8 +40,10 @@ namespace ESL_System
 
         private Dictionary<string, List<K12.Data.SCAttendRecord>> _scatDict = new Dictionary<string, List<SCAttendRecord>>(); // ESL 學生修課紀錄 Dict <studentID,List<SCAttendRecord>>
 
-        private Dictionary<string, List<K12.Data.SCETakeRecord>> _scetDict = new Dictionary<string, List<SCETakeRecord>>(); // ESL 學生系統Exam紀錄 Dict <studentID,List<SCAttendRecord>>
-        
+        private Dictionary<string, List<K12.Data.SCETakeRecord>> _scetDict = new Dictionary<string, List<SCETakeRecord>>(); // 學生系統Exam紀錄 Dict <studentID,List<SCETakeRecord>>
+
+        private Dictionary<string, List<SCETakeESLRecord>> _scetESLDict = new Dictionary<string, List<SCETakeESLRecord>>(); // ESL 學生系統Exam紀錄 Dict <studentID,List<SCETakeESLRecord>>
+
         private Dictionary<string, List<ESLScore>> _scoreAssessmentOriDict = new Dictionary<string, List<ESLScore>>();  // 取得ESL成績ori (assessment)
         private Dictionary<string, List<ESLScore>> _scoreTermSubjectOriDict = new Dictionary<string, List<ESLScore>>();  // 取得ESL成績ori (term、subject)
 
@@ -377,22 +379,92 @@ namespace ESL_System
             _worker.ReportProgress(40, "取得系統課程評量成績...");
 
             // 取得舊有評量成績
-            List<SCETakeRecord> scetakeList_Old = SCETake.SelectByCourseAndExam(_courseIDList, target_exam_id);
+            //List<SCETakeRecord> scetakeList_Old = SCETake.SelectByCourseAndExam(_courseIDList, target_exam_id);
 
-            // 以 studentID 為 key 整理 學生評量成績
-            foreach (SCETakeRecord scetRecord in scetakeList_Old)
+
+
+            #region 取得學生 舊有評量 Exam 成績 
+
+            List<string> scatIDStringList = new List<string>();
+
+            foreach (SCAttendRecord sca in _scatList)
             {
-                if (!_scetDict.ContainsKey(scetRecord.RefStudentID))
-                {
-                    _scetDict.Add(scetRecord.RefStudentID, new List<SCETakeRecord>());
+                scatIDStringList.Add(sca.ID);
+            }
 
-                    _scetDict[scetRecord.RefStudentID].Add(scetRecord);
-                }
-                else
+            string scattendIDs = string.Join(",", scatIDStringList);
+
+            //抓取目前所選取ESL  課程、評量，且其修課學生的 term、subject 成績
+            query = @"SELECT 
+                    sce_take.id
+                    ,ref_sc_attend_id
+                    ,ref_student_id
+                    ,ref_course_id
+                    ,ref_exam_id
+                    ,sce_take.score
+                    ,sce_take.create_date
+                    ,sce_take.extension
+                    FROM sce_take              
+                    LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
+                    WHERE ref_sc_attend_id IN( " + scattendIDs + ") " +
+                    "AND ref_exam_id = " + "'" + target_exam_id + "'";
+            
+
+            dt = qh.Select(query);
+
+            // 整理 既有的成績資料 
+            if (dt.Rows.Count > 0)
+            {
+                foreach (DataRow dr in dt.Rows)
                 {
-                    _scetDict[scetRecord.RefStudentID].Add(scetRecord);
+                    SCETakeESLRecord scetRecord = new SCETakeESLRecord();
+
+                    scetRecord.ID = "" + dr["id"];
+                    scetRecord.RefSCAttendID = "" + dr["ref_sc_attend_id"];
+                    scetRecord.RefStudentID = "" + dr["ref_student_id"];
+                    scetRecord.RefCourseID = "" + dr["ref_course_id"];
+                    scetRecord.RefExamID = "" + dr["ref_exam_id"];
+
+                    decimal d;
+
+                    decimal.TryParse("" + dr["score"],out d);
+
+                    scetRecord.Score = d;
+                    scetRecord.Extensions = "" + dr["extension"];
+
+
+                    if (!_scetESLDict.ContainsKey(scetRecord.RefStudentID))
+                    {
+                        _scetESLDict.Add(scetRecord.RefStudentID, new List<SCETakeESLRecord>());
+
+                        _scetESLDict[scetRecord.RefStudentID].Add(scetRecord);
+                    }
+                    else
+                    {
+                        _scetESLDict[scetRecord.RefStudentID].Add(scetRecord);
+                    }
+
                 }
             }
+
+
+            #endregion
+
+
+            //// 以 studentID 為 key 整理 學生評量成績
+            //foreach (SCETakeRecord scetRecord in scetakeList_Old)
+            //{
+            //    if (!_scetDict.ContainsKey(scetRecord.RefStudentID))
+            //    {
+            //        _scetDict.Add(scetRecord.RefStudentID, new List<SCETakeRecord>());
+
+            //        _scetDict[scetRecord.RefStudentID].Add(scetRecord);
+            //    }
+            //    else
+            //    {
+            //        _scetDict[scetRecord.RefStudentID].Add(scetRecord);
+            //    }
+            //}
 
             #region 換算ESL 成績項目 每一個的權重
             foreach (string courseID in _scoreTemplateDict.Keys)
@@ -453,7 +525,11 @@ namespace ESL_System
                         decimal assementScore;
                         if (decimal.TryParse(score.Value, out assementScore))
                         {
-                            subject_score_partial = Math.Round(assementScore * _scoreRatioDict[key_score_assessment], 2, MidpointRounding.ToEven); // 四捨五入到第二位
+                            //subject_score_partial = Math.Round(assementScore * _scoreRatioDict[key_score_assessment], 2, MidpointRounding.ToEven); // 四捨五入到第二位
+
+                            // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                            // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                            subject_score_partial = assementScore * _scoreRatioDict[key_score_assessment];
 
                             // 處理 subject分母
                             if (!_scoreRatioTotalDict.ContainsKey(key_subject))
@@ -497,7 +573,11 @@ namespace ESL_System
             {
                 string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
 
-                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+                //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+
+                // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey];
 
             }
 
@@ -514,7 +594,11 @@ namespace ESL_System
                 {
                     key_term = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
 
-                    term_score_partial = Math.Round(subjectScore.Score * _scoreRatioDict[key_score_subject], 2, MidpointRounding.ToEven); // 四捨五入到第二位
+                    //term_score_partial = Math.Round(subjectScore.Score * _scoreRatioDict[key_score_subject], 2, MidpointRounding.ToEven); // 四捨五入到第二位
+
+                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                    term_score_partial = subjectScore.Score * _scoreRatioDict[key_score_subject];
 
 
                     // 處理 term 分母
@@ -554,7 +638,14 @@ namespace ESL_System
                 string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
 
                 _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+            }
 
+            // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
+            foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
+            {
+                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
+
+                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, 2, MidpointRounding.ToEven);                
             }
 
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
@@ -642,21 +733,90 @@ namespace ESL_System
             _worker.ReportProgress(80, "轉換ESL成績 為評量成績");
 
             #region 換算Exam 成績
-            List<SCETakeRecord> updateList = new List<SCETakeRecord>();
-            List<SCETakeRecord> insertList = new List<SCETakeRecord>();
+            //List<SCETakeRecord> updateList = new List<SCETakeRecord>();
+            //List<SCETakeRecord> insertList = new List<SCETakeRecord>();
 
+            #region 舊的 使用 K12 API 方法
             // 更新舊評量分數
-            foreach (string studentID in _scetDict.Keys)
+            //foreach (string studentID in _scetDict.Keys)
+            //{
+            //    foreach (K12.Data.SCETakeRecord sce in _scetDict[studentID])
+            //    {
+            //        foreach (ESLScore score in _termScoreDict.Values)
+            //        {
+            //            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
+            //            {
+            //                SetScore(sce, "" + score.Score);
+
+            //                updateList.Add(sce);
+            //            }
+            //        }
+            //    }
+            //}
+
+            //// 新增 評量分數
+            //foreach (SCAttendRecord sca in _scatList)
+            //{
+            //    if (_scetDict.ContainsKey(sca.RefStudentID))
+            //    {
+            //        // 有學生修課紀錄，卻在該試別 沒有舊評量成績 就是本次要新增的項目
+            //        if (!_scetDict[sca.RefStudentID].Any(s => s.RefSCAttendID == sca.ID))
+            //        {
+            //            foreach (ESLScore score in _termScoreDict.Values)
+            //            {
+            //                if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+            //                {
+            //                    SCETakeRecord sce = new SCETakeRecord();
+            //                    sce.RefSCAttendID = sca.ID;
+            //                    sce.RefExamID = target_exam_id;
+            //                    sce.RefStudentID = sca.RefStudentID;
+            //                    sce.RefCourseID = sca.RefCourseID;
+            //                    SetScore(sce, "" + score.Score);
+            //                    insertList.Add(sce);
+            //                }
+            //            }
+            //        }
+
+            //    }
+            //    else
+            //    {
+            //        foreach (ESLScore score in _termScoreDict.Values)
+            //        {
+            //            if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+            //            {
+            //                SCETakeRecord sce = new SCETakeRecord();
+            //                sce.RefSCAttendID = sca.ID;
+            //                sce.RefExamID = target_exam_id;
+            //                sce.RefStudentID = sca.RefStudentID;
+            //                sce.RefCourseID = sca.RefCourseID;
+            //                SetScore(sce, "" + score.Score);
+            //                insertList.Add(sce);
+            //            }
+            //        }
+            //    }
+            //}
+
+
+            //K12.Data.SCETake.Update(updateList);
+            //K12.Data.SCETake.Insert(insertList);
+            #endregion
+
+
+            List<SCETakeESLRecord> updateList = new List<SCETakeESLRecord>();
+            List<SCETakeESLRecord> insertList = new List<SCETakeESLRecord>();
+
+            // 更新舊評量分數 
+            foreach (string studentID in _scetESLDict.Keys)
             {
-                foreach (K12.Data.SCETakeRecord scet in _scetDict[studentID])
+                foreach (SCETakeESLRecord sce in _scetESLDict[studentID])
                 {
                     foreach (ESLScore score in _termScoreDict.Values)
                     {
-                        if (scet.RefCourseID == score.RefCourseID && scet.RefStudentID == score.RefStudentID && GetScore(scet) != "" + score.Score)
+                        if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
                         {
-                            SetScore(scet, "" + score.Score);
-
-                            updateList.Add(scet);
+                            SetScore(sce, "" + score.Score);
+                            sce.Score = score.Score;
+                            updateList.Add(sce);
                         }
                     }
                 }
@@ -665,21 +825,22 @@ namespace ESL_System
             // 新增 評量分數
             foreach (SCAttendRecord sca in _scatList)
             {
-                if (_scetDict.ContainsKey(sca.RefStudentID))
+                if (_scetESLDict.ContainsKey(sca.RefStudentID))
                 {
                     // 有學生修課紀錄，卻在該試別 沒有舊評量成績 就是本次要新增的項目
-                    if (!_scetDict[sca.RefStudentID].Any(s => s.RefSCAttendID == sca.ID))
+                    if (!_scetESLDict[sca.RefStudentID].Any(s => s.RefSCAttendID == sca.ID))
                     {
                         foreach (ESLScore score in _termScoreDict.Values)
                         {
                             if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
-                                SCETakeRecord sce = new SCETakeRecord();
+                                SCETakeESLRecord sce = new SCETakeESLRecord();
                                 sce.RefSCAttendID = sca.ID;
                                 sce.RefExamID = target_exam_id;
                                 sce.RefStudentID = sca.RefStudentID;
                                 sce.RefCourseID = sca.RefCourseID;
                                 SetScore(sce, "" + score.Score);
+                                sce.Score = score.Score;
                                 insertList.Add(sce);
                             }
                         }
@@ -692,21 +853,98 @@ namespace ESL_System
                     {
                         if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                         {
-                            SCETakeRecord sce = new SCETakeRecord();
+                            SCETakeESLRecord sce = new SCETakeESLRecord();
                             sce.RefSCAttendID = sca.ID;
                             sce.RefExamID = target_exam_id;
                             sce.RefStudentID = sca.RefStudentID;
                             sce.RefCourseID = sca.RefCourseID;
                             SetScore(sce, "" + score.Score);
+                            sce.Score = score.Score;
                             insertList.Add(sce);
                         }
                     }
                 }
             }
 
+            //拚SQL
+            // 兜資料
+            List<string> examDataList = new List<string>();
 
-            K12.Data.SCETake.Update(updateList);
-            K12.Data.SCETake.Insert(insertList);
+            foreach (SCETakeESLRecord score in updateList)
+            {
+                string data = string.Format(@"
+                SELECT
+                    '{0}'::BIGINT AS ref_sc_attend_id
+                    ,'{1}'::BIGINT AS ref_exam_id
+                    ,'{2}'::DECIMAL AS score
+                    ,'{3}'::TEXT AS extension                                        
+                    ,'{4}'::INTEGER AS id
+                    ,'UPDATE'::TEXT AS action
+                ", score.RefSCAttendID,score.RefExamID,score.Score,score.Extensions,score.ID);
+
+                examDataList.Add(data);
+            }
+
+            foreach (SCETakeESLRecord score in insertList)
+            {
+                string data = string.Format(@"
+                SELECT
+                '{0}'::BIGINT AS ref_sc_attend_id
+                    ,'{1}'::BIGINT AS ref_exam_id
+                    ,'{2}'::DECIMAL AS score
+                    ,'{3}'::TEXT AS extension                                        
+                    ,'{4}'::INTEGER AS id
+                    ,'INSERT'::TEXT AS action
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions, 0);
+
+                examDataList.Add(data);
+            }
+
+
+            string examData = string.Join(" UNION ALL", examDataList);
+
+
+            string examsql = string.Format(@"
+WITH score_data_row AS(			 
+                {0}     
+),update_score AS(	    
+    Update sce_take
+    SET
+        ref_sc_attend_id = score_data_row.ref_sc_attend_id
+        ,ref_exam_id = score_data_row.ref_exam_id
+        ,score = score_data_row.score
+        ,extension = score_data_row.extension
+    FROM 
+        score_data_row    
+    WHERE sce_take.id = score_data_row.id  
+        AND score_data_row.action ='UPDATE'
+    RETURNING  sce_take.* 
+)
+INSERT INTO sce_take(
+	ref_sc_attend_id	
+	,ref_exam_id
+    ,score
+	,extension
+)	
+SELECT 
+	score_data_row.ref_sc_attend_id::BIGINT AS ref_sc_attend_id	
+	,score_data_row.ref_exam_id::BIGINT AS ref_exam_id
+    ,score_data_row.score::DECIMAL AS score
+	,score_data_row.extension::TEXT AS extension		
+FROM
+	score_data_row
+WHERE action ='INSERT'", examData);
+
+
+
+            UpdateHelper uh = new UpdateHelper();
+
+            _worker.ReportProgress(80, "上傳成績...");
+
+            //執行sql
+            uh.Execute(examsql);
+
+
             #endregion
 
 
@@ -771,7 +1009,7 @@ WITH score_data_row AS(
         ,term = score_data_row.term
         ,subject = score_data_row.subject
         ,value = score_data_row.value
-        ,last_update =NOW()
+        ,last_update = NOW()
     FROM 
         score_data_row    
     WHERE $esl.gradebook_assessment_score.uid = score_data_row.uid  
@@ -799,7 +1037,7 @@ WHERE action ='INSERT'", Data);
 
 
 
-            UpdateHelper uh = new UpdateHelper();
+             uh = new UpdateHelper();
 
             _worker.ReportProgress(90, "上傳成績...");
 
@@ -823,9 +1061,29 @@ WHERE action ='INSERT'", Data);
         }
 
 
-        private string GetScore(SCETakeRecord sce)
+        private string GetScore(SCETakeESLRecord sce)
         {
-            XmlElement elem = sce.ToXML().SelectSingleNode("Extension/Extension/Score") as XmlElement;
+            string xmlStr = "<Extension>" + sce.Extensions + "</Extension>";
+            XElement elmRoot = XElement.Parse(xmlStr);
+            
+            XmlElement xmlElement = null;
+            XmlReader xmlReader = null;
+            try
+            {
+                xmlReader = elmRoot.CreateReader();
+                var doc = new XmlDocument();
+                xmlElement = doc.ReadNode(elmRoot.CreateReader()) as XmlElement;
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (xmlReader != null) xmlReader.Close();
+            }
+
+
+            XmlElement elem = xmlElement.SelectSingleNode("Extension/Extension/Score") as XmlElement;
 
             string score = elem == null ? string.Empty : elem.InnerText;
 
@@ -833,20 +1091,46 @@ WHERE action ='INSERT'", Data);
         }
 
 
-        private void SetScore(SCETakeRecord sce, string score)
+        private void SetScore(SCETakeESLRecord sce, string score)
         {
-            XmlElement root = sce.ToXML();
-            XmlElement elem = root.SelectSingleNode("Extension/Extension/Score") as XmlElement;
-
-            decimal d;
-            decimal.TryParse(score, out d);
-
-            if (elem != null)
+            if (sce.Extensions != null)
             {
-                elem.InnerText = d + "";
-            }
+                string xmlStr = "<Extension>" + sce.Extensions + "</Extension>";
+                XElement elmRoot = XElement.Parse(xmlStr);
 
-            sce.Load(root);
+                XmlElement xmlElement = null;
+                XmlReader xmlReader = null;
+                try
+                {
+                    xmlReader = elmRoot.CreateReader();
+                    var doc = new XmlDocument();
+                    xmlElement = doc.ReadNode(elmRoot.CreateReader()) as XmlElement;
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    if (xmlReader != null) xmlReader.Close();
+                }
+
+                XmlElement elem = xmlElement.SelectSingleNode("Extension/Extension/Score") as XmlElement;
+
+                decimal d;
+                decimal.TryParse(score, out d);
+
+                if (elem != null)
+                {
+                    elem.InnerText = d + "";
+                }
+
+                sce.Extensions = (xmlElement.InnerXml);
+            }
+            else
+            {
+                sce.Extensions = "<Extension><Score>" + score + "</Score><Text/><Effort/></Extension> ";
+            }
+   
         }
 
 

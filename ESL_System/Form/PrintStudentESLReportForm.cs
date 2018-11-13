@@ -107,6 +107,10 @@ namespace ESL_System.Form
             _BeginDate = dtBegin.Value;
             _EndDate = dtEnd.Value;
 
+            // 將時間轉為本地時間，以防語系時間設定問題
+            _BeginDate.ToLocalTime();
+            _EndDate.ToLocalTime();
+
             // 關閉畫面控制項
             btnPrint.Enabled = false;
             btnClose.Enabled = false;
@@ -824,7 +828,11 @@ namespace ESL_System.Form
                             if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                             {
                                 _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
-                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+
+                                if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                                {
+                                    _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                                }                                
                             }
                             else
                             {
@@ -854,7 +862,11 @@ namespace ESL_System.Form
                         if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
-                            _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+
+                            if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                            {
+                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                            }                            
                         }
                         else
                         {
@@ -866,9 +878,7 @@ namespace ESL_System.Form
                 // 沒有assessment、subject，為term 成績
                 if (termWord != "" && "" + subjectWord == "" && "" + assessmentWord == "")
                 {
-                    
-
-                    
+                                        
                     if (_scoreDict.ContainsKey(id))
                     {
                         // 2018/10/29 穎驊註解，和恩正討論後，不同樣板之間的 Term 名稱 會分不清楚， 因此在前面加 評分樣板作區別
@@ -877,7 +887,11 @@ namespace ESL_System.Form
                         if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
-                            _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+
+                            if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                            {
+                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                            }                            
                         }
                         else
                         {

@@ -124,6 +124,7 @@
   <ItemGroup>
     <Compile Include="ESLScore\Assessment.cs" />
     <Compile Include="CalculateTermExamScore.cs" />
+    <Compile Include="ESLScore\SCETakeESLRecord.cs" />
     <Compile Include="ESLScore\ESLTemplate.cs" />
     <Compile Include="ESLScore\ESLCourse.cs" />
     <Compile Include="ESLScore\ESLScore.cs" />
