@@ -26,7 +26,7 @@ namespace ESL_System
         private List<ESLCourse> _ESLCourseList = new List<ESLCourse>();
 
         private BackgroundWorker _worker;
-                
+
         private Dictionary<string, List<Term>> _scoreTemplateDict = new Dictionary<string, List<Term>>(); // 各課程的分數計算規則 
 
         private Dictionary<string, decimal> _scoreRatioDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分子
@@ -37,7 +37,7 @@ namespace ESL_System
         private Dictionary<string, ESLScore> _termScoreDict = new Dictionary<string, ESLScore>(); // 計算用的評量成績字典
 
         private List<ESLScore> _eslscoreList = new List<ESLScore>(); // 先暫時這樣儲存 上傳用，之後會想改用scoreUpsertDict
-        
+
         private List<K12.Data.SCAttendRecord> _scatList; // ESL學生 修課紀錄 List
 
         private Dictionary<string, List<K12.Data.SCAttendRecord>> _scatDict = new Dictionary<string, List<SCAttendRecord>>(); // ESL 學生修課紀錄 Dict <studentID,List<SCAttendRecord>>
@@ -71,7 +71,7 @@ namespace ESL_System
             _worker.WorkerReportsProgress = true;
 
             _worker.RunWorkerAsync();
-          
+
         }
 
 
@@ -410,7 +410,7 @@ namespace ESL_System
                     LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
                     WHERE ref_sc_attend_id IN( " + scattendIDs + ") " +
                     "AND ref_exam_id = " + "'" + target_exam_id + "'";
-            
+
 
             dt = qh.Select(query);
 
@@ -429,7 +429,7 @@ namespace ESL_System
 
                     decimal d;
 
-                    decimal.TryParse("" + dr["score"],out d);
+                    decimal.TryParse("" + dr["score"], out d);
 
                     scetRecord.Score = d;
                     scetRecord.Extensions = "" + dr["extension"];
@@ -477,25 +477,60 @@ namespace ESL_System
                 foreach (Term t in _scoreTemplateDict[courseID])
                 {
                     t.SubjectTotalWeight = 0;
+
+                    // 紀錄每一個subject 下 assessment 加總權重 的 dict
+                    Dictionary<string, int> assessmentTotalWeightOriDict = new Dictionary<string, int>();
+
+                    int currentLCM = 0;
+                    foreach (Subject s in t.SubjectList)
+                    {
+                        int assessmentTotalWeightOri = 0;
+
+                        foreach (Assessment a in s.AssessmentList)
+                        {
+                            if (a.Type == "Score") // 只取分數型成績
+                            {
+                                assessmentTotalWeightOri += int.Parse(a.Weight);
+                            }
+                        }
+
+                        assessmentTotalWeightOriDict.Add(s.Name, assessmentTotalWeightOri);
+
+                        if (currentLCM == 0)
+                        {
+                            currentLCM = assessmentTotalWeightOri;
+                        }
+                        else
+                        {
+                            currentLCM = LCM(currentLCM, assessmentTotalWeightOri);
+
+                        }
+                    }
+
                     foreach (Subject s in t.SubjectList)
                     {
                         s.AssessmentTotalWeight = 0;
+
+                        int ratioLCM_subject = 0;
+
                         foreach (Assessment a in s.AssessmentList)
                         {
                             if (a.Type == "Score") // 只取分數型成績
                             {
                                 key_assessment = courseID + "_" + t.Name + "_" + s.Name + "_" + a.Name;
 
-                                decimal ratio_assessment = decimal.Parse(a.Weight);
+                                int ratioLCM_assessment = currentLCM * int.Parse(a.Weight) * int.Parse(s.Weight) / assessmentTotalWeightOriDict[s.Name];
 
-                                _scoreRatioDict.Add(key_assessment, ratio_assessment);
+                                _scoreRatioDict.Add(key_assessment, ratioLCM_assessment);
+
+                                ratioLCM_subject += ratioLCM_assessment;
                             }
                         }
+
                         key_subject = courseID + "_" + t.Name + "_" + s.Name;
+                         
+                        _scoreRatioDict.Add(key_subject, ratioLCM_subject);
 
-                        decimal ratio = decimal.Parse(s.Weight);
-
-                        _scoreRatioDict.Add(key_subject, ratio);
                     }
                 }
             }
@@ -550,7 +585,7 @@ namespace ESL_System
 
                                 subjectScore.RefCourseID = score.RefCourseID;
                                 subjectScore.RefStudentID = score.RefStudentID;
-                                subjectScore.RefTeacherID = score.RefTeacherID; 
+                                subjectScore.RefTeacherID = score.RefTeacherID;
                                 subjectScore.Term = score.Term;
                                 subjectScore.Subject = score.Subject;
                                 subjectScore.Score = subject_score_partial;
@@ -570,18 +605,8 @@ namespace ESL_System
                 }
             }
 
-            // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
-            foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
-            {
-                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
 
-                //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
 
-                // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey];
-
-            }
 
             //計算成績 依照比例 等量換算成分數 儲存 (term 成績)
             foreach (ESLScore subjectScore in _subjectScoreDict.Values)
@@ -600,7 +625,8 @@ namespace ESL_System
 
                     // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
                     // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                    term_score_partial = subjectScore.Score * _scoreRatioDict[key_score_subject];
+                    //term_score_partial = subjectScore.Score * _scoreRatioDict[key_score_subject];
+                    term_score_partial = subjectScore.Score;
 
 
                     // 處理 term 分母
@@ -621,7 +647,7 @@ namespace ESL_System
 
                         termScore.RefCourseID = subjectScore.RefCourseID;
                         termScore.RefStudentID = subjectScore.RefStudentID;
-                        termScore.RefTeacherID = subjectScore.RefTeacherID;  
+                        termScore.RefTeacherID = subjectScore.RefTeacherID;
                         termScore.Term = subjectScore.Term;
                         termScore.Score = term_score_partial;
 
@@ -637,17 +663,29 @@ namespace ESL_System
             // 計算Term成績後，現在將各自加權後的成績除以各自的的總權重
             foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
             {
-                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
+                string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
 
-                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], _decimalPlace, MidpointRounding.AwayFromZero);
+                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
             }
+
+            // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
+            foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
+            {
+                string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
+
+                //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+
+                // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+
+            }
+
 
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
-                string ratioTotalKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
-
-                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);                
+                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
             }
 
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
@@ -882,7 +920,7 @@ namespace ESL_System
                     ,'{3}'::TEXT AS extension                                        
                     ,'{4}'::INTEGER AS id
                     ,'UPDATE'::TEXT AS action
-                ", score.RefSCAttendID,score.RefExamID,score.Score,score.Extensions,score.ID);
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions, score.ID);
 
                 examDataList.Add(data);
             }
@@ -974,7 +1012,7 @@ WHERE action ='INSERT'", examData);
                     ,'{5}'::TEXT AS value
                     ,'{6}'::INTEGER AS uid
                     ,'UPDATE'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID,score.RefTeacherID,score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
 
                 dataList.Add(data);
             }
@@ -991,7 +1029,7 @@ WHERE action ='INSERT'", examData);
                     ,'{5}'::TEXT AS value
                     ,{6}::INTEGER AS uid
                     ,'INSERT'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject !=null? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
 
                 dataList.Add(data);
             }
@@ -1039,7 +1077,7 @@ WHERE action ='INSERT'", Data);
 
 
 
-             uh = new UpdateHelper();
+            uh = new UpdateHelper();
 
             _worker.ReportProgress(90, "上傳成績...");
 
@@ -1053,13 +1091,13 @@ WHERE action ='INSERT'", Data);
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            
+
             MsgBox.Show("計算完成!");
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage("",e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
         }
 
 
@@ -1067,7 +1105,7 @@ WHERE action ='INSERT'", Data);
         {
             string xmlStr = "<Extension>" + sce.Extensions + "</Extension>";
             XElement elmRoot = XElement.Parse(xmlStr);
-            
+
             XmlElement xmlElement = null;
             XmlReader xmlReader = null;
             try
@@ -1132,7 +1170,28 @@ WHERE action ='INSERT'", Data);
             {
                 sce.Extensions = "<Extension><Score>" + score + "</Score><Text/><Effort/></Extension> ";
             }
-   
+
+        }
+
+
+        // 2018/11/14 穎驊新增， 為了徹底解決，計算精度的問題
+        // 恩政建議，將每一個權重之間 找到 最小公因數
+        // GCD 為最大公因數 ， 為 找最小公因數的過程需要
+        private static int GCD(int num1, int num2)
+        {
+            int min = 0;
+            int max = 0;
+            int maxModMin = 0;
+            min = Math.Min(num1, num2);
+            max = Math.Max(num1, num2);
+            maxModMin = max % min;
+            return maxModMin > 0 ? GCD(min, maxModMin) : min;
+        }
+
+        // LCM 為最小公倍數
+        private static int LCM(int num1, int num2)
+        {
+            return num1 * num2 / GCD(num1, num2);
         }
 
 
