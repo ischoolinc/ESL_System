@@ -406,6 +406,13 @@ namespace ESL_System.Form
                     continue;
                 }
 
+                // 2018/11/14 穎驊修正，若學生有修課紀錄， 但是目前 狀態 為非一般，則不顯示。
+                if (scaRecord.Student.Status != StudentRecord.StudentStatus.一般)
+                {
+                    continue;
+                }
+
+
                 _worker.ReportProgress(10 + 50 * (scaCount++ / _scaList.Count), "取得修課學生資料...");
 
                 // 目標樣板設定
@@ -846,8 +853,8 @@ namespace ESL_System.Form
                                         {
                                             if (assessment.Name == scoreItem.Assessment)
                                             {
-                                                // 有值 才加分子
-                                                if (scoreItem.HasValue)
+                                                // 有值 才加分子 ，且不能為空字串(web 前端成績輸入會存到如此資料，恩正說，此狀況視為沒有輸入)
+                                                if (scoreItem.HasValue && scoreItem.Value!="")
                                                 {
                                                     // 子項目 分子
                                                     if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
@@ -1010,8 +1017,8 @@ namespace ESL_System.Form
                                         {
                                             if (assessment.Name == scoreItem.Assessment)
                                             {
-                                                // 有值 才加分子
-                                                if (scoreItem.HasValue)
+                                                //有值 才加分子 ，且不能為空字串(web 前端成績輸入會存到如此資料，恩正說，此狀況視為沒有輸入)
+                                                if (scoreItem.HasValue && scoreItem.Value != "")
                                                 {
                                                     // 子項目 分子
                                                     if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
