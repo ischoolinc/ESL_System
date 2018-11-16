@@ -20,7 +20,7 @@ namespace ESL_System
     {
         private string target_exam_id; //目標試別id
 
-        private int _decimalPlace = 1; // 結算成績 計算的小數精度位數
+        private int _decimalPlace = 2; // 結算成績 計算的小數精度位數， 基本上為2， 如果後續有調整需要再另外設計架構
 
         private List<string> _courseIDList;
         private List<ESLCourse> _ESLCourseList = new List<ESLCourse>();
@@ -664,16 +664,9 @@ namespace ESL_System
             foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
             {
                 string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.AwayFromZero);
-=======
-                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], _decimalPlace, MidpointRounding.AwayFromZero);
->>>>>>> origin/1DecimalPlaceCalculate
-=======
+                
                 _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
->>>>>>> origin/1DecimalPlaceCalculate
+
             }
 
             // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
@@ -689,19 +682,10 @@ namespace ESL_System
 
             }
 
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, 2, MidpointRounding.AwayFromZero);                
-=======
-                _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);                
->>>>>>> origin/1DecimalPlaceCalculate
-=======
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
                 _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
->>>>>>> origin/1DecimalPlaceCalculate
             }
 
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
@@ -1113,7 +1097,7 @@ WHERE action ='INSERT'", Data);
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage(""+e.UserState, e.ProgressPercentage);
         }
 
 

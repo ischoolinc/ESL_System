@@ -136,8 +136,35 @@ namespace ESL_System
             };
 
 
+            Catalog ribbon6 = RoleAclSource.Instance["課程"]["ESL課程"];
+            ribbon6.Add(new RibbonFeature("12813482-3D73-4AEF-8924-FA5189C9BDE3", "課程成績匯出"));
 
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Enable = false;
 
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
+            {
+                if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0)
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Enable = UserAcl.Current["12813482-3D73-4AEF-8924-FA5189C9BDE3"].Executable;
+                }
+                else
+                {
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Enable = false;
+                }
+            };
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Image = Properties.Resources.admissions_zoom_64;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Size = RibbonBarButton.MenuButtonSize.Medium;
+
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Click += delegate
+            {
+
+                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+
+                ExportESLscore exporter = new ExportESLscore(eslCouseList);
+
+                exporter.export();
+            };
 
         }
     }

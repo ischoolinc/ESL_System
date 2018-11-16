@@ -1219,7 +1219,7 @@ namespace ESL_System.Form
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage("", e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage(""+e.UserState, e.ProgressPercentage);
         }
 
 
