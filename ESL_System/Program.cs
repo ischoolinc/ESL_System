@@ -166,6 +166,11 @@ namespace ESL_System
                 exporter.export();
             };
 
+            //MotherForm.RibbonBarItems["課程", "ESL課程"]["匯入新竹成績(暫時)"].Click += delegate
+            //{
+            //    ImportHCScore import = new ImportHCScore();
+            //};
+
         }
     }
 }

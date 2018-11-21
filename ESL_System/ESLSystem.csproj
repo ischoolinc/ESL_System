@@ -191,6 +191,7 @@
     </Compile>
     <Compile Include="ESLScore\Indicators.cs" />
     <Compile Include="Global.cs" />
+    <Compile Include="ImportHCScore.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
@@ -257,6 +258,7 @@
     <Content Include="Resource\calc_64.png" />
     <None Include="Resource\meeting_refresh_64.png" />
     <None Include="Resource\loading.gif" />
+    <None Include="Resource\協助新竹康橋匯入ESL成績Excel範例.xlsx" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Form\ESLCourseScoreStatusForm.resx">

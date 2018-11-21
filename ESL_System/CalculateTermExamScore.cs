@@ -256,8 +256,7 @@ namespace ESL_System
                       WHERE ref_course_id IN( " + courseIDs + ") " +
                       "AND  ref_student_id IN(" + studentIDs + ")" +
                       "AND term IN(" + termNames + ")" +
-                      "AND assessment != ''" +
-                      "AND custom_assessment = ''";
+                      "AND assessment != ''";
 
             dt = qh.Select(query);
 
@@ -266,6 +265,12 @@ namespace ESL_System
             {
                 foreach (DataRow dr in dt.Rows)
                 {
+                    // 濾掉有 custom_assessment 項目的成績，不用SQL AND custom_assessment!='' 的原因是因為有的時候custom_assessment 會NULL
+                    if ("" + dr["custom_assessment"] !="")
+                    {
+                        continue;
+                    }
+
                     CourseRecord eslcourse = courseList.Find(c => c.ID == ("" + dr["ref_course_id"]));
 
                     if (eslcourse != null)
