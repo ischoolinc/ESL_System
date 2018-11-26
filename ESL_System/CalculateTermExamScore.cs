@@ -1164,7 +1164,7 @@ WHERE action ='INSERT'", Data);
                     if (xmlReader != null) xmlReader.Close();
                 }
 
-                XmlElement elem = xmlElement.SelectSingleNode("Extension/Extension/Score") as XmlElement;
+                XmlElement elem = xmlElement.SelectSingleNode("Extension/Score") as XmlElement;
 
                 decimal d;
                 decimal.TryParse(score, out d);
