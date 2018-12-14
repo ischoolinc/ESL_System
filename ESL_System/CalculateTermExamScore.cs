@@ -31,6 +31,8 @@ namespace ESL_System
 
         private Dictionary<string, decimal> _scoreRatioDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分子
 
+        private Dictionary<string, string> _scoreExamScoreTypeDict = new Dictionary<string, string>(); // 各課程的分數計算評量成績分數種類(定期、平時)
+
         private Dictionary<string, decimal> _scoreRatioTotalDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分母
 
         private Dictionary<string, ESLScore> _subjectScoreDict = new Dictionary<string, ESLScore>(); // 計算用的科目成績字典
@@ -180,6 +182,11 @@ namespace ESL_System
                                     if (a.Type == "Comment") // 假如是 評語類別，多讀一項 輸入限制屬性
                                     {
                                         a.InputLimit = ele_assessment.Attribute("InputLimit").Value;
+                                    }
+
+                                    if (a.Type == "Score") // 假如是 分數類別，多讀一項 評量計算類別 (定期、平時) (若沒有設定，預設為定期)
+                                    {
+                                        a.ExamScoreType = ele_assessment.Attribute("ExamScoreType") != null ? ele_assessment.Attribute("ExamScoreType").Value : "定期";
                                     }
 
                                     a.IndicatorsList = new List<Indicators>();
@@ -478,7 +485,7 @@ namespace ESL_System
             //    }
             //}
 
-            #region 換算ESL 成績項目 每一個的權重
+            #region 換算ESL 成績項目 每一個的權重 、計算評量成績分數種類(定期、平時)
             foreach (string courseID in _scoreTemplateDict.Keys)
             {
                 string key_subject = "";
@@ -534,6 +541,10 @@ namespace ESL_System
                                 _scoreRatioDict.Add(key_assessment, ratioLCM_assessment);
 
                                 ratioLCM_subject += ratioLCM_assessment;
+
+
+                                _scoreExamScoreTypeDict.Add(key_assessment, a.ExamScoreType); //整理分數計算類別， 以利換回系統知道成績對應(定期、平時)
+
                             }
                         }
 
@@ -588,6 +599,20 @@ namespace ESL_System
                                 _scoreRatioTotalDict[key_subject] += _scoreRatioDict[key_score_assessment];
                             }
 
+                            // 處理 subject分母(定期、平時)
+                            if (_scoreExamScoreTypeDict.ContainsKey(key_score_assessment))
+                            {
+                                if (!_scoreRatioTotalDict.ContainsKey(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]))
+                                {
+                                    _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], _scoreRatioDict[key_score_assessment]);
+                                }
+                                else
+                                {
+                                    _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += _scoreRatioDict[key_score_assessment];
+                                }
+                            }
+
+
 
                             if (!_subjectScoreDict.ContainsKey(key_subject))
                             {
@@ -606,6 +631,31 @@ namespace ESL_System
                             {
                                 _subjectScoreDict[key_subject].Score += subject_score_partial;
                             }
+
+                            // 另外存放 算成定期、平時 評量的分數
+                            if (_scoreExamScoreTypeDict.ContainsKey(key_score_assessment))
+                            {
+                                if (!_subjectScoreDict.ContainsKey(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]))
+                                {
+                                    ESLScore subjectScore = new ESLScore();
+
+                                    subjectScore.RefCourseID = score.RefCourseID;
+                                    subjectScore.RefStudentID = score.RefStudentID;
+                                    subjectScore.RefTeacherID = score.RefTeacherID;
+                                    subjectScore.Term = score.Term;
+                                    subjectScore.Subject = score.Subject;
+                                    subjectScore.Score = subject_score_partial;
+
+                                    _subjectScoreDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], subjectScore);
+                                }
+                                else
+                                {
+                                    _subjectScoreDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]].Score += subject_score_partial;
+                                }
+
+                            }
+
+                            
                         }
                         else
                         {
@@ -616,21 +666,18 @@ namespace ESL_System
             }
 
 
-
-
-            //計算成績 依照比例 等量換算成分數 儲存 (term 成績)
-            foreach (ESLScore subjectScore in _subjectScoreDict.Values)
+            foreach (string key_subject in _subjectScoreDict.Keys)
             {
-                string key_score_subject = subjectScore.RefCourseID + "_" + subjectScore.Term + "_" + subjectScore.Subject; // 查分數比例的KEY 這些就夠
+                ESLScore subjectScore = _subjectScoreDict[key_subject];
+                
+                string key_score_subject = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term + "_" + subjectScore.Subject; // 寫給學生的Subject 成績 還必須要有 studentID 才有獨立性
 
-                string key_term = "";
+                string key_term = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
 
                 decimal term_score_partial;
 
-                if (_scoreRatioDict.ContainsKey(key_score_subject))
+                if (_scoreRatioTotalDict.ContainsKey(key_score_subject))
                 {
-                    key_term = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
-
                     //term_score_partial = Math.Round(subjectScore.Score * _scoreRatioDict[key_score_subject], 2, MidpointRounding.ToEven); // 四捨五入到第二位
 
                     // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
@@ -638,57 +685,185 @@ namespace ESL_System
                     //term_score_partial = subjectScore.Score * _scoreRatioDict[key_score_subject];
                     term_score_partial = subjectScore.Score;
 
-
                     // 處理 term 分母
-                    if (!_scoreRatioTotalDict.ContainsKey(key_term))
+                    if (!key_subject.Contains("定期") && !key_subject.Contains("平時"))
                     {
-                        _scoreRatioTotalDict.Add(key_term, _scoreRatioDict[key_score_subject]);
+                        if (!_scoreRatioTotalDict.ContainsKey(key_term))
+                        {
+                            _scoreRatioTotalDict.Add(key_term, _scoreRatioTotalDict[key_score_subject]);
+                        }
+                        else
+                        {
+                            _scoreRatioTotalDict[key_term] += _scoreRatioTotalDict[key_score_subject];
+                        }
                     }
-                    else
+                                        
+                    // 處理 term (定期)分母 
+                    if (key_subject.Contains("定期"))
                     {
-                        _scoreRatioTotalDict[key_term] += _scoreRatioDict[key_score_subject];
+                        if (!_scoreRatioTotalDict.ContainsKey(key_term + "_定期"))
+                        {
+                            _scoreRatioTotalDict.Add(key_term + "_定期", _scoreRatioTotalDict[key_score_subject + "_定期"]);
+                        }
+                        else
+                        {
+                            _scoreRatioTotalDict[key_term + "_定期"] += _scoreRatioTotalDict[key_score_subject + "_定期"];
+                        }
                     }
 
-
-
-                    if (!_termScoreDict.ContainsKey(key_term))
+                    // 處理 term (平時)分母
+                    if (key_subject.Contains("平時"))
                     {
-                        ESLScore termScore = new ESLScore();
+                        if (!_scoreRatioTotalDict.ContainsKey(key_term + "_平時"))
+                        {
+                            _scoreRatioTotalDict.Add(key_term + "_平時", _scoreRatioTotalDict[key_score_subject + "_平時"]);
+                        }
+                        else
+                        {
+                            _scoreRatioTotalDict[key_term + "_平時"] += _scoreRatioTotalDict[key_score_subject + "_平時"];
+                        }
 
-                        termScore.RefCourseID = subjectScore.RefCourseID;
-                        termScore.RefStudentID = subjectScore.RefStudentID;
-                        termScore.RefTeacherID = subjectScore.RefTeacherID;
-                        termScore.Term = subjectScore.Term;
-                        termScore.Score = term_score_partial;
-
-                        _termScoreDict.Add(key_term, termScore);
                     }
-                    else
+
+                    // 一般的term 成績
+                    if (!key_subject.Contains("定期") && !key_subject.Contains("平時"))
                     {
-                        _termScoreDict[key_term].Score += term_score_partial;
+                        if (!_termScoreDict.ContainsKey(key_term))
+                        {
+                            ESLScore termScore = new ESLScore();
+
+                            termScore.RefCourseID = subjectScore.RefCourseID;
+                            termScore.RefStudentID = subjectScore.RefStudentID;
+                            termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.Term = subjectScore.Term;
+                            termScore.Score = term_score_partial;
+
+                            _termScoreDict.Add(key_term, termScore);
+                        }
+                        else
+                        {
+                            _termScoreDict[key_term].Score += term_score_partial;
+                        }
                     }
+
+                    // 定期的term 成績
+                    if (key_subject.Contains("定期"))
+                    {                        
+                        if (!_termScoreDict.ContainsKey(key_term + "_定期"))
+                        {
+                            ESLScore termScore = new ESLScore();
+
+                            termScore.RefCourseID = subjectScore.RefCourseID;
+                            termScore.RefStudentID = subjectScore.RefStudentID;
+                            termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.Term = subjectScore.Term;
+                            termScore.Score = term_score_partial;
+
+                            _termScoreDict.Add(key_term + "_定期", termScore);
+                        }
+                        else
+                        {
+                            _termScoreDict[key_term + "_定期"].Score += term_score_partial;
+                        }
+                    }
+
+                    // 平時的term 成績
+                    if (key_subject.Contains("平時"))
+                    {                        
+                        if (!_termScoreDict.ContainsKey(key_term + "_平時"))
+                        {
+                            ESLScore termScore = new ESLScore();
+
+                            termScore.RefCourseID = subjectScore.RefCourseID;
+                            termScore.RefStudentID = subjectScore.RefStudentID;
+                            termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.Term = subjectScore.Term;
+                            termScore.Score = term_score_partial;
+
+                            _termScoreDict.Add(key_term + "_平時", termScore);
+                        }
+                        else
+                        {
+                            _termScoreDict[key_term + "_平時"].Score += term_score_partial;
+                        }
+                    }
+                    
                 }
+
             }
+
+      
 
             // 計算Term成績後，現在將各自加權後的成績除以各自的的總權重
             foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
             {
-                string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
-                
-                _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                // 一般的 term 成績
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
+                {
+                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
+
+                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                }
+                // 定期的term 成績
+                if (score.Key.Contains("定期"))
+                {
+                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_定期";
+
+                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                }
+                // 平時的term 成績
+                if (score.Key.Contains("平時"))
+                {
+                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_平時";
+
+                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                }
+
 
             }
 
             // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
-                string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
+                // 一般的 subject 成績
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
+                {
+                    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
 
-                //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
 
-                // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                }
+
+                // 定期的 subject 成績
+                if (score.Key.Contains("定期"))
+                {
+                    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_定期";
+
+                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+
+                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                }
+
+                // 平時的 subject 成績
+                if (score.Key.Contains("平時"))
+                {
+                    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_平時";
+
+                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+
+                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                }
+
+
+
+
 
             }
 
@@ -699,33 +874,39 @@ namespace ESL_System
             }
 
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
-            foreach (ESLScore score in _subjectScoreDict.Values)
+            foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
-                if (!_scorefinalDict.ContainsKey(score.RefStudentID))
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
-                    _scorefinalDict.Add(score.RefStudentID, new List<ESLScore>());
+                    if (!_scorefinalDict.ContainsKey(score.Value.RefStudentID))
+                    {
+                        _scorefinalDict.Add(score.Value.RefStudentID, new List<ESLScore>());
 
-                    _scorefinalDict[score.RefStudentID].Add(score);
-                }
-                else
-                {
-                    _scorefinalDict[score.RefStudentID].Add(score);
-                }
+                        _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
+                    }
+                    else
+                    {
+                        _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
+                    }
+                }                
             }
 
             // 以 studentID 為 key 整理 學生term 成績 至 _scorefinalDict
-            foreach (ESLScore score in _termScoreDict.Values)
+            foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
             {
-                if (!_scorefinalDict.ContainsKey(score.RefStudentID))
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
-                    _scorefinalDict.Add(score.RefStudentID, new List<ESLScore>());
+                    if (!_scorefinalDict.ContainsKey(score.Value.RefStudentID))
+                    {
+                        _scorefinalDict.Add(score.Value.RefStudentID, new List<ESLScore>());
 
-                    _scorefinalDict[score.RefStudentID].Add(score);
-                }
-                else
-                {
-                    _scorefinalDict[score.RefStudentID].Add(score);
-                }
+                        _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
+                    }
+                    else
+                    {
+                        _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
+                    }
+                }                
             }
             #endregion
 
@@ -860,14 +1041,44 @@ namespace ESL_System
             {
                 foreach (SCETakeESLRecord sce in _scetESLDict[studentID])
                 {
-                    foreach (ESLScore score in _termScoreDict.Values)
+                    foreach (string key in _termScoreDict.Keys)
                     {
-                        if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
+                        ESLScore score = _termScoreDict[key];
+
+                        // 定期的 term 成績
+                        if (key.Contains("定期"))
                         {
-                            SetScore(sce, "" + score.Score);
-                            sce.Score = score.Score;
-                            updateList.Add(sce);
+                            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
+                            {
+                                SetScore(sce, "" + score.Score);
+                                sce.Score = score.Score;
+
+                                sce.NeedUpdate = true;
+                            }
                         }
+
+                        // 平時的 term 成績
+                        if (key.Contains("平時"))
+                        {
+                            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetAssignmentScore(sce) != "" + score.Score)
+                            {
+                                SetAssignmentScore(sce, "" + score.Score);
+
+                                sce.NeedUpdate = true;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 更新舊評量分數 
+            foreach (string studentID in _scetESLDict.Keys)
+            {
+                foreach (SCETakeESLRecord sce in _scetESLDict[studentID])
+                {
+                    if (sce.NeedUpdate)
+                    {
+                        updateList.Add(sce);
                     }
                 }
             }
@@ -880,38 +1091,67 @@ namespace ESL_System
                     // 有學生修課紀錄，卻在該試別 沒有舊評量成績 就是本次要新增的項目
                     if (!_scetESLDict[sca.RefStudentID].Any(s => s.RefSCAttendID == sca.ID))
                     {
-                        foreach (ESLScore score in _termScoreDict.Values)
+                        SCETakeESLRecord sce = new SCETakeESLRecord();
+
+                        foreach (string key in _termScoreDict.Keys)
                         {
-                            if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                            ESLScore score = _termScoreDict[key];
+
+                            if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
-                                SCETakeESLRecord sce = new SCETakeESLRecord();
                                 sce.RefSCAttendID = sca.ID;
                                 sce.RefExamID = target_exam_id;
                                 sce.RefStudentID = sca.RefStudentID;
                                 sce.RefCourseID = sca.RefCourseID;
                                 SetScore(sce, "" + score.Score);
                                 sce.Score = score.Score;
-                                insertList.Add(sce);
+                            }
+                            if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                            {
+                                sce.RefSCAttendID = sca.ID;
+                                sce.RefExamID = target_exam_id;
+                                sce.RefStudentID = sca.RefStudentID;
+                                sce.RefCourseID = sca.RefCourseID;
+                                SetAssignmentScore(sce, "" + score.Score);
                             }
                         }
+                        if (sce.RefSCAttendID != null)
+                        {
+                            insertList.Add(sce);
+                        }
+                        
                     }
 
                 }
                 else
                 {
-                    foreach (ESLScore score in _termScoreDict.Values)
+                    SCETakeESLRecord sce = new SCETakeESLRecord();
+
+                    foreach (string key in _termScoreDict.Keys)
                     {
-                        if (sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                        ESLScore score = _termScoreDict[key];
+
+                        if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                         {
-                            SCETakeESLRecord sce = new SCETakeESLRecord();
                             sce.RefSCAttendID = sca.ID;
                             sce.RefExamID = target_exam_id;
                             sce.RefStudentID = sca.RefStudentID;
                             sce.RefCourseID = sca.RefCourseID;
                             SetScore(sce, "" + score.Score);
                             sce.Score = score.Score;
-                            insertList.Add(sce);
                         }
+                        if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                        {
+                            sce.RefSCAttendID = sca.ID;
+                            sce.RefExamID = target_exam_id;
+                            sce.RefStudentID = sca.RefStudentID;
+                            sce.RefCourseID = sca.RefCourseID;
+                            SetAssignmentScore(sce, "" + score.Score);
+                        }
+                    }
+                    if (sce.RefSCAttendID != null)
+                    {
+                        insertList.Add(sce);
                     }
                 }
             }
@@ -1140,6 +1380,35 @@ WHERE action ='INSERT'", Data);
             return score;
         }
 
+        private string GetAssignmentScore(SCETakeESLRecord sce)
+        {
+            string xmlStr = "<Extension>" + sce.Extensions + "</Extension>";
+            XElement elmRoot = XElement.Parse(xmlStr);
+
+            XmlElement xmlElement = null;
+            XmlReader xmlReader = null;
+            try
+            {
+                xmlReader = elmRoot.CreateReader();
+                var doc = new XmlDocument();
+                xmlElement = doc.ReadNode(elmRoot.CreateReader()) as XmlElement;
+            }
+            catch
+            {
+            }
+            finally
+            {
+                if (xmlReader != null) xmlReader.Close();
+            }
+
+
+            XmlElement elem = xmlElement.SelectSingleNode("Extension/Extension/AssignmentScore") as XmlElement;
+
+            string score = elem == null ? string.Empty : elem.InnerText;
+
+            return score;
+        }
+
 
         private void SetScore(SCETakeESLRecord sce, string score)
         {
@@ -1178,15 +1447,57 @@ WHERE action ='INSERT'", Data);
             }
             else
             {
-                sce.Extensions = "<Extension><Score>" + score + "</Score><Text/><Effort/></Extension> ";
+                sce.Extensions = "<Extension><Score>" + score + "</Score><AssignmentScore/><Text/><Effort/></Extension> ";
+            }
+
+        }
+
+        private void SetAssignmentScore(SCETakeESLRecord sce, string score)
+        {
+            if (sce.Extensions != null)
+            {
+                string xmlStr = "<Extension>" + sce.Extensions + "</Extension>";
+                XElement elmRoot = XElement.Parse(xmlStr);
+
+                XmlElement xmlElement = null;
+                XmlReader xmlReader = null;
+                try
+                {
+                    xmlReader = elmRoot.CreateReader();
+                    var doc = new XmlDocument();
+                    xmlElement = doc.ReadNode(elmRoot.CreateReader()) as XmlElement;
+                }
+                catch
+                {
+                }
+                finally
+                {
+                    if (xmlReader != null) xmlReader.Close();
+                }
+
+                XmlElement elem = xmlElement.SelectSingleNode("Extension/AssignmentScore") as XmlElement;
+
+                decimal d;
+                decimal.TryParse(score, out d);
+
+                if (elem != null)
+                {
+                    elem.InnerText = d + "";
+                }
+
+                sce.Extensions = (xmlElement.InnerXml);
+            }
+            else
+            {
+                sce.Extensions = "<Extension><Score/><AssignmentScore>" + score + "</AssignmentScore><Text/><Effort/></Extension> ";
             }
 
         }
 
 
         // 2018/11/14 穎驊新增， 為了徹底解決，計算精度的問題
-        // 恩政建議，將每一個權重之間 找到 最小公因數
-        // GCD 為最大公因數 ， 為 找最小公因數的過程需要
+        // 恩政建議，將每一個權重之間 找到 最小公倍數
+        // GCD 為最大公因數 ， 為 找最小公倍數的過程需要
         private static int GCD(int num1, int num2)
         {
             int min = 0;

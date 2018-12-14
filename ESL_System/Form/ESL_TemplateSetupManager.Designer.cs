@@ -41,6 +41,12 @@
             this.btnDelete = new DevComponents.DotNetBar.ButtonX();
             this.buttonItem4 = new DevComponents.DotNetBar.ButtonItem();
             this.peTemplateName1 = new DevComponents.DotNetBar.PanelEx();
+            this.lblpt02 = new DevComponents.DotNetBar.LabelX();
+            this.labelX2 = new DevComponents.DotNetBar.LabelX();
+            this.ipt01 = new DevComponents.Editors.IntegerInput();
+            this.labelX4 = new DevComponents.DotNetBar.LabelX();
+            this.lbl1 = new DevComponents.DotNetBar.LabelX();
+            this.labelX1 = new DevComponents.DotNetBar.LabelX();
             this.importXmlBtn = new DevComponents.DotNetBar.ButtonX();
             this.ExportXmlBtn = new DevComponents.DotNetBar.ButtonX();
             this.linkLabel2 = new System.Windows.Forms.LinkLabel();
@@ -96,13 +102,16 @@
             this.elementStyle1 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle2 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle3 = new DevComponents.DotNetBar.ElementStyle();
+            this.numericUpDown = new DevComponents.Editors.IntegerInput();
             this.npLeft.SuspendLayout();
             this.navigationPanePanel1.SuspendLayout();
             this.ipList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.loading)).BeginInit();
             this.panel2.SuspendLayout();
             this.peTemplateName1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ipt01)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.advTree1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // npLeft
@@ -118,7 +127,7 @@
             this.npLeft.Location = new System.Drawing.Point(0, 0);
             this.npLeft.Name = "npLeft";
             this.npLeft.Padding = new System.Windows.Forms.Padding(1);
-            this.npLeft.Size = new System.Drawing.Size(156, 693);
+            this.npLeft.Size = new System.Drawing.Size(156, 705);
             this.npLeft.Style = DevComponents.DotNetBar.eDotNetBarStyle.Office2007;
             this.npLeft.TabIndex = 5;
             // 
@@ -150,7 +159,7 @@
             this.navigationPanePanel1.Location = new System.Drawing.Point(1, 25);
             this.navigationPanePanel1.Name = "navigationPanePanel1";
             this.navigationPanePanel1.ParentItem = this.buttonItem4;
-            this.navigationPanePanel1.Size = new System.Drawing.Size(154, 635);
+            this.navigationPanePanel1.Size = new System.Drawing.Size(154, 647);
             this.navigationPanePanel1.Style.Alignment = System.Drawing.StringAlignment.Center;
             this.navigationPanePanel1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.PanelBackground;
             this.navigationPanePanel1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.PanelBackground2;
@@ -195,7 +204,7 @@
             this.ipList.LicenseKey = "F962CEC7-CD8F-4911-A9E9-CAB39962FC1F";
             this.ipList.Location = new System.Drawing.Point(0, 0);
             this.ipList.Name = "ipList";
-            this.ipList.Size = new System.Drawing.Size(154, 604);
+            this.ipList.Size = new System.Drawing.Size(154, 616);
             this.ipList.TabIndex = 0;
             this.ipList.Text = "itemPanel1";
             // 
@@ -233,7 +242,7 @@
             this.panel2.Controls.Add(this.btnAddNew);
             this.panel2.Controls.Add(this.btnDelete);
             this.panel2.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel2.Location = new System.Drawing.Point(0, 604);
+            this.panel2.Location = new System.Drawing.Point(0, 616);
             this.panel2.Name = "panel2";
             this.panel2.Size = new System.Drawing.Size(154, 31);
             this.panel2.TabIndex = 14;
@@ -273,6 +282,13 @@
             // 
             this.peTemplateName1.CanvasColor = System.Drawing.SystemColors.Control;
             this.peTemplateName1.ColorSchemeStyle = DevComponents.DotNetBar.eDotNetBarStyle.Office2007;
+            this.peTemplateName1.Controls.Add(this.numericUpDown);
+            this.peTemplateName1.Controls.Add(this.lblpt02);
+            this.peTemplateName1.Controls.Add(this.labelX2);
+            this.peTemplateName1.Controls.Add(this.ipt01);
+            this.peTemplateName1.Controls.Add(this.labelX4);
+            this.peTemplateName1.Controls.Add(this.lbl1);
+            this.peTemplateName1.Controls.Add(this.labelX1);
             this.peTemplateName1.Controls.Add(this.importXmlBtn);
             this.peTemplateName1.Controls.Add(this.ExportXmlBtn);
             this.peTemplateName1.Controls.Add(this.linkLabel2);
@@ -282,9 +298,9 @@
             this.peTemplateName1.Controls.Add(this.lblIsDirty);
             this.peTemplateName1.Controls.Add(this.btnSave);
             this.peTemplateName1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.peTemplateName1.Location = new System.Drawing.Point(156, 629);
+            this.peTemplateName1.Location = new System.Drawing.Point(156, 612);
             this.peTemplateName1.Name = "peTemplateName1";
-            this.peTemplateName1.Size = new System.Drawing.Size(777, 64);
+            this.peTemplateName1.Size = new System.Drawing.Size(777, 93);
             this.peTemplateName1.Style.BackColor1.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground;
             this.peTemplateName1.Style.BackColor2.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarBackground2;
             this.peTemplateName1.Style.BorderColor.ColorSchemePart = DevComponents.DotNetBar.eColorSchemePart.BarDockedBorder;
@@ -294,6 +310,100 @@
             this.peTemplateName1.Style.MarginLeft = 15;
             this.peTemplateName1.TabIndex = 6;
             this.peTemplateName1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.peTemplateName1_MouseDoubleClick);
+            // 
+            // lblpt02
+            // 
+            this.lblpt02.AutoSize = true;
+            this.lblpt02.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.lblpt02.BackgroundStyle.Class = "";
+            this.lblpt02.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.lblpt02.Location = new System.Drawing.Point(391, 39);
+            this.lblpt02.Name = "lblpt02";
+            this.lblpt02.Size = new System.Drawing.Size(37, 21);
+            this.lblpt02.TabIndex = 29;
+            this.lblpt02.Text = "60 %";
+            this.lblpt02.TextAlignment = System.Drawing.StringAlignment.Far;
+            // 
+            // labelX2
+            // 
+            this.labelX2.AutoSize = true;
+            // 
+            // 
+            // 
+            this.labelX2.BackgroundStyle.Class = "";
+            this.labelX2.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX2.Location = new System.Drawing.Point(296, 39);
+            this.labelX2.Name = "labelX2";
+            this.labelX2.Size = new System.Drawing.Size(19, 21);
+            this.labelX2.TabIndex = 28;
+            this.labelX2.Text = "%";
+            this.labelX2.TextAlignment = System.Drawing.StringAlignment.Center;
+            // 
+            // ipt01
+            // 
+            this.ipt01.BackColor = System.Drawing.Color.White;
+            // 
+            // 
+            // 
+            this.ipt01.BackgroundStyle.Class = "DateTimeInputBackground";
+            this.ipt01.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.ipt01.ButtonFreeText.Shortcut = DevComponents.DotNetBar.eShortcut.F2;
+            this.ipt01.Enabled = false;
+            this.ipt01.Location = new System.Drawing.Point(233, 37);
+            this.ipt01.MaxValue = 100;
+            this.ipt01.MinValue = 0;
+            this.ipt01.Name = "ipt01";
+            this.ipt01.ShowUpDown = true;
+            this.ipt01.Size = new System.Drawing.Size(60, 25);
+            this.ipt01.TabIndex = 27;
+            this.ipt01.Value = 40;
+            this.ipt01.ValueChanged += new System.EventHandler(this.ipt01_ValueChanged);
+            // 
+            // labelX4
+            // 
+            this.labelX4.AutoSize = true;
+            // 
+            // 
+            // 
+            this.labelX4.BackgroundStyle.Class = "";
+            this.labelX4.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX4.Location = new System.Drawing.Point(330, 39);
+            this.labelX4.Name = "labelX4";
+            this.labelX4.Size = new System.Drawing.Size(60, 21);
+            this.labelX4.TabIndex = 26;
+            this.labelX4.Text = "平時比例";
+            // 
+            // lbl1
+            // 
+            this.lbl1.AutoSize = true;
+            // 
+            // 
+            // 
+            this.lbl1.BackgroundStyle.Class = "";
+            this.lbl1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.lbl1.Location = new System.Drawing.Point(170, 39);
+            this.lbl1.Name = "lbl1";
+            this.lbl1.Size = new System.Drawing.Size(60, 21);
+            this.lbl1.TabIndex = 25;
+            this.lbl1.Text = "定期比例";
+            // 
+            // labelX1
+            // 
+            this.labelX1.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX1.BackgroundStyle.Class = "";
+            this.labelX1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX1.ForeColor = System.Drawing.SystemColors.ControlText;
+            this.labelX1.Location = new System.Drawing.Point(19, 37);
+            this.labelX1.Name = "labelX1";
+            this.labelX1.Size = new System.Drawing.Size(96, 23);
+            this.labelX1.TabIndex = 23;
+            this.labelX1.Text = "成績小數位數:";
             // 
             // importXmlBtn
             // 
@@ -327,7 +437,7 @@
             this.linkLabel2.AutoSize = true;
             this.linkLabel2.BackColor = System.Drawing.Color.Transparent;
             this.linkLabel2.Enabled = false;
-            this.linkLabel2.Location = new System.Drawing.Point(324, 38);
+            this.linkLabel2.Location = new System.Drawing.Point(324, 67);
             this.linkLabel2.Name = "linkLabel2";
             this.linkLabel2.Size = new System.Drawing.Size(112, 17);
             this.linkLabel2.TabIndex = 20;
@@ -341,7 +451,7 @@
             this.linkLabel1.AutoSize = true;
             this.linkLabel1.BackColor = System.Drawing.Color.Transparent;
             this.linkLabel1.Enabled = false;
-            this.linkLabel1.Location = new System.Drawing.Point(169, 38);
+            this.linkLabel1.Location = new System.Drawing.Point(169, 67);
             this.linkLabel1.Name = "linkLabel1";
             this.linkLabel1.Size = new System.Drawing.Size(112, 17);
             this.linkLabel1.TabIndex = 19;
@@ -355,7 +465,7 @@
             this.linkLabel3.AutoSize = true;
             this.linkLabel3.BackColor = System.Drawing.Color.Transparent;
             this.linkLabel3.Enabled = false;
-            this.linkLabel3.Location = new System.Drawing.Point(16, 38);
+            this.linkLabel3.Location = new System.Drawing.Point(16, 67);
             this.linkLabel3.Name = "linkLabel3";
             this.linkLabel3.Size = new System.Drawing.Size(112, 17);
             this.linkLabel3.TabIndex = 18;
@@ -380,6 +490,7 @@
             // 
             // lblIsDirty
             // 
+            this.lblIsDirty.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             // 
             // 
             // 
@@ -387,7 +498,7 @@
             this.lblIsDirty.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
             this.lblIsDirty.Font = new System.Drawing.Font("微軟正黑體", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
             this.lblIsDirty.ForeColor = System.Drawing.Color.Red;
-            this.lblIsDirty.Location = new System.Drawing.Point(524, 38);
+            this.lblIsDirty.Location = new System.Drawing.Point(574, 67);
             this.lblIsDirty.Name = "lblIsDirty";
             this.lblIsDirty.Size = new System.Drawing.Size(63, 23);
             this.lblIsDirty.TabIndex = 4;
@@ -400,7 +511,7 @@
             this.btnSave.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.btnSave.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
             this.btnSave.Enabled = false;
-            this.btnSave.Location = new System.Drawing.Point(643, 38);
+            this.btnSave.Location = new System.Drawing.Point(643, 67);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(121, 23);
             this.btnSave.TabIndex = 3;
@@ -433,7 +544,7 @@
             this.advTree1.NodesConnector = this.nodeConnector1;
             this.advTree1.NodeStyle = this.elementStyle1;
             this.advTree1.PathSeparator = ";";
-            this.advTree1.Size = new System.Drawing.Size(771, 629);
+            this.advTree1.Size = new System.Drawing.Size(771, 606);
             this.advTree1.Styles.Add(this.elementStyle1);
             this.advTree1.Styles.Add(this.elementStyle2);
             this.advTree1.Styles.Add(this.elementStyle3);
@@ -446,7 +557,7 @@
             this.colItem.Name = "colItem";
             this.colItem.SortingEnabled = false;
             this.colItem.Text = "項目";
-            this.colItem.Width.Absolute = 300;
+            this.colItem.Width.Absolute = 330;
             // 
             // colValue
             // 
@@ -863,11 +974,31 @@
             this.elementStyle3.PaddingTop = 1;
             this.elementStyle3.TextColor = System.Drawing.Color.Black;
             // 
+            // numericUpDown
+            // 
+            this.numericUpDown.BackColor = System.Drawing.Color.White;
+            // 
+            // 
+            // 
+            this.numericUpDown.BackgroundStyle.Class = "DateTimeInputBackground";
+            this.numericUpDown.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.numericUpDown.ButtonFreeText.Shortcut = DevComponents.DotNetBar.eShortcut.F2;
+            this.numericUpDown.Enabled = false;
+            this.numericUpDown.Location = new System.Drawing.Point(105, 37);
+            this.numericUpDown.MaxValue = 100;
+            this.numericUpDown.MinValue = 0;
+            this.numericUpDown.Name = "numericUpDown";
+            this.numericUpDown.ShowUpDown = true;
+            this.numericUpDown.Size = new System.Drawing.Size(43, 25);
+            this.numericUpDown.TabIndex = 30;
+            this.numericUpDown.Value = 2;
+            this.numericUpDown.ValueChanged += new System.EventHandler(this.numericUpDown_ValueChanged_1);
+            // 
             // ESL_TemplateSetupManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(933, 693);
+            this.ClientSize = new System.Drawing.Size(933, 705);
             this.Controls.Add(this.advTree1);
             this.Controls.Add(this.peTemplateName1);
             this.Controls.Add(this.npLeft);
@@ -884,7 +1015,9 @@
             this.panel2.ResumeLayout(false);
             this.peTemplateName1.ResumeLayout(false);
             this.peTemplateName1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.ipt01)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.advTree1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -958,5 +1091,12 @@
         private System.Windows.Forms.LinkLabel linkLabel3;
         private DevComponents.DotNetBar.ButtonX ExportXmlBtn;
         private DevComponents.DotNetBar.ButtonX importXmlBtn;
+        private DevComponents.DotNetBar.LabelX labelX1;
+        private DevComponents.DotNetBar.LabelX lblpt02;
+        private DevComponents.DotNetBar.LabelX labelX2;
+        private DevComponents.Editors.IntegerInput ipt01;
+        private DevComponents.DotNetBar.LabelX labelX4;
+        private DevComponents.DotNetBar.LabelX lbl1;
+        private DevComponents.Editors.IntegerInput numericUpDown;
     }
 }

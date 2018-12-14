@@ -34,6 +34,11 @@ namespace ESL_System
         public string AllowCustomAssessment { get; set; }
 
         /// <summary>
+        /// 子評量在回中文成績系統計算評量成績分數種類(定期、平時)
+        /// </summary>
+        public string ExamScoreType { get; set; }
+
+        /// <summary>
         /// 專門給 子評量名稱Comments 的欄位，用來規範教師可以在web 上的評語字數，預設200
         /// </summary>
         public string InputLimit { get; set; }

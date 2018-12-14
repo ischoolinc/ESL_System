@@ -64,6 +64,7 @@ namespace ESL_System.Form
             _hintGuideDict.Add("ScoreKind", "點選左鍵選取:分數、指標、評語");
             _hintGuideDict.Add("AllowCustom", "點選左鍵選取:是、否");
             _hintGuideDict.Add("Exam", "選擇對應系統評量名稱，不得空白、重覆。");
+            _hintGuideDict.Add("ExamScoreType", "點選左鍵選取:定期、平時");
 
             _typeCovertDict.Add("Score", "分數");
             _typeCovertDict.Add("Indicator", "指標");
@@ -193,6 +194,8 @@ namespace ESL_System.Form
         {
             advTree1.Nodes.Clear();
 
+            ipt01.Tag = null; // Tag 紀錄 初始比例
+
             //沒東西 預設空畫面
             if (item == null)
             {
@@ -206,8 +209,30 @@ namespace ESL_System.Form
                 DataTable dt;
                 QueryHelper qh = new QueryHelper();
 
-                string selQuery = "select id,description from exam_template where id = '" + esl_exam_template_id + "'";
+                string selQuery = "select id,description,extension from exam_template where id = '" + esl_exam_template_id + "'";
                 dt = qh.Select(selQuery);
+
+                #region 填寫 定期、平時 比例 數值
+                ipt01.Value = 40;
+                ipt01.Enabled = true;
+                numericUpDown.Enabled = true;
+
+                string xmlStr_extension = "<root>" + dt.Rows[0]["extension"].ToString() + "</root>";
+                XElement elmRoot_extension = XElement.Parse(xmlStr_extension);
+
+                if (elmRoot_extension != null)
+                {
+                    if (elmRoot_extension.Element("Extension") != null)
+                    {
+                        if (elmRoot_extension.Element("Extension").Element("ScorePercentage") != null)
+                            ipt01.Value = int.Parse(elmRoot_extension.Element("Extension").Element("ScorePercentage").Value);
+                    }
+                }
+
+                ipt01.Tag = ipt01.Value; // 初始值 跟後來做比較檢查 Dirty 
+                #endregion
+
+
                 string xmlStr = "<root>" + dt.Rows[0]["description"].ToString() + "</root>";
                 XElement elmRoot = XElement.Parse(xmlStr);
 
@@ -216,6 +241,9 @@ namespace ESL_System.Form
                 {
                     if (elmRoot.Element("ESLTemplate") != null)
                     {
+                        numericUpDown.Value = elmRoot.Element("ESLTemplate").Attribute("decimalPlace") != null ? int.Parse(elmRoot.Element("ESLTemplate").Attribute("decimalPlace").Value) : 2; // 小數位數預設為2
+                        numericUpDown.Tag = numericUpDown.Value; // 初始值 跟後來做比較檢查 Dirty 
+
                         foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
                         {
                             Term t = new Term();
@@ -248,9 +276,17 @@ namespace ESL_System.Form
                                     a.Type = ele_assessment.Attribute("Type").Value;
                                     a.AllowCustomAssessment = ele_assessment.Attribute("AllowCustomAssessment").Value;
 
+
+
+
                                     if (a.Type == "Comment") // 假如是 評語類別，多讀一項 輸入限制屬性
                                     {
                                         a.InputLimit = ele_assessment.Attribute("InputLimit").Value;
+                                    }
+
+                                    if (a.Type == "Score") // 假如是 分數類別，多讀一項 評量計算類別 (定期、平時)
+                                    {
+                                        a.ExamScoreType = ele_assessment.Attribute("ExamScoreType") != null ? ele_assessment.Attribute("ExamScoreType").Value : "定期";
                                     }
 
                                     a.IndicatorsList = new List<Indicators>();
@@ -555,6 +591,12 @@ namespace ESL_System.Form
 
                     LeftMouseClick(menuItems, e);
                     break;
+                case "ExamScoreType":
+                    //Declare the menu items and the shortcut menu.
+                    menuItems = new MenuItem[]{new MenuItem("定期",MenuItemNew_Click),
+                new MenuItem("平時",MenuItemNew_Click)};
+                    LeftMouseClick(menuItems, e);
+                    break;
                 default:
                     break;
             }
@@ -600,6 +642,11 @@ namespace ESL_System.Form
             // 假若分數指標沒有選項，則會只再 新增"一項" 指標子項目設定
             if (mi.Text == "指標")
             {
+                if (node_now.Parent.Nodes.Count > 5)
+                {
+                    node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count - 1);
+                }
+
                 // 選擇指標後，將比重設定為0，且disable
                 node_now.Parent.Nodes[1].Cells[1].Text = "0";
                 node_now.Parent.Nodes[1].Cells[2].Text = "指標型評量無法輸入比例";
@@ -674,7 +721,12 @@ namespace ESL_System.Form
 
                     if (mi.Text == "評語")
                     {
-                        node_now.Parent.Nodes[1].Cells[1].Text = "0"; // 切換到評語 則為0
+                        if (node_now.Parent.Nodes.Count > 5)
+                        {
+                            node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count - 1); // 假若從 分數選回 評語 把最後一項計算評量成績分數種類(定期、平時) 刪掉。
+                        }
+
+                        node_now.Parent.Nodes[1].Cells[1].Text = "0"; // 切換到評語 比重則為0
                         DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
                         new_assessment_node_inputLimit.Text = "輸入限制";
                         new_assessment_node_inputLimit.Tag = "integer";
@@ -686,10 +738,24 @@ namespace ESL_System.Form
 
                         node_now.Parent.Nodes.Add(new_assessment_node_inputLimit);
                     }
-                    if (mi.Text == "分數" && node_now.Parent.Nodes.Count > 5)
+                    if (mi.Text == "分數")
                     {
-                        node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count - 1); // 假若從 評語選回 分數 把最後一項 輸入限制刪掉。
+                        if (node_now.Parent.Nodes.Count > 5)
+                        {
+                            node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count - 1); // 假若從 評語選回 分數 把最後一項 輸入限制刪掉。
+                        }
+                        // 然後再加入 評量計算類型(定期、平時)
+                        DevComponents.AdvTree.Node new_assessment_node_examScoreType = new DevComponents.AdvTree.Node(); //計算評量成績分數種類(定期、平時)                                                               
+                        new_assessment_node_examScoreType.Text = "評量結算分數類別";
+                        new_assessment_node_examScoreType.Tag = "ExamScoreType";
+                        new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell("定期")); //預設 都是 "定期"
+                        new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_examScoreType.Tag]));
+                        new_assessment_node_examScoreType.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
+                        new_assessment_node_examScoreType.Cells[0].Editable = false;
+                        new_assessment_node_examScoreType.Cells[2].Editable = false;
+                        new_assessment_node_examScoreType.DragDropEnabled = false;
 
+                        node_now.Parent.Nodes.Add(new_assessment_node_examScoreType);
                     }
 
 
@@ -989,6 +1055,7 @@ namespace ESL_System.Form
                     DevComponents.AdvTree.Node new_assessment_node_type = new DevComponents.AdvTree.Node(); //評分種類
                     DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
                     DevComponents.AdvTree.Node new_assessment_node_allowCustomAssessment = new DevComponents.AdvTree.Node(); //是否允許自訂項目
+                    DevComponents.AdvTree.Node new_assessment_node_examScoreType = new DevComponents.AdvTree.Node(); //計算評量成績分數種類(定期、平時)
 
                     //項目
                     new_assessment_node_name.Text = "名稱:";
@@ -997,6 +1064,7 @@ namespace ESL_System.Form
                     new_assessment_node_type.Text = "評分種類";
                     new_assessment_node_inputLimit.Text = "輸入限制";
                     new_assessment_node_allowCustomAssessment.Text = "是否允許自訂項目";
+                    new_assessment_node_examScoreType.Text = "評量結算分數類別";
 
                     //node Tag
                     new_assessment_node_name.Tag = "string";
@@ -1005,6 +1073,7 @@ namespace ESL_System.Form
                     new_assessment_node_type.Tag = "ScoreKind";
                     new_assessment_node_inputLimit.Tag = "integer";
                     new_assessment_node_allowCustomAssessment.Tag = "AllowCustom";
+                    new_assessment_node_examScoreType.Tag = "ExamScoreType";
 
                     //值
                     new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell(a.Name));
@@ -1013,6 +1082,7 @@ namespace ESL_System.Form
                     new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell(_typeCovertDict[a.Type]));
                     new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell(a.InputLimit));
                     new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell(a.AllowCustomAssessment == "true" ? "是" : "否"));
+                    new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell(a.ExamScoreType));
 
                     //說明
                     new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_name.Tag]));
@@ -1021,11 +1091,13 @@ namespace ESL_System.Form
                     new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_type.Tag]));
                     new_assessment_node_inputLimit.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_inputLimit.Tag]));
                     new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_allowCustomAssessment.Tag]));
+                    new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_examScoreType.Tag]));
 
                     // 點擊事件 (適用於:teacherKind、ScoreKind、AllowCustom)
                     new_assessment_node_teacherRole.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
                     new_assessment_node_type.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
                     new_assessment_node_allowCustomAssessment.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
+                    new_assessment_node_examScoreType.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
 
                     //設定為不能點選編輯，避免使用者誤用
                     new_assessment_node_name.Cells[0].Editable = false;
@@ -1040,6 +1112,8 @@ namespace ESL_System.Form
                     new_assessment_node_inputLimit.Cells[2].Editable = false;
                     new_assessment_node_allowCustomAssessment.Cells[0].Editable = false;
                     new_assessment_node_allowCustomAssessment.Cells[2].Editable = false;
+                    new_assessment_node_examScoreType.Cells[0].Editable = false;
+                    new_assessment_node_examScoreType.Cells[2].Editable = false;
 
                     //設定為不能拖曳，避免使用者誤用
                     new_assessment_node_name.DragDropEnabled = false;
@@ -1048,6 +1122,7 @@ namespace ESL_System.Form
                     new_assessment_node_type.DragDropEnabled = false;
                     new_assessment_node_inputLimit.DragDropEnabled = false;
                     new_assessment_node_allowCustomAssessment.DragDropEnabled = false;
+                    new_assessment_node_examScoreType.DragDropEnabled = false;
 
 
                     //假如有指標型評量 則加入最後一層指標型評量輸入
@@ -1124,9 +1199,16 @@ namespace ESL_System.Form
                     new_assessment_node.Nodes.Add(new_assessment_node_teacherRole);
                     new_assessment_node.Nodes.Add(new_assessment_node_type);
                     new_assessment_node.Nodes.Add(new_assessment_node_allowCustomAssessment);
+
+
                     if (a.Type == "Comment")// 假如是 評語類別，才多加入
                     {
                         new_assessment_node.Nodes.Add(new_assessment_node_inputLimit);
+                    }
+
+                    if (a.Type == "Score")// 假如是 分數類別，才多加入
+                    {
+                        new_assessment_node.Nodes.Add(new_assessment_node_examScoreType);
                     }
 
                     //設定為不能點選編輯，避免使用者誤用
@@ -1398,7 +1480,7 @@ namespace ESL_System.Form
             updQuery += string.Format(@"
                 UPDATE exam_template 
                     SET description = '" + description_xml + "'" +
-                    ", extension = '<Extension><ScorePercentage>100</ScorePercentage></Extension>' " +
+                    ", extension = '<Extension><ScorePercentage>" + ipt01.Value +"</ScorePercentage></Extension>' " +
                 "WHERE id = '" + esl_exam_template_id + "'");
 
 
@@ -1441,6 +1523,9 @@ namespace ESL_System.Form
 
             //string.Empty makes cleaner code
             XmlElement element_ESLTemplate = doc.CreateElement(string.Empty, "ESLTemplate", string.Empty);
+
+            element_ESLTemplate.SetAttribute("decimalPlace", "" + numericUpDown.Value); // 儲存小數位數精度
+
             doc.AppendChild(element_ESLTemplate);
 
             foreach (DevComponents.AdvTree.Node term_node in advTree1.Nodes)
@@ -1475,6 +1560,11 @@ namespace ESL_System.Form
                                 {
                                     element_Assessment.SetAttribute("AllowCustomAssessment", assessment_node.Nodes[4].Cells[1].Text == "是" ? "true" : "false");
                                     element_Assessment.SetAttribute("InputLimit", assessment_node.Nodes[5].Cells[1].Text);
+                                }
+                                else if (_typeCovertRevDict[assessment_node.Nodes[3].Cells[1].Text] == "Score") // 假如是分數，需要再多存一項 評量計算分數種類 (定期、 平時)
+                                {
+                                    element_Assessment.SetAttribute("AllowCustomAssessment", assessment_node.Nodes[4].Cells[1].Text == "是" ? "true" : "false");
+                                    element_Assessment.SetAttribute("ExamScoreType", assessment_node.Nodes[5].Cells[1].Text);
                                 }
                                 else
                                 {
@@ -2003,9 +2093,9 @@ namespace ESL_System.Form
             string description_xml = GetXmlDesriptionInTree();
 
             XmlDocument doc = new XmlDocument();
-            
+
             doc.LoadXml(description_xml);
-           
+
             doc.PreserveWhitespace = true;
 
             // 重新 排版 xml 使使用者 較易閱讀、編排
@@ -2078,7 +2168,7 @@ namespace ESL_System.Form
                     MsgBox.Show(ex.Message);
                 }
 
-                
+
             }
             else
             {
@@ -2144,13 +2234,35 @@ namespace ESL_System.Form
                 if (!_examName_IDDict.ContainsKey(term_node.Nodes[4].Cells[1].Text))
                 {
                     allTermHasRefExamID = false;
-                }                
+                }
             }
 
             return allTermHasRefExamID;
         }
 
+        private void numericUpDown_ValueChanged(object sender, EventArgs e)
+        {
 
+        }
+
+        private void ipt01_ValueChanged(object sender, EventArgs e)
+        {
+            // 最多100
+            lblpt02.Text = (100 - ipt01.Value) + " %";
+
+            lblIsDirty.Visible = false;
+            if (ipt01.Tag != null)
+                if (ipt01.Value.ToString() != ipt01.Tag.ToString())
+                    lblIsDirty.Visible = true;
+        }
+
+        private void numericUpDown_ValueChanged_1(object sender, EventArgs e)
+        {
+            lblIsDirty.Visible = false;
+            if (numericUpDown.Tag != null)
+                if (numericUpDown.Value.ToString() != numericUpDown.Tag.ToString())
+                    lblIsDirty.Visible = true;
+        }
     }
 }
 

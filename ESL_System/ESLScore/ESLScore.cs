@@ -66,7 +66,7 @@ namespace ESL_System
         public string Custom_Assessment { get; set; }
 
         /// <summary>
-        /// 成績值
+        /// 成績值 (可能是分數:100、指標:G、評語:Good Job!)
         /// </summary>
         public string Value { get; set; }
 

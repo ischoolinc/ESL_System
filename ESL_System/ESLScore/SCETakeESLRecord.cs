@@ -47,6 +47,11 @@ namespace ESL_System
         /// </summary>
         public string Extensions { get; set; }
 
+        /// <summary>
+        /// 資料需update
+        /// </summary>
+        public bool NeedUpdate  { get; set; }
+
 
     }
 }
