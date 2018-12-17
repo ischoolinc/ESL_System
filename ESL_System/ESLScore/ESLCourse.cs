@@ -18,10 +18,15 @@ namespace ESL_System
         /// 課程名稱
         /// </summary>
         public string CourseName { get; set; }
-       
+
         /// <summary>
         /// 子評量項目設定
         /// </summary>
         public string Description { get; set; }
+
+        /// <summary>
+        /// 評分樣版定期平時占比
+        /// </summary>
+        public string Extension { get; set; }
     }
 }

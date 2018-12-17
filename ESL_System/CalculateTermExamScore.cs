@@ -20,7 +20,8 @@ namespace ESL_System
     {
         private string target_exam_id; //目標試別id
 
-        private int _decimalPlace = 2; // 結算成績 計算的小數精度位數， 基本上為2， 如果後續有調整需要再另外設計架構
+        // 不再使用， 因應新的調整， 小數位數 將會 跟著每一個樣板設定
+        //private int _decimalPlace = 2; // 結算成績 計算的小數精度位數， 基本上為2， 如果後續有調整需要再另外設計架構
 
         private List<string> _courseIDList;
         private List<ESLCourse> _ESLCourseList = new List<ESLCourse>();
@@ -28,6 +29,8 @@ namespace ESL_System
         private BackgroundWorker _worker;
 
         private Dictionary<string, List<Term>> _scoreTemplateDict = new Dictionary<string, List<Term>>(); // 各課程的分數計算規則 
+
+        private Dictionary<string, int> _scoreDecimalPlaceDict = new Dictionary<string, int>(); // 各課程的計算小數位數 
 
         private Dictionary<string, decimal> _scoreRatioDict = new Dictionary<string, decimal>(); // 各課程的分數比例權重分子
 
@@ -94,6 +97,7 @@ namespace ESL_System
                         course.id
                         ,course.course_name
                         ,exam_template.description 
+                        ,exam_template.extension
                     FROM course 
                     LEFT JOIN  exam_template ON course.ref_exam_template_id =exam_template.id  
                     WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NOT NULL  ";
@@ -115,6 +119,7 @@ namespace ESL_System
                     record.ID = "" + dr[0]; //課程ID
                     record.CourseName = "" + dr[1]; //課程名稱
                     record.Description = "" + dr[2]; // ESL 評分樣版設定
+                    record.Extension = "" + dr[3]; // ESL 評分樣版定期平時占比
 
                     _ESLCourseList.Add(record);
                 }
@@ -135,6 +140,7 @@ namespace ESL_System
             // 解析計算規則
             foreach (ESLCourse course in _ESLCourseList)
             {
+                int _decimalPlace = 2; // 預設兩位數
                 string xmlStr = "<root>" + course.Description + "</root>";
                 XElement elmRoot = XElement.Parse(xmlStr);
 
@@ -143,6 +149,8 @@ namespace ESL_System
                 {
                     if (elmRoot.Element("ESLTemplate") != null)
                     {
+                        _decimalPlace = elmRoot.Element("ESLTemplate").Attribute("decimalPlace") != null ? int.Parse(elmRoot.Element("ESLTemplate").Attribute("decimalPlace").Value) : 2; // 小數位數預設為2
+
                         foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
                         {
                             Term t = new Term();
@@ -219,7 +227,30 @@ namespace ESL_System
                             {
                                 _scoreTemplateDict[course.ID].Add(t);
                             }
+
+                            if (!_scoreDecimalPlaceDict.ContainsKey(course.ID))
+                            {
+                                _scoreDecimalPlaceDict.Add(course.ID, _decimalPlace);
+                            }
+
+
                         }
+                    }
+                }
+
+                // 解析 Extension 比例資料
+                xmlStr = "<root>" + course.Extension + "</root>";
+                elmRoot = XElement.Parse(xmlStr);
+
+                if (elmRoot != null)
+                {
+                    if (elmRoot.Element("Extension") != null)
+                    {
+                        if (elmRoot.Element("Extension").Element("ScorePercentage") != null)
+                        {
+                            _scoreRatioTotalDict.Add(course.ID + "_中文系統評分樣版定期比例", int.Parse(elmRoot.Element("Extension").Element("ScorePercentage").Value));
+                            _scoreRatioTotalDict.Add(course.ID + "_中文系統評分樣版平時比例", 100 -int.Parse(elmRoot.Element("Extension").Element("ScorePercentage").Value));
+                        }                        
                     }
                 }
             }
@@ -644,13 +675,30 @@ namespace ESL_System
                                     subjectScore.RefTeacherID = score.RefTeacherID;
                                     subjectScore.Term = score.Term;
                                     subjectScore.Subject = score.Subject;
-                                    subjectScore.Score = subject_score_partial;
+
+                                    if (_scoreExamScoreTypeDict[key_score_assessment].Contains("定期"))
+                                    {
+                                        subjectScore.Score = subject_score_partial;
+                                    }
+                                    else
+                                    {
+                                        // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的                                    
+                                        subjectScore.Score = 0;
+                                    }
+                                    
 
                                     _subjectScoreDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], subjectScore);
                                 }
                                 else
                                 {
-                                    _subjectScoreDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]].Score += subject_score_partial;
+                                    if (_scoreExamScoreTypeDict[key_score_assessment].Contains("定期"))
+                                    {
+                                        _subjectScoreDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]].Score += subject_score_partial;
+                                    }
+                                    else
+                                    {
+                                        // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的                                                                         
+                                    }                                    
                                 }
 
                             }
@@ -792,11 +840,14 @@ namespace ESL_System
 
             }
 
-      
+
 
             // 計算Term成績後，現在將各自加權後的成績除以各自的的總權重
             foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
             {
+                // 各課程  自己的 四捨五入 精度 小數位
+                int _decimalPlace = _scoreDecimalPlaceDict[score.Value.RefCourseID];
+
                 // 一般的 term 成績
                 if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
@@ -811,15 +862,34 @@ namespace ESL_System
 
                     _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
                 }
-                // 平時的term 成績
-                if (score.Key.Contains("平時"))
+            }
+
+            // 計算Term(一般、定期)成績後，
+            // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的  
+            foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
+            {
+                // 各課程  自己的 四捨五入 精度 小數位
+                int _decimalPlace = _scoreDecimalPlaceDict[score.Value.RefCourseID];
+
+                // term 成績
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
-                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_平時";
+                    string ratioTotalTermKey = score.Value.RefCourseID;
 
-                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
-                }
-
-
+                    // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的  (Term 一般 -Term 定期 = Term 平時)
+                    if (_termScoreDict.ContainsKey(score.Key + "_平時"))
+                    {                        
+                        if (_termScoreDict.ContainsKey(score.Key + "_定期"))
+                        {
+                            // 定期 加 平時 的權重 固定為 100
+                            _termScoreDict[score.Key + "_平時"].Score = Math.Round(((_termScoreDict[score.Key].Score *100 - (_termScoreDict[score.Key + "_定期"].Score)* (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版定期比例"])) / (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版平時比例"])), _decimalPlace, MidpointRounding.AwayFromZero);
+                        }
+                        else
+                        {
+                            _termScoreDict[score.Key + "_平時"].Score = Math.Round(_termScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
+                        }
+                    }
+                }               
             }
 
             // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
@@ -837,29 +907,29 @@ namespace ESL_System
                     _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
                 }
 
-                // 定期的 subject 成績
-                if (score.Key.Contains("定期"))
-                {
-                    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_定期";
+                //// 定期的 subject 成績
+                //if (score.Key.Contains("定期"))
+                //{
+                //    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_定期";
 
-                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+                //    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
 
-                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
-                }
+                //    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                //    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                //    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                //}
 
-                // 平時的 subject 成績
-                if (score.Key.Contains("平時"))
-                {
-                    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_平時";
+                //// 平時的 subject 成績
+                //if (score.Key.Contains("平時"))
+                //{
+                //    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_平時";
 
-                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
+                //    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
 
-                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
-                }
+                //    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
+                //    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
+                //    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
+                //}
 
 
 
@@ -870,6 +940,9 @@ namespace ESL_System
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
+                // 各課程  自己的 四捨五入 精度 小數位
+                int _decimalPlace = _scoreDecimalPlaceDict[score.Value.RefCourseID];
+
                 _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
             }
 

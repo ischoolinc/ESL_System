@@ -1429,7 +1429,7 @@ namespace ESL_System.Form
                         ,{2}:: REAL AS weight
                         ,1  :: BIT AS open_ta
                         ,1  :: BIT AS input_required
-                        ,'<Extension><UseScore>是</UseScore><UseEffort>否</UseEffort><UseText>否</UseText><UseAssignmentScore>否</UseAssignmentScore></Extension>'  :: TEXT AS extension
+                        ,'<Extension><UseScore>是</UseScore><UseEffort>否</UseEffort><UseText>否</UseText><UseAssignmentScore>是</UseAssignmentScore></Extension>'  :: TEXT AS extension
                         ,'INSERT' :: TEXT AS action
                   ", esl_exam_template_id, examID, examWeightDict[examID]);
                 rawdataList.Add(insertdata);
