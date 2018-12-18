@@ -38,6 +38,13 @@
             this.labelX14 = new DevComponents.DotNetBar.LabelX();
             this.labelX13 = new DevComponents.DotNetBar.LabelX();
             this.labelX12 = new DevComponents.DotNetBar.LabelX();
+            this.comboBoxEx2 = new DevComponents.DotNetBar.Controls.ComboBoxEx();
+            this.comboBoxEx1 = new DevComponents.DotNetBar.Controls.ComboBoxEx();
+            this.labelX1 = new DevComponents.DotNetBar.LabelX();
+            this.labelX2 = new DevComponents.DotNetBar.LabelX();
+            this.comboBoxEx3 = new DevComponents.DotNetBar.Controls.ComboBoxEx();
+            this.labelX3 = new DevComponents.DotNetBar.LabelX();
+            this.linkLabel4 = new System.Windows.Forms.LinkLabel();
             ((System.ComponentModel.ISupportInitialize)(this.dtEnd)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtBegin)).BeginInit();
             this.SuspendLayout();
@@ -47,7 +54,7 @@
             this.linklabel3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel3.AutoSize = true;
             this.linklabel3.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel3.Location = new System.Drawing.Point(42, 92);
+            this.linklabel3.Location = new System.Drawing.Point(42, 238);
             this.linklabel3.Name = "linklabel3";
             this.linklabel3.Size = new System.Drawing.Size(112, 17);
             this.linklabel3.TabIndex = 31;
@@ -60,7 +67,7 @@
             this.linklabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel1.AutoSize = true;
             this.linklabel1.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel1.Location = new System.Drawing.Point(287, 16);
+            this.linklabel1.Location = new System.Drawing.Point(287, 162);
             this.linklabel1.Name = "linklabel1";
             this.linklabel1.Size = new System.Drawing.Size(86, 17);
             this.linklabel1.TabIndex = 29;
@@ -74,7 +81,7 @@
             this.linklabel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel2.AutoSize = true;
             this.linklabel2.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel2.Location = new System.Drawing.Point(379, 16);
+            this.linklabel2.Location = new System.Drawing.Point(379, 162);
             this.linklabel2.Name = "linklabel2";
             this.linklabel2.Size = new System.Drawing.Size(86, 17);
             this.linklabel2.TabIndex = 30;
@@ -89,7 +96,7 @@
             this.btnPrint.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnPrint.BackColor = System.Drawing.Color.Transparent;
             this.btnPrint.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnPrint.Location = new System.Drawing.Point(298, 86);
+            this.btnPrint.Location = new System.Drawing.Point(298, 232);
             this.btnPrint.Name = "btnPrint";
             this.btnPrint.Size = new System.Drawing.Size(75, 23);
             this.btnPrint.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -103,7 +110,7 @@
             this.btnClose.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.btnClose.BackColor = System.Drawing.Color.Transparent;
             this.btnClose.ColorTable = DevComponents.DotNetBar.eButtonColor.OrangeWithBackground;
-            this.btnClose.Location = new System.Drawing.Point(389, 86);
+            this.btnClose.Location = new System.Drawing.Point(389, 232);
             this.btnClose.Name = "btnClose";
             this.btnClose.Size = new System.Drawing.Size(75, 23);
             this.btnClose.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -122,7 +129,7 @@
             this.dtEnd.ButtonDropDown.Shortcut = DevComponents.DotNetBar.eShortcut.AltDown;
             this.dtEnd.ButtonDropDown.Visible = true;
             this.dtEnd.IsPopupCalendarOpen = false;
-            this.dtEnd.Location = new System.Drawing.Point(290, 42);
+            this.dtEnd.Location = new System.Drawing.Point(298, 115);
             // 
             // 
             // 
@@ -184,7 +191,7 @@
             this.dtBegin.ButtonDropDown.Shortcut = DevComponents.DotNetBar.eShortcut.AltDown;
             this.dtBegin.ButtonDropDown.Visible = true;
             this.dtBegin.IsPopupCalendarOpen = false;
-            this.dtBegin.Location = new System.Drawing.Point(72, 42);
+            this.dtBegin.Location = new System.Drawing.Point(72, 115);
             this.dtBegin.MaxDate = new System.DateTime(3000, 12, 31, 0, 0, 0, 0);
             this.dtBegin.MinDate = new System.DateTime(1900, 1, 1, 0, 0, 0, 0);
             // 
@@ -247,7 +254,7 @@
             // 
             this.labelX14.BackgroundStyle.Class = "";
             this.labelX14.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX14.Location = new System.Drawing.Point(250, 46);
+            this.labelX14.Location = new System.Drawing.Point(250, 119);
             this.labelX14.Name = "labelX14";
             this.labelX14.Size = new System.Drawing.Size(34, 21);
             this.labelX14.TabIndex = 38;
@@ -263,7 +270,7 @@
             // 
             this.labelX13.BackgroundStyle.Class = "";
             this.labelX13.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX13.Location = new System.Drawing.Point(32, 46);
+            this.labelX13.Location = new System.Drawing.Point(32, 119);
             this.labelX13.Name = "labelX13";
             this.labelX13.Size = new System.Drawing.Size(34, 21);
             this.labelX13.TabIndex = 37;
@@ -279,17 +286,124 @@
             // 
             this.labelX12.BackgroundStyle.Class = "";
             this.labelX12.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX12.Location = new System.Drawing.Point(12, 15);
+            this.labelX12.Location = new System.Drawing.Point(12, 88);
             this.labelX12.Name = "labelX12";
             this.labelX12.Size = new System.Drawing.Size(256, 21);
             this.labelX12.TabIndex = 36;
             this.labelX12.Text = "請選擇日期區間：(依區間統計缺曠、獎懲)";
             // 
+            // comboBoxEx2
+            // 
+            this.comboBoxEx2.DisplayMember = "Text";
+            this.comboBoxEx2.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.comboBoxEx2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxEx2.FormattingEnabled = true;
+            this.comboBoxEx2.ItemHeight = 19;
+            this.comboBoxEx2.Location = new System.Drawing.Point(232, 31);
+            this.comboBoxEx2.Name = "comboBoxEx2";
+            this.comboBoxEx2.Size = new System.Drawing.Size(109, 25);
+            this.comboBoxEx2.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
+            this.comboBoxEx2.TabIndex = 42;
+            // 
+            // comboBoxEx1
+            // 
+            this.comboBoxEx1.DisplayMember = "Text";
+            this.comboBoxEx1.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.comboBoxEx1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxEx1.FormattingEnabled = true;
+            this.comboBoxEx1.ItemHeight = 19;
+            this.comboBoxEx1.Location = new System.Drawing.Point(72, 31);
+            this.comboBoxEx1.Name = "comboBoxEx1";
+            this.comboBoxEx1.Size = new System.Drawing.Size(107, 25);
+            this.comboBoxEx1.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
+            this.comboBoxEx1.TabIndex = 41;
+            // 
+            // labelX1
+            // 
+            this.labelX1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelX1.AutoSize = true;
+            this.labelX1.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX1.BackgroundStyle.Class = "";
+            this.labelX1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX1.Location = new System.Drawing.Point(185, 34);
+            this.labelX1.Name = "labelX1";
+            this.labelX1.Size = new System.Drawing.Size(47, 21);
+            this.labelX1.TabIndex = 40;
+            this.labelX1.Text = "學期：";
+            // 
+            // labelX2
+            // 
+            this.labelX2.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelX2.AutoSize = true;
+            this.labelX2.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX2.BackgroundStyle.Class = "";
+            this.labelX2.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX2.Location = new System.Drawing.Point(13, 34);
+            this.labelX2.Name = "labelX2";
+            this.labelX2.Size = new System.Drawing.Size(60, 21);
+            this.labelX2.TabIndex = 39;
+            this.labelX2.Text = "學年度：";
+            // 
+            // comboBoxEx3
+            // 
+            this.comboBoxEx3.DisplayMember = "Text";
+            this.comboBoxEx3.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.comboBoxEx3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.comboBoxEx3.FormattingEnabled = true;
+            this.comboBoxEx3.ItemHeight = 19;
+            this.comboBoxEx3.Location = new System.Drawing.Point(84, 178);
+            this.comboBoxEx3.Name = "comboBoxEx3";
+            this.comboBoxEx3.Size = new System.Drawing.Size(107, 25);
+            this.comboBoxEx3.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
+            this.comboBoxEx3.TabIndex = 44;
+            // 
+            // labelX3
+            // 
+            this.labelX3.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelX3.AutoSize = true;
+            this.labelX3.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX3.BackgroundStyle.Class = "";
+            this.labelX3.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX3.Location = new System.Drawing.Point(13, 182);
+            this.labelX3.Name = "labelX3";
+            this.labelX3.Size = new System.Drawing.Size(74, 21);
+            this.labelX3.TabIndex = 43;
+            this.labelX3.Text = "列印科目：";
+            // 
+            // linkLabel4
+            // 
+            this.linkLabel4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.linkLabel4.AutoSize = true;
+            this.linkLabel4.BackColor = System.Drawing.Color.Transparent;
+            this.linkLabel4.Location = new System.Drawing.Point(160, 238);
+            this.linkLabel4.Name = "linkLabel4";
+            this.linkLabel4.Size = new System.Drawing.Size(60, 17);
+            this.linkLabel4.TabIndex = 45;
+            this.linkLabel4.TabStop = true;
+            this.linkLabel4.Text = "等第設定";
+            this.linkLabel4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel4_LinkClicked);
+            // 
             // PrintStudentESLReportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(479, 118);
+            this.ClientSize = new System.Drawing.Size(479, 264);
+            this.Controls.Add(this.linkLabel4);
+            this.Controls.Add(this.comboBoxEx3);
+            this.Controls.Add(this.labelX3);
+            this.Controls.Add(this.comboBoxEx2);
+            this.Controls.Add(this.comboBoxEx1);
+            this.Controls.Add(this.labelX1);
+            this.Controls.Add(this.labelX2);
             this.Controls.Add(this.dtEnd);
             this.Controls.Add(this.dtBegin);
             this.Controls.Add(this.labelX14);
@@ -301,7 +415,6 @@
             this.Controls.Add(this.linklabel1);
             this.Controls.Add(this.linklabel2);
             this.DoubleBuffered = true;
-            this.MaximumSize = new System.Drawing.Size(495, 157);
             this.MinimumSize = new System.Drawing.Size(495, 157);
             this.Name = "PrintStudentESLReportForm";
             this.Text = "列印學生ESL成績單";
@@ -324,5 +437,12 @@
         private DevComponents.DotNetBar.LabelX labelX14;
         private DevComponents.DotNetBar.LabelX labelX13;
         private DevComponents.DotNetBar.LabelX labelX12;
+        private DevComponents.DotNetBar.Controls.ComboBoxEx comboBoxEx2;
+        private DevComponents.DotNetBar.Controls.ComboBoxEx comboBoxEx1;
+        private DevComponents.DotNetBar.LabelX labelX1;
+        private DevComponents.DotNetBar.LabelX labelX2;
+        private DevComponents.DotNetBar.Controls.ComboBoxEx comboBoxEx3;
+        private DevComponents.DotNetBar.LabelX labelX3;
+        private System.Windows.Forms.LinkLabel linkLabel4;
     }
 }

@@ -1118,14 +1118,23 @@ namespace ESL_System
                     {
                         ESLScore score = _termScoreDict[key];
 
+                        // 總評量成績
+                        if (!key.Contains("定期") && !key.Contains("平時"))
+                        {
+                            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && ""+ sce.Score != "" + score.Score)
+                            {
+                                sce.Score = score.Score;
+
+                                sce.NeedUpdate = true;
+                            }                            
+                        }
+
                         // 定期的 term 成績
                         if (key.Contains("定期"))
                         {
                             if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
                             {
-                                SetScore(sce, "" + score.Score);
-                                sce.Score = score.Score;
-
+                                SetScore(sce, "" + score.Score);                                
                                 sce.NeedUpdate = true;
                             }
                         }
@@ -1170,7 +1179,7 @@ namespace ESL_System
                         {
                             ESLScore score = _termScoreDict[key];
 
-                            if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                            if (!key.Contains("定期") &&!key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
                                 sce.RefSCAttendID = sca.ID;
                                 sce.RefExamID = target_exam_id;
@@ -1178,6 +1187,15 @@ namespace ESL_System
                                 sce.RefCourseID = sca.RefCourseID;
                                 SetScore(sce, "" + score.Score);
                                 sce.Score = score.Score;
+                            }
+
+                            if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                            {
+                                sce.RefSCAttendID = sca.ID;
+                                sce.RefExamID = target_exam_id;
+                                sce.RefStudentID = sca.RefStudentID;
+                                sce.RefCourseID = sca.RefCourseID;
+                                SetScore(sce, "" + score.Score);                                
                             }
                             if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
@@ -1204,7 +1222,7 @@ namespace ESL_System
                     {
                         ESLScore score = _termScoreDict[key];
 
-                        if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                        if (!key.Contains("定期") && !key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                         {
                             sce.RefSCAttendID = sca.ID;
                             sce.RefExamID = target_exam_id;
@@ -1212,6 +1230,15 @@ namespace ESL_System
                             sce.RefCourseID = sca.RefCourseID;
                             SetScore(sce, "" + score.Score);
                             sce.Score = score.Score;
+                        }
+
+                        if (key.Contains("定期") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                        {
+                            sce.RefSCAttendID = sca.ID;
+                            sce.RefExamID = target_exam_id;
+                            sce.RefStudentID = sca.RefStudentID;
+                            sce.RefCourseID = sca.RefCourseID;
+                            SetScore(sce, "" + score.Score);                            
                         }
                         if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                         {

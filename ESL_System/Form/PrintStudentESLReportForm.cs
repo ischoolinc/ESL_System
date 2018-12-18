@@ -15,6 +15,7 @@ using K12.Data;
 using System.Xml;
 using System.IO;
 using Aspose.Words;
+using K12.Data.Configuration;
 
 namespace ESL_System.Form
 {
@@ -23,6 +24,12 @@ namespace ESL_System.Form
         private BackgroundWorker _bw = new BackgroundWorker();
 
         private string _wordURL = "";
+
+        private bool _isOrderBySubject = false;
+        private string _orderedSubject = ""; // 排序科目
+
+        private string school_year = "";
+        private string semester = "";
 
         // 儲放樣板 id 與 樣板名稱的對照
         private Dictionary<string, string> _templateIDNameDict = new Dictionary<string, string>();
@@ -38,6 +45,12 @@ namespace ESL_System.Form
 
         // 紀錄成績 為 評語型comment 的 key值
         private List<string> _commentList = new List<string>();
+
+        // 儲放教務作業系統設定的 評量名稱
+        private List<string> _examList = new List<string>();
+
+        // 儲放教務作業系統設定的 領域名稱
+        private List<string> _doaminList = new List<string>();
 
         // 缺曠區間統計
         Dictionary<string, Dictionary<string, int>> _AttendanceDict = new Dictionary<string, Dictionary<string, int>>();
@@ -73,18 +86,91 @@ namespace ESL_System.Form
             dtBegin.Value = DateTime.Now;
             dtEnd.Value = DateTime.Now;
 
-             
+
             // 缺曠資料
             foreach (PeriodMappingInfo info in PeriodMapping.SelectAll())
             {
                 if (!_typeList.Contains(info.Type))
                     _typeList.Add(info.Type);
             }
-            
+
             foreach (AbsenceMappingInfo info in AbsenceMapping.SelectAll())
             {
                 if (!_absenceList.Contains(info.Name))
                     _absenceList.Add(info.Name);
+            }
+
+            // 因應康橋國小學制(6年)，提供目前學年度往後六年的學年度選擇
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 6);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 5);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 4);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 3);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 2);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 1);
+            comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear));
+
+            comboBoxEx2.Items.Add(1);
+            comboBoxEx2.Items.Add(2);
+
+            // 預設為學校的當學年度學期
+            comboBoxEx1.Text = School.DefaultSchoolYear;
+            comboBoxEx2.Text = School.DefaultSemester;
+
+
+            QueryHelper qh = new QueryHelper();
+
+            // 選出 所有有設定ESL 評分樣版 的科目名稱 
+            string sqlCourseID = @"
+    SELECT 		
+	DISTINCT	course.subject
+	FROM course 
+	WHERE 	
+     ref_exam_template_id IN(
+		SELECT id 
+		FROM exam_template  
+		WHERE description IS NOT NULL)
+	AND course.subject IS NOT NULL";
+
+            DataTable dtCourseID = qh.Select(sqlCourseID);
+
+            foreach (DataRow row in dtCourseID.Rows)
+            {
+                string subject = "" + row["subject"];
+
+                comboBoxEx3.Items.Add(subject);
+            }
+
+           
+            // 2018/12/18 穎驊註解，為了提供序列式的功能變數抓出系統，
+            // 這邊填入 教務作業設定的 所有評量名稱
+            string sqlExam = @"
+    SELECT * FROM exam";
+
+            DataTable dtExam = qh.Select(sqlExam);
+
+            foreach (DataRow row in dtExam.Rows)
+            {
+                string exam = "" + row["exam_name"];
+
+                _examList.Add(exam);
+            }
+
+            // 取得 教務作業的設定領域名稱
+            string ConfigName = "JHEvaluation_Subject_Ordinal";
+            string ColumnKey = "DomainOrdinal";
+
+            K12.Data.Configuration.ConfigData cd = K12.Data.School.Configuration[ConfigName];
+            if (cd.Contains(ColumnKey))
+            {
+                XmlElement element = cd.GetXml(ColumnKey, XmlHelper.LoadXml("<Domains/>"));
+                foreach (XmlElement domainElement in element.SelectNodes("Domain"))
+                {
+                    string group = domainElement.GetAttribute("Group");
+                    string name = domainElement.GetAttribute("Name");
+                    string englishName = domainElement.GetAttribute("EnglishName");
+
+                    _doaminList.Add(name);
+                }
             }
 
         }
@@ -116,10 +202,20 @@ namespace ESL_System.Form
             btnClose.Enabled = false;
             linklabel3.Enabled = false;
 
+            school_year = comboBoxEx1.Text;
+            semester = comboBoxEx2.Text;
 
-            // 2018/10/29 穎驊註解，目前的作法先每一次都讓使用者列印前，選擇列印樣板
-            // 等本次期中考後，再看使用情境 怎麼去做列印樣板設定。
-            OpenFileDialog ope = new OpenFileDialog();
+            // 假如使用者有選擇科目，列印順序將以 課程科目排序、而非班級學生
+            if (comboBoxEx3.Text != "")
+            {
+                _isOrderBySubject = true;
+                _orderedSubject = comboBoxEx3.Text; // 排序科目
+            }
+
+
+        // 2018/10/29 穎驊註解，目前的作法先每一次都讓使用者列印前，選擇列印樣板
+        // 等本次期中考後，再看使用情境 怎麼去做列印樣板設定。
+        OpenFileDialog ope = new OpenFileDialog();
             ope.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
 
             if (ope.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
@@ -155,6 +251,7 @@ namespace ESL_System.Form
         // 檢視功能變數總表
         private void linklabel3_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+          
             // 新寫法，依照　所選取的ESL 樣板設定，產生出動態對應階層的功能變數總表！！
             CreateFieldTemplate();
             return;
@@ -292,6 +389,12 @@ namespace ESL_System.Form
                 _templateIDNameDict.Add(dr["id"].ToString(), dr["name"].ToString());
             }
 
+            // 幫每一個系統試別 建立序列化的功能變數 
+            foreach (string exam in _examList)
+            {
+                MergeFieldSerialGenerator(builder,exam,_doaminList);
+            }
+
 
             #endregion
 
@@ -418,7 +521,7 @@ namespace ESL_System.Form
             return termList;
         }
 
-        private void MergeFieldGenerator(Aspose.Words.DocumentBuilder builder, string eslTemplateName,List<Term> termList)
+        private void MergeFieldGenerator(Aspose.Words.DocumentBuilder builder, string eslTemplateName, List<Term> termList)
         {
             #region 成績變數
 
@@ -451,16 +554,16 @@ namespace ESL_System.Form
                 builder.EndRow();
 
                 builder.InsertCell();
-                
+
                 builder.Write(term.Name);
 
                 builder.InsertCell();
-                
+
                 // 2018/10/29 穎驊註解，和恩正討論後，不同樣板之間的 Term 名稱 會分不清楚， 因此在前面加 評分樣板作區別
                 builder.InsertField("MERGEFIELD " + eslTemplateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數" + " \\* MERGEFORMAT ", "«TS»");
 
                 builder.InsertCell();
-                
+
                 builder.InsertField("MERGEFIELD " + eslTemplateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重" + " \\* MERGEFORMAT ", "«TW»");
 
                 //termCounter++;
@@ -632,7 +735,77 @@ namespace ESL_System.Form
 
             #endregion
 
+        }
 
+        // 產生序列化的 功能變數
+        private void MergeFieldSerialGenerator(Aspose.Words.DocumentBuilder builder, string ExamName, List<string> doaminList)
+        {
+            #region 成績變數
+
+
+            // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string..Trim().Replace(' ', '_').Replace('"', '_') 
+            // >> 其用意為避免Word 功能變數合併列印時 會有一些奇怪的BUG ，EX: row["Final-Term評量_Science科目_In-Class Score子項目_分數1"] = "YOYO!"; >> 有空格印不出來 
+
+
+            // Apply the paragraph style to the current paragraph in the document and add some text.
+            builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
+            // 每一個 評量的名稱 放在最上面 (使用大字粗體)
+            builder.Writeln("評量名稱: " + ExamName);
+
+            // Change to a paragraph style that has no list formatting. (將字體還原)
+            builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
+            builder.Writeln("");
+
+            foreach (string domain in doaminList)
+            {
+                // 領域
+                builder.Writeln(ExamName + "_" +domain.Trim().Replace(' ', '_').Replace('"', '_'));
+
+                builder.StartTable();
+                builder.InsertCell();
+                builder.Write("課程科目名稱");
+                builder.InsertCell();
+                builder.Write("科目權數");
+                builder.InsertCell();
+                builder.Write("科目定期評量");
+                builder.InsertCell();
+                builder.Write("科目平時評量");
+                builder.InsertCell();
+                builder.Write("科目總成績");
+                //builder.InsertCell();
+                //builder.Write("科目文字評量");
+                builder.EndRow();
+
+                for (int i = 1; i < 8; i++)
+                {
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "課程科目名稱" + i + " \\* MERGEFORMAT ", "«SN»");
+
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_"+ "科目權數" + i + " \\* MERGEFORMAT ", "«SC»");
+
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目定期評量" + i + " \\* MERGEFORMAT ", "«SF»");
+
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目平時評量" + i + " \\* MERGEFORMAT ", "«SA»");
+
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目總成績" + i + " \\* MERGEFORMAT ", "«SST»");
+
+                    builder.EndRow();
+                }
+                                                                
+                builder.EndTable();
+                builder.Writeln();
+            }
+
+            #endregion
         }
 
         private void _bkWork_DoWork(object sender, DoWorkEventArgs e)
@@ -658,8 +831,8 @@ namespace ESL_System.Form
 		,ref_exam_template_id 
 	FROM course 
 	WHERE 
-	school_year =" + K12.Data.School.DefaultSchoolYear +
-    @"AND semester = " + K12.Data.School.DefaultSemester +
+	school_year =" + school_year +
+    @"AND semester = " + semester +
     @"AND ref_exam_template_id IN(
 		SELECT id 
 		FROM exam_template  
@@ -832,7 +1005,7 @@ namespace ESL_System.Form
                                 if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
                                 {
                                     _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
-                                }                                
+                                }
                             }
                             else
                             {
@@ -847,7 +1020,7 @@ namespace ESL_System.Form
                             {
                                 _scoreDict[id][scoreKey + "_" + "教師"] = teacherList.Find(t => t.ID == "" + row["ref_teacher_id"]).Name; //教師名稱
                             }
-                            
+
                         }
                     }
                 }
@@ -858,7 +1031,7 @@ namespace ESL_System.Form
                     if (_scoreDict.ContainsKey(id))
                     {
                         string scoreKey = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_');
-                        
+
                         if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
@@ -866,7 +1039,7 @@ namespace ESL_System.Form
                             if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
                             {
                                 _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
-                            }                            
+                            }
                         }
                         else
                         {
@@ -878,12 +1051,12 @@ namespace ESL_System.Form
                 // 沒有assessment、subject，為term 成績
                 if (termWord != "" && "" + subjectWord == "" && "" + assessmentWord == "")
                 {
-                                        
+
                     if (_scoreDict.ContainsKey(id))
                     {
                         // 2018/10/29 穎驊註解，和恩正討論後，不同樣板之間的 Term 名稱 會分不清楚， 因此在前面加 評分樣板作區別
                         string scoreKey = courseRecord.AssessmentSetup.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_');
-                        
+
                         if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
@@ -891,7 +1064,7 @@ namespace ESL_System.Form
                             if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
                             {
                                 _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
-                            }                            
+                            }
                         }
                         else
                         {
@@ -901,11 +1074,89 @@ namespace ESL_System.Form
                 }
 
             }
+
+
+            //2018/12/18 穎驊與恩正討論後， 對應 序列化 成績的功能變數， 從學生 系統評量成績 sce_take 抓取  對應成績
+            string sqlSerialScore = @"
+SELECT 
+exam.exam_name
+--,exam_template.extension AS ratio
+,unnest(xpath('/Extension/ScorePercentage/text()', xmlparse(content exam_template.extension))) ::text AS exam_ratio
+,100 - (unnest(xpath('/Extension/ScorePercentage/text()', xmlparse(content exam_template.extension))) ::text)::integer AS assignment_ratio
+,course.credit
+,course.domain
+,course.subject
+,sc_attend.ref_student_id
+,sce_take.score AS score -- 評量總分
+--,sce_take.extension
+,unnest(xpath('/Extension/Score/text()', xmlparse(content sce_take.extension))) ::text AS exam_score 
+,unnest(xpath('/Extension/AssignmentScore/text()', xmlparse(content sce_take.extension))) ::text AS assignment_score 
+FROM sce_take 
+LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
+LEFT JOIN course ON course.id = sc_attend.ref_course_id
+LEFT JOIN exam ON exam.id =sce_take.ref_exam_id
+LEFT JOIN exam_template ON exam_template.id =course.ref_exam_template_id
+WHERE course.id IN ('" + course_ids + "') " +
+"AND sc_attend.ref_student_id IN ('" + student_ids + "')" +
+"ORDER BY ref_student_id,exam_name,domain,subject";
+
+
+            DataTable dtSerialScore = qh.Select(sqlSerialScore);
+
+            foreach (DataRow row in dtSerialScore.Rows)
+            {
+                string id = "" + row["ref_student_id"];
+
+                string examWord = "" + row["exam_name"];
+                string domainWord = "" + row["domain"];
+                string subjectWord = "" + row["subject"];
+                string credit = "" + row["credit"];
+                string exam_score = "" + row["exam_score"]; // 定期評量
+                string assignment_score = "" + row["assignment_score"]; // 平時評量
+                string score = "" + row["score"]; // 評量總分
+
+                string scoreKey = examWord +"_" + "評量" + "_" + domainWord +"_";
+
+                if (_scoreDict.ContainsKey(id))
+                {
+                    bool added = false;  // 尚未加入
+
+                    for (int i = 1; !added; i++)
+                    {
+                        // 課程科目名稱
+                        if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                        {
+                            i++;
+                            continue;
+                        }
+                        else
+                        {
+                            _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                            added = true;
+                        }
+
+                        _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
+
+                        _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
+
+                        _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
+
+                        _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
+
+                    }
+                    
+                }
+            }
+
+
+
+
+
             #endregion
 
 
             #region 取得 缺曠獎懲
-            // 缺曠資料區間統計
+            // 缺曠資料區間統計        
             _AttendanceDict = Utility.GetAttendanceCountByDate(studentList, _BeginDate, _EndDate);
 
             // 獎懲資料
@@ -913,6 +1164,61 @@ namespace ESL_System.Form
 
             #endregion
 
+            // BY subject 排序 ，將studentList 順序重新整理
+            if (_isOrderBySubject)
+            {
+                // 2018/12/18 穎驊 備註 這一個API 有問題， 按下列所示，結果會抓不到東西。
+                //List<K12.Data.SCAttendRecord> scaList = K12.Data.SCAttend.SelectByStudentIDAndCourseID(courseIDList, studentIDList);
+
+                List<K12.Data.SCAttendRecord> scaList = K12.Data.SCAttend.SelectByCourseIDs(courseIDList);
+
+                List<K12.Data.StudentRecord> studentList_new = new List<StudentRecord>();
+
+                // 以課程ID 整理學生清單順序
+                Dictionary<string, List<K12.Data.StudentRecord>> courseIDstudentListDict = new Dictionary<string, List<StudentRecord>>();
+
+
+                foreach (SCAttendRecord scaRecord in scaList)
+                {
+                    if (scaRecord.Course.Subject == _orderedSubject)
+                    {
+                        StudentRecord stuRecord = studentList.Find(x => x.ID == scaRecord.RefStudentID);
+
+                        if (stuRecord != null)
+                        {
+                            if (!courseIDstudentListDict.ContainsKey(scaRecord.Course.ID))
+                            {
+                                courseIDstudentListDict.Add(scaRecord.Course.ID, new List<StudentRecord>());
+
+                                courseIDstudentListDict[scaRecord.Course.ID].Add(stuRecord);
+                            }
+                            else
+                            {
+                                courseIDstudentListDict[scaRecord.Course.ID].Add(stuRecord);
+                            }
+
+                            // 學生已經加入以科目的課程 新排序後， 從原本的清單移除
+                            studentList.RemoveAll(s => s.ID == scaRecord.RefStudentID);
+                        }
+                    }
+                }
+
+                // 將每一個課程 內學生順序以學號排序
+                foreach (string courseID in courseIDstudentListDict.Keys)
+                {
+                    courseIDstudentListDict[courseID].Sort((x, y) => { return x.StudentNumber.CompareTo(y.StudentNumber); });
+
+                    // 排序後加入 新學生清單
+                    studentList_new.AddRange(courseIDstudentListDict[courseID]);
+                }
+
+                // 剩下的學生 也用學號排序
+                studentList.Sort((x, y) => { return x.StudentNumber.CompareTo(y.StudentNumber); });
+
+                studentList_new.AddRange(studentList);
+
+                studentList = studentList_new;
+            }
 
 
             foreach (StudentRecord stuRecord in studentList)
@@ -1126,21 +1432,21 @@ namespace ESL_System.Form
                 //每一個 template 清空一次 weight 計算用 字典
                 weightCalDict.Clear();
 
-                _itemDict.Add(templateName,new Dictionary<string, string>());
+                _itemDict.Add(templateName, new Dictionary<string, string>());
 
                 foreach (Term term in termListDict[templateName])
                 {
                     // 2018/10/29 穎驊註解，和恩正討論後，不同樣板之間的 Term 名稱 會分不清楚， 因此在前面加 評分樣板作區別
 
-                    if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') +  "_" +"評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重"))
-                        dataTable.Columns.Add(templateName.Replace(' ', '_').Replace('"', '_') +  "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重");
+                    if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重"))
+                        dataTable.Columns.Add(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重");
 
-                    if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') +  "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"))
-                        dataTable.Columns.Add(templateName.Replace(' ', '_').Replace('"', '_') +  "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"); // Term 分數本身 先暫時這樣處理之後要有類別整理
+                    if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"))
+                        dataTable.Columns.Add(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數"); // Term 分數本身 先暫時這樣處理之後要有類別整理
 
-                    if (!_itemDict[templateName].ContainsKey(templateName.Replace(' ', '_').Replace('"', '_') +  "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重"))
-                    {                        
-                        _itemDict[templateName].Add(templateName.Replace(' ', '_').Replace('"', '_') +  "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", term.Weight);
+                    if (!_itemDict[templateName].ContainsKey(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重"))
+                    {
+                        _itemDict[templateName].Add(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", term.Weight);
                     }
 
 
@@ -1221,7 +1527,7 @@ namespace ESL_System.Form
                                 string assessmentWieght = "" + Math.Round((weightCalDict[term.Name + "_" + subject.Name] * float.Parse(assessment.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"] * weightCalDict[term.Name + "_" + subject.Name + "_AssessmentTotal"]), 2, MidpointRounding.ToEven);
 
                                 _itemDict[templateName].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", assessmentWieght); //assessment比重 
-                                
+
                             }
                             if (assessment.Type == "Indicator") // 檢查看有沒有　　Indicator　，有的話另外存List 做對照
                             {
@@ -1238,7 +1544,7 @@ namespace ESL_System.Form
                                     _indicatorList.Add(key);
                                 }
 
-                                
+
                             }
 
                             if (assessment.Type == "Comment") // 檢查看有沒有　　Comment　，有的話另外存List 做對照
@@ -1247,7 +1553,7 @@ namespace ESL_System.Form
                                     dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語");
                                 if (!dataTable.Columns.Contains("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "教師"))
                                     dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "教師");
-                                
+
 
                                 string key = term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_');
 
@@ -1264,9 +1570,32 @@ namespace ESL_System.Form
                 }
 
             }
-  
+
+
+            // 加入序列化的 功能變數
+            foreach (string examName in _examList)
+            {
+                foreach (string domain in _doaminList)
+                {
+                    for (int i = 1; i < 8; i++)
+                    {
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "課程科目名稱" + i);
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目權數" + i);
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目定期評量" + i);
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目平時評量" + i);
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目總成績" + i);
+
+                    }
+                }
+            }
+
+
             return dataTable;
         }
 
+        private void linkLabel4_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+
+        }
     }
 }
