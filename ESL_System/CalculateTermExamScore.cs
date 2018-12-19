@@ -1542,6 +1542,14 @@ WHERE action ='INSERT'", Data);
                 {
                     elem.InnerText = d + "";
                 }
+                else
+                {
+                    XmlElement elemScore = xmlElement.OwnerDocument.CreateElement("Score");
+
+                    elemScore.InnerText = d + "";
+
+                    xmlElement.SelectSingleNode("Extension").AppendChild(elemScore);
+                }
 
                 sce.Extensions = (xmlElement.InnerXml);
             }
@@ -1583,6 +1591,14 @@ WHERE action ='INSERT'", Data);
                 if (elem != null)
                 {
                     elem.InnerText = d + "";
+                }
+                else
+                {
+                    XmlElement elemAssignmentScore = xmlElement.OwnerDocument.CreateElement("AssignmentScore");
+
+                    elemAssignmentScore.InnerText = d + "";
+
+                    xmlElement.SelectSingleNode("Extension").AppendChild(elemAssignmentScore);
                 }
 
                 sce.Extensions = (xmlElement.InnerXml);

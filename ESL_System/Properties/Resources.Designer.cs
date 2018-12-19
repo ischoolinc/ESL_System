@@ -173,5 +173,20 @@ namespace ESL_System.Properties {
                 return ((byte[])(obj));
             }
         }
+        
+        /// <summary>
+        ///   查詢類似 &lt;ScoreMappingList&gt;
+        ///	&lt;ScoreMapping EngName=&quot;A+&quot; Score=&quot;90&quot;&gt;&lt;/ScoreMapping&gt;
+        ///	&lt;ScoreMapping EngName=&quot;A&quot; Score=&quot;80&quot;&gt;&lt;/ScoreMapping&gt;
+        ///	&lt;ScoreMapping EngName=&quot;B&quot; Score=&quot;70&quot;&gt;&lt;/ScoreMapping&gt;
+        ///	&lt;ScoreMapping EngName=&quot;C&quot; Score=&quot;60&quot;&gt;&lt;/ScoreMapping&gt;
+        ///	&lt;ScoreMapping EngName=&quot;D&quot; Score=&quot;&quot;&gt;&lt;/ScoreMapping&gt;
+        ///&lt;/ScoreMappingList&gt; 的當地語系化字串。
+        /// </summary>
+        internal static string 預設ESL等第對照表 {
+            get {
+                return ResourceManager.GetString("預設ESL等第對照表", resourceCulture);
+            }
+        }
     }
 }
