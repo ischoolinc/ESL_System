@@ -552,9 +552,31 @@ namespace ESL_System.Form
                 }
                 builder.Writeln();
             }
-           
+
             #endregion
-            
+
+            #region 課程學期成績
+            builder.Writeln("課程學期成績");
+
+            builder.StartTable();
+            builder.InsertCell();
+            builder.Write("課程學期成績分數");
+            builder.InsertCell();
+            builder.Write("課程學期成績等第");
+            builder.EndRow();
+
+            builder.InsertCell();
+
+            builder.InsertField("MERGEFIELD "  + "課程學期成績分數" + " \\* MERGEFORMAT ", "«CSS»");
+
+            builder.InsertCell();
+
+            builder.InsertField("MERGEFIELD "  + "課程學期成績等第" + " \\* MERGEFORMAT ", "«CSL»");
+
+            builder.EndRow();
+            builder.EndTable();
+            #endregion
+
 
             #region 儲存檔案
             string inputReportName = "合併欄位總表";

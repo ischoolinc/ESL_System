@@ -99,6 +99,9 @@ namespace ESL_System.Form
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
+            // 處理等第
+            DegreeMapper dm = new DegreeMapper();
+
             _worker.ReportProgress(0, "開始列印 ESL報表...");
 
             #region 取得課程成績單 設定樣板
@@ -243,7 +246,7 @@ namespace ESL_System.Form
                         }
                         // 分數型成績
                         else
-                        {                            
+                        {
                             string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "分數";
                             if (_scoreDict[id].ContainsKey(key))
                             {
@@ -254,7 +257,7 @@ namespace ESL_System.Form
                                 _scoreDict[id].Add(key, "" + row["value"]);
                             }
 
-                        }                        
+                        }
                     }
                 }
 
@@ -279,6 +282,61 @@ namespace ESL_System.Form
                 }
 
             }
+
+
+
+            // 課程學期成績
+            string sqlSemesterCourseScore = @"SELECT
+sc_attend.ref_student_id
+,sc_attend.ref_course_id
+,exam_template.name
+,course.domain
+,course.subject
+,sc_attend.score
+FROM sc_attend
+LEFT JOIN course ON course.id = sc_attend.ref_course_id
+LEFT JOIN exam_template ON exam_template.id =course.ref_exam_template_id
+WHERE course.id IN ('" + course_ids + "') " +
+"AND sc_attend.ref_student_id IN ('" + student_ids + "')" +
+"ORDER BY ref_student_id,domain,subject";
+
+            DataTable dtSemesterCourseScore = qh.Select(sqlSemesterCourseScore);
+
+            foreach (DataRow row in dtSemesterCourseScore.Rows)
+            {
+                string id = "" + row["ref_student_id"] + "_" + row["ref_course_id"];
+
+                string templateWord = "" + row["name"];
+                string domainWord = "" + row["domain"];
+                string subjectWord = "" + row["subject"];
+
+                string score = "" + row["score"]; // 課程學期成績
+
+               
+                if (_scoreDict.ContainsKey(id))
+                {
+                    #region 跟樣板的功能變數
+                    // 理論上一學期上 一個學生 只會有一個ESL評分樣版的課程成績 ， 不會有同一個ESL 評分樣版 有不同的課程成績
+                    if (!_scoreDict[id].ContainsKey("課程學期成績分數"))
+                    {
+                        _scoreDict[id].Add("課程學期成績分數", score);
+                    }
+                    if (!_scoreDict[id].ContainsKey("課程學期成績等第"))
+                    {
+                        decimal score_d;
+                        if (decimal.TryParse(score, out score_d))
+                        {
+                            _scoreDict[id].Add("課程學期成績等第", dm.GetDegreeByScore(score_d));
+                        }
+                    }
+
+                    #endregion
+                    
+                }
+            }
+
+
+
             #endregion
 
 
@@ -572,6 +630,13 @@ namespace ESL_System.Form
             dataTable.Columns.Add("電子報表辨識編號");
             #endregion
 
+
+            // 學期課程成績
+            if (!dataTable.Columns.Contains("課程學期成績分數"))
+                dataTable.Columns.Add("課程學期成績分數");
+
+            if (!dataTable.Columns.Contains("課程學期成績等第"))
+                dataTable.Columns.Add("課程學期成績等第");
 
             // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string.Trim().Replace(' ', '_').Replace('"', '_') 
             // >> 其用意為避免Word 功能變數合併列印時 會有一些奇怪的BUG ，EX: row["Final-Term評量_Science科目_In-Class Score子項目_分數1"] = "YOYO!"; >> 有空格印不出來 
