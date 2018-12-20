@@ -52,12 +52,16 @@ namespace ESL_System.Form
         // 儲放教務作業系統設定的 領域名稱
         private List<string> _doaminList = new List<string>();
 
+        // 儲放 所有課程的科目名稱
+        private List<string> _subjectList = new List<string>();
+
         // 缺曠區間統計
         Dictionary<string, Dictionary<string, int>> _AttendanceDict = new Dictionary<string, Dictionary<string, int>>();
 
         // 獎懲統計
         Dictionary<string, Dictionary<string, int>> _DisciplineCountDict = new Dictionary<string, Dictionary<string, int>>();
 
+        BackgroundWorker bkw;
 
 
         // 開始日期
@@ -74,6 +78,10 @@ namespace ESL_System.Form
 
         private DataTable _mergeDataTable = new DataTable();
 
+        private List<UDT_ReportTemplate> _configuresList = new List<UDT_ReportTemplate>();
+
+        private UDT_ReportTemplate _configure { get; set; }
+
 
         public PrintStudentESLReportForm()
         {
@@ -83,6 +91,12 @@ namespace ESL_System.Form
             _bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(_worker_RunWorkerCompleted);
             _bw.ProgressChanged += new ProgressChangedEventHandler(_worker_ProgressChanged);
             _bw.WorkerReportsProgress = true;
+
+            bkw = new BackgroundWorker();
+            bkw.DoWork += new DoWorkEventHandler(bkw_DoWork);
+            bkw.ProgressChanged += new ProgressChangedEventHandler(bkw_ProgressChanged);
+            bkw.WorkerReportsProgress = true;
+            bkw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bkw_RunWorkerCompleted);
 
             // 預設都為今天
             dtBegin.Value = DateTime.Now;
@@ -118,10 +132,20 @@ namespace ESL_System.Form
             comboBoxEx1.Text = School.DefaultSchoolYear;
             comboBoxEx2.Text = School.DefaultSemester;
 
+            btnPrint.Enabled = false;
+        }
+
+        void bkw_DoWork(object sender, DoWorkEventArgs e)
+        {
+            bkw.ReportProgress(1);
+
             QueryHelper qh = new QueryHelper();
+
 
             #region 抓科目
             // 選出 所有有設定ESL 評分樣版 的科目名稱 
+
+            bkw.ReportProgress(20);
             string sqlCourseID = @"
     SELECT 		
 	DISTINCT	course.subject
@@ -138,14 +162,15 @@ namespace ESL_System.Form
             foreach (DataRow row in dtCourseID.Rows)
             {
                 string subject = "" + row["subject"];
-
-                comboBoxEx3.Items.Add(subject);
+                _subjectList.Add(subject);                
             }
             #endregion
 
             #region 抓試別
             // 2018/12/18 穎驊註解，為了提供序列式的功能變數抓出系統，
             // 這邊填入 教務作業設定的 所有評量名稱
+
+            bkw.ReportProgress(40);
             string sqlExam = @"
     SELECT * FROM exam";
 
@@ -160,6 +185,8 @@ namespace ESL_System.Form
             #endregion
 
             #region 抓領域
+
+            bkw.ReportProgress(60);
             // 取得 教務作業的設定領域名稱
             string ConfigName = "JHEvaluation_Subject_Ordinal";
             string ColumnKey = "DomainOrdinal";
@@ -181,9 +208,49 @@ namespace ESL_System.Form
             }
             #endregion
 
+
+            bkw.ReportProgress(80);
+
+            FISCA.UDT.AccessHelper _AccessHelper = new FISCA.UDT.AccessHelper();
+
+            // 因原本樣板儲存 是 跟隨ESL 設定樣板， 現在取消掉，全部都要獨立設定
+            // 因此 沒有參考ESL 樣板ID 的都是 學生ESL 成績單 的樣板設定檔
+            string qry = "Ref_exam_Template_ID is null";
+
+            _configuresList = _AccessHelper.Select<UDT_ReportTemplate>(qry);
+
             
 
+            bkw.ReportProgress(100);
+
         }
+
+        void bkw_ProgressChanged(object sender, ProgressChangedEventArgs e)
+        {
+            circularProgress1.Value = e.ProgressPercentage;
+        }
+
+        void bkw_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+        {
+            // 加入 科目名稱
+            foreach (string subject in _subjectList)
+            {
+                comboBoxEx3.Items.Add(subject);
+            }
+
+            // 進度條 隱藏
+            circularProgress1.Hide();
+
+            cboConfigure.Items.Clear();
+            foreach (var item in _configuresList)
+            {
+                cboConfigure.Items.Add(item);
+            }
+            cboConfigure.Items.Add(new UDT_ReportTemplate() { Name = "新增" });
+
+        }
+
+
 
         // 列印
         private void btnPrint_Click(object sender, EventArgs e)
@@ -204,13 +271,18 @@ namespace ESL_System.Form
             _EndDate = dtEnd.Value;
 
             // 將時間轉為本地時間，以防語系時間設定問題
-            _BeginDate.ToLocalTime();
-            _EndDate.ToLocalTime();
+            _BeginDate.ToShortDateString();
+            _EndDate.ToShortDateString();
 
             // 關閉畫面控制項
+            lnkCopyConfig.Enabled = false;
+            lnkDelConfig.Enabled = false;
             btnPrint.Enabled = false;
             btnClose.Enabled = false;
+            linklabel1.Enabled = false;
+            linklabel2.Enabled = false;
             linklabel3.Enabled = false;
+            linkLabel4.Enabled = false;
 
             school_year = comboBoxEx1.Text;
             semester = comboBoxEx2.Text;
@@ -222,40 +294,99 @@ namespace ESL_System.Form
                 _orderedSubject = comboBoxEx3.Text; // 排序科目
             }
 
+            _bw.RunWorkerAsync();
 
-            // 2018/10/29 穎驊註解，目前的作法先每一次都讓使用者列印前，選擇列印樣板
-            // 等本次期中考後，再看使用情境 怎麼去做列印樣板設定。
-            OpenFileDialog ope = new OpenFileDialog();
-            ope.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
+            //2018/12/20 不選電腦內樣板了，有設定檔
+            //// 2018/10/29 穎驊註解，目前的作法先每一次都讓使用者列印前，選擇列印樣板
+            //// 等本次期中考後，再看使用情境 怎麼去做列印樣板設定。
+            //OpenFileDialog ope = new OpenFileDialog();
+            //ope.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
 
-            if (ope.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
-            {
-                return;
-            }
-            else
-            {
-                _wordURL = ope.FileName;
-                _bw.RunWorkerAsync();
+            //if (ope.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
+            //{
+            //    return;
+            //}
+            //else
+            //{
+            //    _wordURL = ope.FileName;
+            //    _bw.RunWorkerAsync();
 
-            }
+            //}
         }
 
         // 離開
         private void btnClose_Click(object sender, EventArgs e)
         {
-
+            this.Close();
         }
 
         // 檢視套印樣板
         private void linklabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
+            // 當沒有設定檔
+            if (_configure == null) return;
+            linklabel1.Enabled = false;
+            #region 儲存檔案
 
+            string reportName = "ESL學生成績單樣板(" + _configure.Name + ").docx";
+
+            string path = Path.Combine(System.Windows.Forms.Application.StartupPath, "Reports");
+            if (!Directory.Exists(path))
+                Directory.CreateDirectory(path);
+            path = Path.Combine(path, reportName + ".docx");
+
+            if (File.Exists(path))
+            {
+                int i = 1;
+                while (true)
+                {
+                    string newPath = Path.GetDirectoryName(path) + "\\" + Path.GetFileNameWithoutExtension(path) + (i++) + Path.GetExtension(path);
+                    if (!File.Exists(newPath))
+                    {
+                        path = newPath;
+                        break;
+                    }
+                }
+            }
+
+            try
+            {
+                System.IO.FileStream stream = new FileStream(path, FileMode.Create, FileAccess.Write);
+                _configure.Template.Save(stream, Aspose.Words.SaveFormat.Docx);
+
+                stream.Flush();
+                stream.Close();
+                System.Diagnostics.Process.Start(path);
+            }
+            catch
+            {
+               
+            }
+            linklabel1.Enabled = true;
+            #endregion
         }
 
         // 變更套印樣板
         private void linklabel2_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
-
+            if (_configure == null) return;
+            linklabel2.Enabled = false;
+            OpenFileDialog dialog = new OpenFileDialog();
+            dialog.Title = "上傳樣板";
+            dialog.Filter = "Word檔案 (*.doc)|*.doc|Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                try
+                {
+                    _configure.Template = new Aspose.Words.Document(dialog.FileName);
+                    _configure.Save();
+                }
+                catch
+                {
+                    MessageBox.Show("樣板開啟失敗");
+                }
+            }
+            linklabel2.Enabled = true;
         }
 
         // 檢視功能變數總表
@@ -1318,9 +1449,12 @@ WHERE course.id IN ('" + course_ids + "') " +
 
 
             #region 取得 缺曠獎懲
+
+            _bw.ReportProgress(40, "取得缺曠資料");
             // 缺曠資料區間統計        
             _AttendanceDict = Utility.GetAttendanceCountByDate(studentList, _BeginDate, _EndDate);
 
+            _bw.ReportProgress(50, "取得獎懲資料");
             // 獎懲資料
             _DisciplineCountDict = Utility.GetDisciplineCountByDate(studentIDList, _BeginDate, _EndDate);
 
@@ -1462,8 +1596,11 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             try
             {
-                // 載入使用者所選擇的 word 檔案
-                _doc = new Document(_wordURL);
+                //// 載入使用者所選擇的 word 檔案
+                //_doc = new Document(_wordURL);
+
+                // 樣板的設定
+                _doc = _configure.Template;
             }
             catch (Exception ex)
             {
@@ -1539,7 +1676,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
         private void _worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-
+            FISCA.Presentation.MotherForm.SetStatusBarMessage("" + e.UserState, e.ProgressPercentage);
         }
 
         private DataTable GetMergeField(Dictionary<string, List<Term>> termListDict)
@@ -1773,5 +1910,92 @@ WHERE course.id IN ('" + course_ids + "') " +
         {
             new ScoreMappingTable().ShowDialog();
         }
+
+        private void PrintStudentESLReportForm_Load(object sender, EventArgs e)
+        {
+            bkw.RunWorkerAsync();
+        }
+
+        private void cboConfigure_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // 選到最後一項 就是 新增樣板
+            if (cboConfigure.SelectedIndex == cboConfigure.Items.Count - 1)
+            {
+                //新增
+                btnPrint.Enabled = false;
+                NewConfigure dialog = new NewConfigure();
+                if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+                {
+                    _configure = new UDT_ReportTemplate();
+                    _configure.Name = dialog.ConfigName;
+                    _configure.Template = dialog.Template;                    
+
+                    _configuresList.Add(_configure);
+                    cboConfigure.Items.Insert(cboConfigure.SelectedIndex, _configure);
+                    cboConfigure.SelectedIndex = cboConfigure.SelectedIndex - 1;
+                    _configure.Encode();
+                    _configure.Save();
+                    btnPrint.Enabled = true;
+                }
+                else
+                {
+                    cboConfigure.SelectedIndex = -1;
+                }
+            }
+            else
+            {
+                if (cboConfigure.SelectedIndex >= 0)
+                {
+                    btnPrint.Enabled = true;
+                    _configure = _configuresList[cboConfigure.SelectedIndex];
+                    if (_configure.Template == null)
+                        _configure.Decode();                    
+                }
+                else
+                {
+                    _configure = null;                             
+                }
+
+            }
+        }
+
+        // 刪除設定檔樣板
+        private void lnkDelConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (_configure == null) return;
+      
+            if (MessageBox.Show("樣板刪除後將無法回復，確定刪除樣板?", "刪除樣板", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.OK)
+            {
+                _configuresList.Remove(_configure);
+                if (_configure.UID != "")
+                {
+                    _configure.Deleted = true;
+                    _configure.Save();
+                }
+                var conf = _configure;
+                cboConfigure.SelectedIndex = -1;
+                cboConfigure.Items.Remove(conf);
+            }
+        }
+
+        // 複製評分樣版
+        private void lnkCopyConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
+        {
+            if (_configure == null) return;
+            CloneConfigure dialog = new CloneConfigure() { ParentName = _configure.Name };
+            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            {
+                UDT_ReportTemplate conf = new UDT_ReportTemplate();
+                conf.Name = dialog.NewConfigureName;                
+                conf.Template = _configure.Template;    
+                conf.Encode();
+                conf.Save();
+                _configuresList.Add(conf);
+                cboConfigure.Items.Insert(cboConfigure.Items.Count - 1, conf);
+                cboConfigure.SelectedIndex = cboConfigure.Items.Count - 2;
+            }
+        }
+
+
     }
 }

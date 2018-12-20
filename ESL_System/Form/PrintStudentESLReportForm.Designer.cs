@@ -49,6 +49,8 @@
             this.lnkDelConfig = new System.Windows.Forms.LinkLabel();
             this.lnkCopyConfig = new System.Windows.Forms.LinkLabel();
             this.labelX11 = new DevComponents.DotNetBar.LabelX();
+            this.circularProgress1 = new DevComponents.DotNetBar.Controls.CircularProgress();
+            this.labelX4 = new DevComponents.DotNetBar.LabelX();
             ((System.ComponentModel.ISupportInitialize)(this.dtEnd)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtBegin)).BeginInit();
             this.SuspendLayout();
@@ -58,7 +60,7 @@
             this.linklabel3.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel3.AutoSize = true;
             this.linklabel3.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel3.Location = new System.Drawing.Point(19, 244);
+            this.linklabel3.Location = new System.Drawing.Point(8, 244);
             this.linklabel3.Name = "linklabel3";
             this.linklabel3.Size = new System.Drawing.Size(112, 17);
             this.linklabel3.TabIndex = 31;
@@ -71,13 +73,12 @@
             this.linklabel1.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel1.AutoSize = true;
             this.linklabel1.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel1.Location = new System.Drawing.Point(203, 244);
+            this.linklabel1.Location = new System.Drawing.Point(192, 244);
             this.linklabel1.Name = "linklabel1";
             this.linklabel1.Size = new System.Drawing.Size(86, 17);
             this.linklabel1.TabIndex = 29;
             this.linklabel1.TabStop = true;
             this.linklabel1.Text = "檢視套印樣板";
-            this.linklabel1.Visible = false;
             this.linklabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linklabel1_LinkClicked);
             // 
             // linklabel2
@@ -85,13 +86,12 @@
             this.linklabel2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linklabel2.AutoSize = true;
             this.linklabel2.BackColor = System.Drawing.Color.Transparent;
-            this.linklabel2.Location = new System.Drawing.Point(295, 244);
+            this.linklabel2.Location = new System.Drawing.Point(284, 244);
             this.linklabel2.Name = "linklabel2";
             this.linklabel2.Size = new System.Drawing.Size(86, 17);
             this.linklabel2.TabIndex = 30;
             this.linklabel2.TabStop = true;
             this.linklabel2.Text = "變更套印樣板";
-            this.linklabel2.Visible = false;
             this.linklabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linklabel2_LinkClicked);
             // 
             // btnPrint
@@ -133,7 +133,7 @@
             this.dtEnd.ButtonDropDown.Shortcut = DevComponents.DotNetBar.eShortcut.AltDown;
             this.dtEnd.ButtonDropDown.Visible = true;
             this.dtEnd.IsPopupCalendarOpen = false;
-            this.dtEnd.Location = new System.Drawing.Point(298, 118);
+            this.dtEnd.Location = new System.Drawing.Point(266, 135);
             // 
             // 
             // 
@@ -195,7 +195,7 @@
             this.dtBegin.ButtonDropDown.Shortcut = DevComponents.DotNetBar.eShortcut.AltDown;
             this.dtBegin.ButtonDropDown.Visible = true;
             this.dtBegin.IsPopupCalendarOpen = false;
-            this.dtBegin.Location = new System.Drawing.Point(100, 118);
+            this.dtBegin.Location = new System.Drawing.Point(64, 135);
             this.dtBegin.MaxDate = new System.DateTime(3000, 12, 31, 0, 0, 0, 0);
             this.dtBegin.MinDate = new System.DateTime(1900, 1, 1, 0, 0, 0, 0);
             // 
@@ -258,7 +258,7 @@
             // 
             this.labelX14.BackgroundStyle.Class = "";
             this.labelX14.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX14.Location = new System.Drawing.Point(250, 122);
+            this.labelX14.Location = new System.Drawing.Point(226, 139);
             this.labelX14.Name = "labelX14";
             this.labelX14.Size = new System.Drawing.Size(34, 21);
             this.labelX14.TabIndex = 38;
@@ -274,7 +274,7 @@
             // 
             this.labelX13.BackgroundStyle.Class = "";
             this.labelX13.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX13.Location = new System.Drawing.Point(45, 122);
+            this.labelX13.Location = new System.Drawing.Point(11, 139);
             this.labelX13.Name = "labelX13";
             this.labelX13.Size = new System.Drawing.Size(34, 21);
             this.labelX13.TabIndex = 37;
@@ -290,7 +290,7 @@
             // 
             this.labelX12.BackgroundStyle.Class = "";
             this.labelX12.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX12.Location = new System.Drawing.Point(56, 91);
+            this.labelX12.Location = new System.Drawing.Point(11, 97);
             this.labelX12.Name = "labelX12";
             this.labelX12.Size = new System.Drawing.Size(256, 21);
             this.labelX12.TabIndex = 36;
@@ -303,7 +303,7 @@
             this.comboBoxEx2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxEx2.FormattingEnabled = true;
             this.comboBoxEx2.ItemHeight = 19;
-            this.comboBoxEx2.Location = new System.Drawing.Point(298, 63);
+            this.comboBoxEx2.Location = new System.Drawing.Point(264, 56);
             this.comboBoxEx2.Name = "comboBoxEx2";
             this.comboBoxEx2.Size = new System.Drawing.Size(109, 25);
             this.comboBoxEx2.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -316,7 +316,7 @@
             this.comboBoxEx1.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxEx1.FormattingEnabled = true;
             this.comboBoxEx1.ItemHeight = 19;
-            this.comboBoxEx1.Location = new System.Drawing.Point(108, 59);
+            this.comboBoxEx1.Location = new System.Drawing.Point(100, 56);
             this.comboBoxEx1.Name = "comboBoxEx1";
             this.comboBoxEx1.Size = new System.Drawing.Size(107, 25);
             this.comboBoxEx1.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -332,7 +332,7 @@
             // 
             this.labelX1.BackgroundStyle.Class = "";
             this.labelX1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX1.Location = new System.Drawing.Point(227, 63);
+            this.labelX1.Location = new System.Drawing.Point(213, 60);
             this.labelX1.Name = "labelX1";
             this.labelX1.Size = new System.Drawing.Size(47, 21);
             this.labelX1.TabIndex = 40;
@@ -348,7 +348,7 @@
             // 
             this.labelX2.BackgroundStyle.Class = "";
             this.labelX2.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX2.Location = new System.Drawing.Point(55, 63);
+            this.labelX2.Location = new System.Drawing.Point(12, 60);
             this.labelX2.Name = "labelX2";
             this.labelX2.Size = new System.Drawing.Size(60, 21);
             this.labelX2.TabIndex = 39;
@@ -361,7 +361,7 @@
             this.comboBoxEx3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
             this.comboBoxEx3.FormattingEnabled = true;
             this.comboBoxEx3.ItemHeight = 19;
-            this.comboBoxEx3.Location = new System.Drawing.Point(136, 185);
+            this.comboBoxEx3.Location = new System.Drawing.Point(100, 205);
             this.comboBoxEx3.Name = "comboBoxEx3";
             this.comboBoxEx3.Size = new System.Drawing.Size(107, 25);
             this.comboBoxEx3.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
@@ -377,7 +377,7 @@
             // 
             this.labelX3.BackgroundStyle.Class = "";
             this.labelX3.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX3.Location = new System.Drawing.Point(57, 185);
+            this.labelX3.Location = new System.Drawing.Point(11, 209);
             this.labelX3.Name = "labelX3";
             this.labelX3.Size = new System.Drawing.Size(74, 21);
             this.labelX3.TabIndex = 43;
@@ -388,7 +388,7 @@
             this.linkLabel4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.linkLabel4.AutoSize = true;
             this.linkLabel4.BackColor = System.Drawing.Color.Transparent;
-            this.linkLabel4.Location = new System.Drawing.Point(137, 244);
+            this.linkLabel4.Location = new System.Drawing.Point(126, 244);
             this.linkLabel4.Name = "linkLabel4";
             this.linkLabel4.Size = new System.Drawing.Size(60, 17);
             this.linkLabel4.TabIndex = 45;
@@ -408,6 +408,7 @@
             this.cboConfigure.Size = new System.Drawing.Size(273, 25);
             this.cboConfigure.Style = DevComponents.DotNetBar.eDotNetBarStyle.StyleManagerControlled;
             this.cboConfigure.TabIndex = 46;
+            this.cboConfigure.SelectedIndexChanged += new System.EventHandler(this.cboConfigure_SelectedIndexChanged);
             // 
             // lnkDelConfig
             // 
@@ -419,6 +420,7 @@
             this.lnkDelConfig.TabIndex = 48;
             this.lnkDelConfig.TabStop = true;
             this.lnkDelConfig.Text = "刪除設定檔";
+            this.lnkDelConfig.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkDelConfig_LinkClicked);
             // 
             // lnkCopyConfig
             // 
@@ -430,6 +432,7 @@
             this.lnkCopyConfig.TabIndex = 47;
             this.lnkCopyConfig.TabStop = true;
             this.lnkCopyConfig.Text = "複製設定檔";
+            this.lnkCopyConfig.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.lnkCopyConfig_LinkClicked);
             // 
             // labelX11
             // 
@@ -440,17 +443,54 @@
             // 
             this.labelX11.BackgroundStyle.Class = "";
             this.labelX11.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX11.Location = new System.Drawing.Point(9, 14);
+            this.labelX11.Location = new System.Drawing.Point(11, 17);
             this.labelX11.Name = "labelX11";
             this.labelX11.Size = new System.Drawing.Size(87, 21);
             this.labelX11.TabIndex = 49;
             this.labelX11.Text = "樣板設定檔：";
+            // 
+            // circularProgress1
+            // 
+            this.circularProgress1.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.circularProgress1.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.circularProgress1.BackgroundStyle.Class = "";
+            this.circularProgress1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.circularProgress1.FocusCuesEnabled = false;
+            this.circularProgress1.Location = new System.Drawing.Point(236, 97);
+            this.circularProgress1.Name = "circularProgress1";
+            this.circularProgress1.ProgressBarType = DevComponents.DotNetBar.eCircularProgressType.Dot;
+            this.circularProgress1.ProgressColor = System.Drawing.Color.LimeGreen;
+            this.circularProgress1.ProgressTextVisible = true;
+            this.circularProgress1.Size = new System.Drawing.Size(53, 46);
+            this.circularProgress1.Style = DevComponents.DotNetBar.eDotNetBarStyle.Windows7;
+            this.circularProgress1.TabIndex = 50;
+            // 
+            // labelX4
+            // 
+            this.labelX4.Anchor = System.Windows.Forms.AnchorStyles.None;
+            this.labelX4.AutoSize = true;
+            this.labelX4.BackColor = System.Drawing.Color.Transparent;
+            // 
+            // 
+            // 
+            this.labelX4.BackgroundStyle.Class = "";
+            this.labelX4.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.labelX4.Location = new System.Drawing.Point(12, 178);
+            this.labelX4.Name = "labelX4";
+            this.labelX4.Size = new System.Drawing.Size(328, 21);
+            this.labelX4.TabIndex = 51;
+            this.labelX4.Text = "選擇列印科目課程排序列印，否則將會以班級座號排序";
             // 
             // PrintStudentESLReportForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(567, 270);
+            this.Controls.Add(this.labelX4);
+            this.Controls.Add(this.circularProgress1);
             this.Controls.Add(this.cboConfigure);
             this.Controls.Add(this.lnkDelConfig);
             this.Controls.Add(this.lnkCopyConfig);
@@ -473,9 +513,11 @@
             this.Controls.Add(this.linklabel1);
             this.Controls.Add(this.linklabel2);
             this.DoubleBuffered = true;
-            this.MinimumSize = new System.Drawing.Size(495, 157);
+            this.MaximumSize = new System.Drawing.Size(583, 309);
+            this.MinimumSize = new System.Drawing.Size(583, 309);
             this.Name = "PrintStudentESLReportForm";
             this.Text = "列印學生ESL成績單";
+            this.Load += new System.EventHandler(this.PrintStudentESLReportForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dtEnd)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtBegin)).EndInit();
             this.ResumeLayout(false);
@@ -506,5 +548,7 @@
         private System.Windows.Forms.LinkLabel lnkDelConfig;
         private System.Windows.Forms.LinkLabel lnkCopyConfig;
         private DevComponents.DotNetBar.LabelX labelX11;
+        private DevComponents.DotNetBar.Controls.CircularProgress circularProgress1;
+        private DevComponents.DotNetBar.LabelX labelX4;
     }
 }
