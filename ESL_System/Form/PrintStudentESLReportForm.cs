@@ -204,8 +204,8 @@ namespace ESL_System.Form
                     _doaminList.Add(name);
                 }
 
-                _doaminList.Add(""); //有些課程可能會沒有領域， 給它空值。
             }
+            _doaminList.Add(""); //有些課程可能會沒有領域， 給它空值。
             #endregion
 
 
@@ -379,6 +379,7 @@ namespace ESL_System.Form
                 try
                 {
                     _configure.Template = new Aspose.Words.Document(dialog.FileName);
+                    _configure.Encode();
                     _configure.Save();
                 }
                 catch
