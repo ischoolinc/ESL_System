@@ -171,6 +171,46 @@ namespace ESL_System
             //    ImportHCScore import = new ImportHCScore();
             //};
 
+            Catalog ribbon7 = RoleAclSource.Instance["課程"]["ESL報表"];
+            ribbon7.Add(new RibbonFeature("EB1AF12A-F5B3-41B9-9F9A-B2ABE541F3A3", "班級前N名"));
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["班級前N名"].Enable = UserAcl.Current["EB1AF12A-F5B3-41B9-9F9A-B2ABE541F3A3"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
+            {
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["班級前N名"].Enable = UserAcl.Current["EB1AF12A-F5B3-41B9-9F9A-B2ABE541F3A3"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+            };
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["班級前N名"].Click += delegate
+            {
+                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+
+                Form.PrintESLAwardTotalScoreReportForm printform = new Form.PrintESLAwardTotalScoreReportForm(eslCouseList);
+
+                printform.ShowDialog();
+            };
+
+
+            Catalog ribbon8 = RoleAclSource.Instance["課程"]["ESL報表"];
+            ribbon8.Add(new RibbonFeature("4B1318A1-1DA6-4A23-8508-2A394CFE4D9C", "進步名單"));
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["進步名單"].Enable = UserAcl.Current["4B1318A1-1DA6-4A23-8508-2A394CFE4D9C"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+
+            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
+            {
+                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["進步名單"].Enable = UserAcl.Current["4B1318A1-1DA6-4A23-8508-2A394CFE4D9C"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+            };
+
+            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["進步名單"].Click += delegate
+            {
+                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+
+                //Form.PrintESLReportForm printform = new Form.PrintESLReportForm(eslCouseList);
+
+                //printform.ShowDialog();
+            };
+
+
         }
     }
 }
