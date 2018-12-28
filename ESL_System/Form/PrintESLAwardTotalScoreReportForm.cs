@@ -227,7 +227,36 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  "
 
             string student_ids = string.Join("','", studentIDList);
 
-            string sql = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') ORDER BY last_update "; // 2018/6/21 通通都抓了，因為一張成績單上資訊，不只Final的
+            string sql = @"
+SELECT 
+course.course_name AS english_class
+,course.id AS course_id 
+,student.student_number AS student_number
+,student.name AS student_chinese_name
+,student.english_name AS student_english_name
+,student.gender AS gender
+,class.class_name AS home_room
+,student.ref_class_id AS ref_class_id
+,student.id AS student_id
+ ,teacher.teacher_name
+ ,sc_attend.id AS sc_attend_id
+,$esl.gradebook_assessment_score.ref_teacher_id
+,$esl.gradebook_assessment_score.ref_course_id
+,$esl.gradebook_assessment_score.ref_student_id
+,$esl.gradebook_assessment_score.term
+,$esl.gradebook_assessment_score.subject
+,$esl.gradebook_assessment_score.assessment
+,$esl.gradebook_assessment_score.custom_assessment
+,$esl.gradebook_assessment_score.value 
+FROM $esl.gradebook_assessment_score  
+LEFT JOIN course ON $esl.gradebook_assessment_score .ref_course_id = course.id
+LEFT JOIN student ON $esl.gradebook_assessment_score .ref_student_id = student.id
+LEFT JOIN class ON student.ref_class_id = class.id
+LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id
+LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_student_id = sc_attend.ref_student_id AND  $esl.gradebook_assessment_score.ref_course_id = sc_attend.ref_course_id
+WHERE $esl.gradebook_assessment_score.ref_course_id IN ('" + course_ids + @"')
+ORDER BY $esl.gradebook_assessment_score.last_update";
+;
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(sql);
