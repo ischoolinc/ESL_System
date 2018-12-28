@@ -946,6 +946,12 @@ namespace ESL_System
                 _subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
             }
 
+            // 2018/12/28 穎驊更新，成績都計算完後， trim 掉 多餘的 0， 像是 85.0 >> 85 、 70.0 >> 70 、76.1234000 >> 76.1234
+            foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
+            {
+                _subjectScoreDict[score.Key].Score = decimal.Parse(_subjectScoreDict[score.Key].Score.ToString("0.#########"));
+            }
+
             // 以 studentID 為 key 整理 學生subject成績 至_scorefinalDict
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
