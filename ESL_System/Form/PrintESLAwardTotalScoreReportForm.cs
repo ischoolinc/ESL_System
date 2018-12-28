@@ -85,6 +85,39 @@ namespace ESL_System.Form
             comboBoxEx1.Items.Add("課程總成績");
 
             comboBoxEx1.SelectedIndex = 0;
+
+            string courseIDs = string.Join(",", _courseIDList);
+
+            // 若使用者選取課程沒有 ESL 的樣板設定 則提醒
+            string query = @"
+SELECT 
+    course.id
+    ,course.course_name
+    ,exam_template.description 
+FROM course 
+LEFT JOIN  exam_template ON course.ref_exam_template_id =exam_template.id  
+WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  ";
+
+            QueryHelper qh = new QueryHelper();
+            DataTable dt = qh.Select(query);
+            if (dt.Rows.Count > 0)
+            {
+                List<string> errorList = new List<string>();
+
+                foreach (DataRow dr in dt.Rows)
+                {
+                    errorList.Add("所選取課程:「" + dr["course_name"] + "」，其並非使用ESL評分樣版，無法使用本功能。 ");
+                }
+
+                if (errorList.Count > 0)
+                {
+                    string erroor = string.Join("\r\n", errorList);
+
+                    MsgBox.Show(erroor);
+
+                    this.Close();
+                }
+            }
         }
 
 
@@ -224,29 +257,12 @@ namespace ESL_System.Form
                         // 指標型成績
                         if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
-                            string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "指標";
-                            if (_scoreDict[id].ContainsKey(key))
-                            {
-                                _scoreDict[id][key] = "" + row["value"]; //重覆項目，後來時間的蓋過前面
-                            }
-                            else
-                            {
-                                _scoreDict[id].Add(key, "" + row["value"]);
-                            }
-
+                            //獎項只排 分數型成績、指標不納入
                         }
                         // 評語型成績
                         else if (_commentList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
                         {
-                            string key = "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評語";
-                            if (_scoreDict[id].ContainsKey(key))
-                            {
-                                _scoreDict[id][key] = "" + row["value"]; //重覆項目，後來時間的蓋過前面
-                            }
-                            else
-                            {
-                                _scoreDict[id].Add(key, "" + row["value"]);
-                            }
+                            //獎項只排 分數型成績、評語不納入
                         }
                         // 分數型成績
                         else
