@@ -97,6 +97,16 @@ namespace ESL_System.Properties {
         /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
+        internal static byte[] ESL課程班級取前N名_樣板_ {
+            get {
+                object obj = ResourceManager.GetObject("ESL課程班級取前N名_樣板_", resourceCulture);
+                return ((byte[])(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   查詢類型 System.Byte[] 的當地語系化資源。
+        /// </summary>
         internal static byte[] FinalReport {
             get {
                 object obj = ResourceManager.GetObject("FinalReport", resourceCulture);

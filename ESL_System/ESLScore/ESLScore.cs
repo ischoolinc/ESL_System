@@ -83,5 +83,11 @@ namespace ESL_System
         public bool HasValue { get; set; }
 
 
+        /// <summary>
+        /// 最後更新時間(比較重覆結構成績，以最後上傳為主)
+        /// </summary>
+        public string LastUpdate { get; set; }
+
+
     }
 }

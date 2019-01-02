@@ -154,4 +154,7 @@
   <data name="預設ESL等第對照表" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\resource\預設esl等第對照表.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
+  <data name="ESL課程班級取前N名_樣板_" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\resource\esl課程班級取前n名(樣板).xlsx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </data>
 </root>

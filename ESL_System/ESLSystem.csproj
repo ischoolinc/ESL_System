@@ -281,6 +281,7 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Resource\calc_64.png" />
+    <None Include="Resource\ESL課程班級取前N名%28樣板%29.xlsx" />
     <None Include="Resource\預設ESL等第對照表.xml" />
     <None Include="Resource\meeting_refresh_64.png" />
     <None Include="Resource\loading.gif" />
