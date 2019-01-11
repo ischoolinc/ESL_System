@@ -1680,7 +1680,7 @@ namespace ESL_System.Form
             DevComponents.AdvTree.Node new_assessment_node_teacherRole = new DevComponents.AdvTree.Node();  //評分老師
             DevComponents.AdvTree.Node new_assessment_node_type = new DevComponents.AdvTree.Node(); //評分種類
             DevComponents.AdvTree.Node new_assessment_node_allowCustomAssessment = new DevComponents.AdvTree.Node(); //是否允許自訂項目
-
+            DevComponents.AdvTree.Node new_assessment_node_examScoreType = new DevComponents.AdvTree.Node(); //計算評量成績分數種類(定期、平時)
 
             //項目
             new_assessment_node_name.Text = "名稱:";
@@ -1688,6 +1688,7 @@ namespace ESL_System.Form
             new_assessment_node_teacherRole.Text = "評分老師";
             new_assessment_node_type.Text = "評分種類";
             new_assessment_node_allowCustomAssessment.Text = "是否允許自訂項目";
+            new_assessment_node_examScoreType.Text = "評量結算分數類別";
 
             //node Tag
             new_assessment_node_name.Tag = "string";
@@ -1695,6 +1696,7 @@ namespace ESL_System.Form
             new_assessment_node_teacherRole.Tag = "teacherKind";
             new_assessment_node_type.Tag = "ScoreKind";
             new_assessment_node_allowCustomAssessment.Tag = "AllowCustom";
+            new_assessment_node_examScoreType.Tag = "ExamScoreType";
 
             //值
             new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell("請輸入評量名稱"));
@@ -1702,6 +1704,7 @@ namespace ESL_System.Form
             new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell("教師一")); //預設為教師一
             new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell("分數")); //預設為分數
             new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell("否")); //預設為否
+            new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell("定期")); //預設 都是 "定期"
 
             //說明
             new_assessment_node_name.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_name.Tag]));
@@ -1709,11 +1712,13 @@ namespace ESL_System.Form
             new_assessment_node_teacherRole.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_teacherRole.Tag]));
             new_assessment_node_type.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_type.Tag]));
             new_assessment_node_allowCustomAssessment.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_allowCustomAssessment.Tag]));
+            new_assessment_node_examScoreType.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_assessment_node_examScoreType.Tag]));
 
             // 點擊事件 (適用於:teacherKind、ScoreKind、AllowCustom)
             new_assessment_node_teacherRole.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
             new_assessment_node_type.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
             new_assessment_node_allowCustomAssessment.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
+            new_assessment_node_examScoreType.NodeMouseDown += new System.Windows.Forms.MouseEventHandler(NodeMouseDown);
 
             //設定為不能點選編輯，避免使用者誤用
             new_assessment_node_name.Cells[0].Editable = false;
@@ -1726,6 +1731,8 @@ namespace ESL_System.Form
             new_assessment_node_type.Cells[2].Editable = false;
             new_assessment_node_allowCustomAssessment.Cells[0].Editable = false;
             new_assessment_node_allowCustomAssessment.Cells[2].Editable = false;
+            new_assessment_node_examScoreType.Cells[0].Editable = false;
+            new_assessment_node_examScoreType.Cells[2].Editable = false;
 
             //設定為不能拖曳，避免使用者誤用
             new_assessment_node_name.DragDropEnabled = false;
@@ -1733,7 +1740,7 @@ namespace ESL_System.Form
             new_assessment_node_teacherRole.DragDropEnabled = false;
             new_assessment_node_type.DragDropEnabled = false;
             new_assessment_node_allowCustomAssessment.DragDropEnabled = false;
-
+            new_assessment_node_examScoreType.DragDropEnabled = false;
 
             //加入子 node
             new_assessment_node.Nodes.Add(new_assessment_node_name);
@@ -1741,6 +1748,7 @@ namespace ESL_System.Form
             new_assessment_node.Nodes.Add(new_assessment_node_teacherRole);
             new_assessment_node.Nodes.Add(new_assessment_node_type);
             new_assessment_node.Nodes.Add(new_assessment_node_allowCustomAssessment);
+            new_assessment_node.Nodes.Add(new_assessment_node_examScoreType);
 
             //設定為不能點選編輯，避免使用者誤用
             new_assessment_node.Cells[0].Editable = false;
