@@ -529,6 +529,7 @@ namespace ESL_System.Form
                         ,$esl.gradebook_assessment_score.term
                         ,$esl.gradebook_assessment_score.subject
                         ,$esl.gradebook_assessment_score.assessment
+                        ,$esl.gradebook_assessment_score.custom_assessment
                         ,$esl.gradebook_assessment_score.value
                         ,$esl.gradebook_assessment_score.ref_course_id
                         ,$esl.gradebook_assessment_score.ref_student_id
@@ -558,6 +559,12 @@ namespace ESL_System.Form
             {
                 foreach (DataRow dr in dt.Rows)
                 {
+                    // 濾掉有 custom_assessment 項目的成績，不用SQL AND custom_assessment!='' 的原因是因為有的時候custom_assessment 會NULL
+                    if ("" + dr["custom_assessment"] != "")
+                    {
+                        continue;
+                    }
+
                     foreach (string courseID in _scoreDict.Keys)
                     {
                         if (courseID == "" + dr["ref_course_id"])
