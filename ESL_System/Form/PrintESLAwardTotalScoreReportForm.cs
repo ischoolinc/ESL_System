@@ -112,11 +112,11 @@ namespace ESL_System.Form
             _lessThan = int.Parse("" + numericUpDown3.Value);
             _lessThanPeople = int.Parse("" + numericUpDown4.Value);
 
-            if (_moreThan < _moreThanPeople || _lessThan < _lessThanPeople)
-            {
-                MsgBox.Show("學生人數下限、學生人數上限，不得少與取得名次數量");
-                return;
-            };
+            //if (_moreThan < _moreThanPeople || _lessThan < _lessThanPeople)
+            //{
+            //    MsgBox.Show("學生人數下限、學生人數上限，不得少與取得名次數量");
+            //    return;
+            //};
 
             if (_moreThan <= _lessThan)
             {
