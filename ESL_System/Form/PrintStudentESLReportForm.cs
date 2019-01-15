@@ -551,6 +551,8 @@ namespace ESL_System.Form
             builder.StartTable();
 
             builder.InsertCell();
+            builder.Write("課程名稱");
+            builder.InsertCell();
             builder.Write("課程科目名稱");
             builder.InsertCell();
             builder.Write("課程學期成績分數");
@@ -562,7 +564,9 @@ namespace ESL_System.Form
             for (int i = 1; i < 26; i++)
             {
                 builder.InsertCell();
-                builder.InsertField("MERGEFIELD " + "課程科目名稱" + i + " \\* MERGEFORMAT ", "«CN»");
+                builder.InsertField("MERGEFIELD " + "課程名稱" + i + " \\* MERGEFORMAT ", "«CN»");
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + "課程科目名稱" + i + " \\* MERGEFORMAT ", "«CSN»");
                 builder.InsertCell();
                 builder.InsertField("MERGEFIELD " + "課程學期成績分數" + i + " \\* MERGEFORMAT ", "«CSS»");
                 builder.InsertCell();
@@ -1325,7 +1329,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string id = "" + row["ref_student_id"];
 
                 string examWord = "" + row["exam_name"];
-                string domainWord = "" + row["domain"];
+                string domainWord = "" + row["domain"];                
                 string subjectWord = "" + row["subject"];
                 string teacher = "" + row["teacher_name"]; // 教師姓名，固定抓 該課程的 教師一
                 string credit = "" + row["credit"];
@@ -1340,7 +1344,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                     bool added = false;  // 尚未加入
 
                     for (int i = 1; !added; i++)
-                    {
+                    {                    
                         // 課程科目名稱
                         if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
                         {
@@ -1371,6 +1375,7 @@ WHERE course.id IN ('" + course_ids + "') " +
             string sqlSemesterCourseScore = @"SELECT
 sc_attend.ref_student_id
 ,exam_template.name
+,course.course_name
 ,course.domain
 ,course.subject
 ,sc_attend.score
@@ -1389,6 +1394,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                 string templateWord = "" + row["name"];
                 string domainWord = "" + row["domain"];
+                string courseWord = "" + row["course_name"];
                 string subjectWord = "" + row["subject"];
                                 
                 string score = "" + row["score"]; // 課程學期成績
@@ -1418,6 +1424,17 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                     for (int i = 1; !added; i++)
                     {
+
+                        // 課程名稱
+                        if (_scoreDict[id].ContainsKey("課程名稱" + i))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            _scoreDict[id].Add("課程名稱" + i, courseWord);                            
+                        }
+
                         // 課程科目名稱
                         if (_scoreDict[id].ContainsKey("課程科目名稱" + i))
                         {
@@ -1897,6 +1914,7 @@ WHERE course.id IN ('" + course_ids + "') " +
             }
             for (int i = 1; i < 26; i++)
             {
+                dataTable.Columns.Add("課程名稱" + i);
                 dataTable.Columns.Add("課程科目名稱" + i);
                 dataTable.Columns.Add("課程學期成績分數" + i);
                 dataTable.Columns.Add("課程學期成績等第" + i);     
