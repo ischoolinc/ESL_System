@@ -315,10 +315,10 @@ namespace ESL_System
                     {
                         CourseTeacherRecord teacher = eslcourse.Teachers.Find(t => t.TeacherID == ("" + dr["ref_teacher_id"]));
 
-                        if (teacher == null)
-                        {
-                            continue;  // 在目前的ESL 課程找不到這個老師，代表本成績 是舊的老師所打，要跳過此成績。
-                        }
+                        //if (teacher == null)
+                        //{
+                        //    continue;  // 在目前的ESL 課程找不到這個老師，代表本成績 是舊的老師所打，要跳過此成績。
+                        //}
 
                     }
 
