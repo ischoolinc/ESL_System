@@ -302,10 +302,14 @@ WHERE course.id IN( " + courseIDs + ")";
 
             foreach (K12.Data.SCAttendRecord scr in scList)
             {
+                if (scr.Student.Status != K12.Data.StudentRecord.StudentStatus.一般)
+                {
+                    continue;
+                }
                 studentIDList.Add(scr.Student.ID);
 
                 // 建立課程修課名單，以對照出修課人數 對照畫面設定 決定取幾名 ，
-                if (!_courseScattendDict.ContainsKey(scr.Course.ID))
+                if (!_courseScattendDict.ContainsKey(scr.Course.ID) )
                 {
                     _courseScattendDict.Add(scr.Course.ID, new List<K12.Data.SCAttendRecord>());
                     _courseScattendDict[scr.Course.ID].Add(scr);
