@@ -128,8 +128,7 @@ WITH RawData AS
     LEFT JOIN teacher
     ON teacher.id =  $esl.gradebook_assessment_score.ref_teacher_id
     WHERE course.id IN( " + courseIDs + @")
-    AND $esl.gradebook_assessment_score.custom_assessment IS NULL
-    OR $esl.gradebook_assessment_score.custom_assessment =''
+    AND ($esl.gradebook_assessment_score.custom_assessment IS NULL OR $esl.gradebook_assessment_score.custom_assessment ='')    
 )
 SELECT
 RawData.student_number
