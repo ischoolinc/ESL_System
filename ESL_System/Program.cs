@@ -185,6 +185,7 @@ namespace ESL_System
             {
                 List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
+
                 Form.PrintESLAwardTotalScoreReportForm printform = new Form.PrintESLAwardTotalScoreReportForm(eslCouseList);
 
                 printform.ShowDialog();
