@@ -259,8 +259,14 @@ namespace ESL_System
             _worker.ReportProgress(20, "取得ESL課程修課學生...");
 
             #region 取得ESL 課程 修課學生 修課紀錄
+
+            // K12 API 會抓到 畢業及離校 的學生 修課紀錄
             _scatList = K12.Data.SCAttend.SelectByCourseIDs(_courseIDList);
 
+            // 將全部狀態非一般生的學生 修課紀錄移除
+            _scatList.RemoveAll(scaRecord => scaRecord.Student.Status != StudentRecord.StudentStatus.一般);
+
+            
             // 將修課紀錄 以stidentID 整理成字典
             foreach (K12.Data.SCAttendRecord scattendRecord in _scatList)
             {
@@ -282,17 +288,27 @@ namespace ESL_System
 
             #region 取得學生ESL 成績(assessment)
             // 學生ID清單
-            string studentIDs = string.Join(",", _scatDict.Keys);
+            //string studentIDs = string.Join(",", _scatDict.Keys);
+
+            // 修課紀錄 sc_attend ID清單
+            string sc_attend_IDs = string.Join(",", _scatList.Select(scaRecord => scaRecord.ID).ToList());
 
             // Term 名稱 清單
             string termNames = string.Join(",", _TargetCourseTermList);
 
             //抓取目前所選取ESL  課程、評量，且其修課學生的 成績
             //assessment 欄位 為空，還有濾掉 custom_assessment 成績 代表此成績 是 Subject 或是 Term 成績            
+            //query = @"SELECT * 
+            //          FROM $esl.gradebook_assessment_score 
+            //          WHERE ref_course_id IN( " + courseIDs + ") " +
+            //          "AND  ref_student_id IN(" + studentIDs + ")" +
+            //          "AND term IN(" + termNames + ")" +
+            //          "AND assessment != ''";
+
+            // 2019/01/29 ESL 寒假改版， 採用 sc_attend 找資料
             query = @"SELECT * 
                       FROM $esl.gradebook_assessment_score 
-                      WHERE ref_course_id IN( " + courseIDs + ") " +
-                      "AND  ref_student_id IN(" + studentIDs + ")" +
+                      WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +                      
                       "AND term IN(" + termNames + ")" +
                       "AND assessment != ''";
 
@@ -364,13 +380,13 @@ namespace ESL_System
 
 
             #region 取得學生 ESL 成績(term、subject) 作為最後對照是否更新使用
-            //抓取目前所選取ESL  課程、評量，且其修課學生的 term、subject 成績
+
+            // 2019/01/29 ESL 寒假改版， 採用 sc_attend 找資料
             query = @"SELECT * 
                       FROM $esl.gradebook_assessment_score 
-                      WHERE ref_course_id IN( " + courseIDs + ") " +
-                      "AND  ref_student_id IN(" + studentIDs + ")" +
+                      WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +
                       "AND term IN(" + termNames + ")" +
-                      "AND assessment IS NULL " ;
+                      "AND assessment IS NULL ";
 
             dt = qh.Select(query);
 
