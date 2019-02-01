@@ -739,12 +739,7 @@ namespace ESL_System
                 decimal term_score_partial;
 
                 if (_scoreRatioTotalDict.ContainsKey(key_score_subject))
-                {
-                    //term_score_partial = Math.Round(subjectScore.Score * _scoreRatioDict[key_score_subject], 2, MidpointRounding.ToEven); // 四捨五入到第二位
-
-                    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                    //term_score_partial = subjectScore.Score * _scoreRatioDict[key_score_subject];
+                {                                     
                     term_score_partial = subjectScore.Score;
 
                     // 處理 term 分母
@@ -848,10 +843,8 @@ namespace ESL_System
                         {
                             _termScoreDict[key_term + "_平時"].Score += term_score_partial;
                         }
-                    }
-                    
+                    }                    
                 }
-
             }
 
 
