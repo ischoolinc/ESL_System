@@ -89,5 +89,11 @@ namespace ESL_System
         public string LastUpdate { get; set; }
 
 
+        /// <summary>
+        /// 指定Assessment成績分數比例(給特殊學生(ex:轉學生)成績使用，可以無視樣板的比例，強制將此成績以設定的Ratio　比例計算)
+        /// </summary>
+        public int Ratio { get; set; }
+
+
     }
 }

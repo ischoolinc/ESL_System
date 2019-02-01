@@ -353,6 +353,12 @@ namespace ESL_System
                         score.Custom_Assessment = "" + dr["custom_assessment"];
                         score.Value = "" + dr["value"];
 
+                        // 2019/02/01 穎驊新增，若學生assessment成績，有指定的比例設定，將會保存此屬性，作為權重使用
+                        if ("" + dr["ratio"] != "")
+                        {
+                            score.Ratio = int.Parse("" + dr["ratio"]);
+                        }
+
                         _scoreAssessmentOriDict.Add("" + dr["ref_student_id"], new List<ESLScore>());
 
                         _scoreAssessmentOriDict["" + dr["ref_student_id"]].Add(score);
@@ -370,6 +376,12 @@ namespace ESL_System
                         score.Assessment = "" + dr["assessment"];
                         score.Custom_Assessment = "" + dr["custom_assessment"];
                         score.Value = "" + dr["value"];
+
+                        // 2019/02/01 穎驊新增，若學生assessment成績，有指定的比例設定，將會保存此屬性，作為權重使用
+                        if ("" + dr["ratio"] != "")
+                        {
+                            score.Ratio = int.Parse("" + dr["ratio"]);
+                        }
 
                         _scoreAssessmentOriDict["" + dr["ref_student_id"]].Add(score);
                     }
@@ -544,8 +556,7 @@ namespace ESL_System
 
                     // 紀錄每一個subject 下 assessment 加總權重 的 dict
                     Dictionary<string, int> assessmentTotalWeightOriDict = new Dictionary<string, int>();
-
-                    int currentLCM = 0;
+                    
                     foreach (Subject s in t.SubjectList)
                     {
                         int assessmentTotalWeightOri = 0;
@@ -557,18 +568,7 @@ namespace ESL_System
                                 assessmentTotalWeightOri += int.Parse(a.Weight);
                             }
                         }
-
-                        assessmentTotalWeightOriDict.Add(s.Name, assessmentTotalWeightOri);
-
-                        if (currentLCM == 0)
-                        {
-                            currentLCM = assessmentTotalWeightOri;
-                        }
-                        else
-                        {
-                            currentLCM = LCM(currentLCM, assessmentTotalWeightOri);
-
-                        }
+                        assessmentTotalWeightOriDict.Add(s.Name, assessmentTotalWeightOri);    
                     }
 
                     foreach (Subject s in t.SubjectList)
@@ -582,23 +582,21 @@ namespace ESL_System
                             if (a.Type == "Score") // 只取分數型成績
                             {
                                 key_assessment = courseID + "_" + t.Name + "_" + s.Name + "_" + a.Name;
-
-                                int ratioLCM_assessment = currentLCM * int.Parse(a.Weight) * int.Parse(s.Weight) / assessmentTotalWeightOriDict[s.Name];
+                                
+                                // 2019/02/01 穎驊更新， ESＬ　寒假優化，assessment　直接對應 term 成績計算
+                                int ratioLCM_assessment = int.Parse(a.Weight); 
 
                                 _scoreRatioDict.Add(key_assessment, ratioLCM_assessment);
 
                                 ratioLCM_subject += ratioLCM_assessment;
 
-
                                 _scoreExamScoreTypeDict.Add(key_assessment, a.ExamScoreType); //整理分數計算類別， 以利換回系統知道成績對應(定期、平時)
-
                             }
                         }
 
                         key_subject = courseID + "_" + t.Name + "_" + s.Name;
                          
                         _scoreRatioDict.Add(key_subject, ratioLCM_subject);
-
                     }
                 }
             }
@@ -915,42 +913,11 @@ namespace ESL_System
                 if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
                     string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
-
-                    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
-
+                    
                     // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
                     // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
                     _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
                 }
-
-                //// 定期的 subject 成績
-                //if (score.Key.Contains("定期"))
-                //{
-                //    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_定期";
-
-                //    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
-
-                //    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                //    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                //    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
-                //}
-
-                //// 平時的 subject 成績
-                //if (score.Key.Contains("平時"))
-                //{
-                //    string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject + "_平時";
-
-                //    //_subjectScoreDict[score.Key].Score = Math.Round(_subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalKey], 2, MidpointRounding.ToEven);
-
-                //    // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
-                //    // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                //    _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
-                //}
-
-
-
-
-
             }
 
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
@@ -1633,25 +1600,7 @@ WHERE action ='INSERT'", Data);
         }
 
 
-        // 2018/11/14 穎驊新增， 為了徹底解決，計算精度的問題
-        // 恩政建議，將每一個權重之間 找到 最小公倍數
-        // GCD 為最大公因數 ， 為 找最小公倍數的過程需要
-        private static int GCD(int num1, int num2)
-        {
-            int min = 0;
-            int max = 0;
-            int maxModMin = 0;
-            min = Math.Min(num1, num2);
-            max = Math.Max(num1, num2);
-            maxModMin = max % min;
-            return maxModMin > 0 ? GCD(min, maxModMin) : min;
-        }
 
-        // LCM 為最小公倍數
-        private static int LCM(int num1, int num2)
-        {
-            return num1 * num2 / GCD(num1, num2);
-        }
 
 
 
