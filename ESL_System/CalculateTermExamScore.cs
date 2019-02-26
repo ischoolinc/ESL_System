@@ -74,7 +74,7 @@ namespace ESL_System
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
             _worker.ProgressChanged += new ProgressChangedEventHandler(Worker_ProgressChanged);
             _worker.WorkerReportsProgress = true;
-
+            _worker.WorkerSupportsCancellation = true;            
             _worker.RunWorkerAsync();
 
         }
@@ -320,24 +320,10 @@ namespace ESL_System
                 foreach (DataRow dr in dt.Rows)
                 {
                     // 濾掉有 custom_assessment 項目的成績，不用SQL AND custom_assessment!='' 的原因是因為有的時候custom_assessment 會NULL
-                    if ("" + dr["custom_assessment"] !="")
+                    if ("" + dr["custom_assessment"] != "")
                     {
                         continue;
                     }
-
-                    CourseRecord eslcourse = courseList.Find(c => c.ID == ("" + dr["ref_course_id"]));
-
-                    if (eslcourse != null)
-                    {
-                        CourseTeacherRecord teacher = eslcourse.Teachers.Find(t => t.TeacherID == ("" + dr["ref_teacher_id"]));
-
-                        //if (teacher == null)
-                        //{
-                        //    continue;  // 在目前的ESL 課程找不到這個老師，代表本成績 是舊的老師所打，要跳過此成績。
-                        //}
-
-                    }
-
 
                     if (!_scoreAssessmentOriDict.ContainsKey("" + dr["ref_student_id"]))
                     {
@@ -386,6 +372,11 @@ namespace ESL_System
                         _scoreAssessmentOriDict["" + dr["ref_student_id"]].Add(score);
                     }
                 }
+            }
+            else
+            {                
+                e.Cancel = true;                
+                return;
             }
             #endregion
 
@@ -456,10 +447,6 @@ namespace ESL_System
 
             _worker.ReportProgress(40, "取得系統課程評量成績...");
 
-            // 取得舊有評量成績
-            //List<SCETakeRecord> scetakeList_Old = SCETake.SelectByCourseAndExam(_courseIDList, target_exam_id);
-
-
 
             #region 取得學生 舊有評量 Exam 成績 
 
@@ -521,28 +508,12 @@ namespace ESL_System
                     {
                         _scetESLDict[scetRecord.RefStudentID].Add(scetRecord);
                     }
-
                 }
             }
 
 
             #endregion
 
-
-            //// 以 studentID 為 key 整理 學生評量成績
-            //foreach (SCETakeRecord scetRecord in scetakeList_Old)
-            //{
-            //    if (!_scetDict.ContainsKey(scetRecord.RefStudentID))
-            //    {
-            //        _scetDict.Add(scetRecord.RefStudentID, new List<SCETakeRecord>());
-
-            //        _scetDict[scetRecord.RefStudentID].Add(scetRecord);
-            //    }
-            //    else
-            //    {
-            //        _scetDict[scetRecord.RefStudentID].Add(scetRecord);
-            //    }
-            //}
 
             #region 換算ESL 成績項目 每一個的權重 、計算評量成績分數種類(定期、平時)
             foreach (string courseID in _scoreTemplateDict.Keys)
@@ -552,30 +523,13 @@ namespace ESL_System
 
                 foreach (Term t in _scoreTemplateDict[courseID])
                 {
-                    t.SubjectTotalWeight = 0;
-
-                    // 紀錄每一個subject 下 assessment 加總權重 的 dict
-                    Dictionary<string, int> assessmentTotalWeightOriDict = new Dictionary<string, int>();
-                    
-                    foreach (Subject s in t.SubjectList)
-                    {
-                        int assessmentTotalWeightOri = 0;
-
-                        foreach (Assessment a in s.AssessmentList)
-                        {
-                            if (a.Type == "Score") // 只取分數型成績
-                            {
-                                assessmentTotalWeightOri += int.Parse(a.Weight);
-                            }
-                        }
-                        assessmentTotalWeightOriDict.Add(s.Name, assessmentTotalWeightOri);    
-                    }
+                    t.SubjectTotalWeight = 0;                  
 
                     foreach (Subject s in t.SubjectList)
                     {
                         s.AssessmentTotalWeight = 0;
 
-                        int ratioLCM_subject = 0;
+                        int ratio_subject = 0;
 
                         foreach (Assessment a in s.AssessmentList)
                         {
@@ -584,11 +538,11 @@ namespace ESL_System
                                 key_assessment = courseID + "_" + t.Name + "_" + s.Name + "_" + a.Name;
                                 
                                 // 2019/02/01 穎驊更新， ESＬ　寒假優化，assessment　直接對應 term 成績計算
-                                int ratioLCM_assessment = int.Parse(a.Weight); 
+                                int ratio_assessment = int.Parse(a.Weight); 
 
-                                _scoreRatioDict.Add(key_assessment, ratioLCM_assessment);
+                                _scoreRatioDict.Add(key_assessment, ratio_assessment);
 
-                                ratioLCM_subject += ratioLCM_assessment;
+                                ratio_subject += ratio_assessment;
 
                                 _scoreExamScoreTypeDict.Add(key_assessment, a.ExamScoreType); //整理分數計算類別， 以利換回系統知道成績對應(定期、平時)
                             }
@@ -596,7 +550,7 @@ namespace ESL_System
 
                         key_subject = courseID + "_" + t.Name + "_" + s.Name;
                          
-                        _scoreRatioDict.Add(key_subject, ratioLCM_subject);
+                        _scoreRatioDict.Add(key_subject, ratio_subject);
                     }
                 }
             }
@@ -620,9 +574,7 @@ namespace ESL_System
                     key_score_assessment = score.RefCourseID + "_" + score.Term + "_" + score.Subject + "_" + score.Assessment; // 查分數比例的KEY 這些就夠
 
                     key_subject = score.RefCourseID + "_" + score.RefStudentID + "_" + score.Term + "_" + score.Subject; // 寫給學生的Subject 成績 還必須要有 studentID 才有獨立性
-
-                    key_term = score.RefCourseID + "_" + score.RefStudentID + "_" + score.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
-
+                    
                     if (_scoreRatioDict.ContainsKey(key_score_assessment))
                     {
                         decimal assementScore;
@@ -632,16 +584,40 @@ namespace ESL_System
 
                             // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
                             // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
-                            subject_score_partial = assementScore * _scoreRatioDict[key_score_assessment];
-
-                            // 處理 subject分母
-                            if (!_scoreRatioTotalDict.ContainsKey(key_subject))
+                            // 2019/02/26 穎驊 依據ESL 寒假優化項目， 新增了 學生個別成績 比例的計算
+                            // 如果 學生該筆成績 有獨立的  Ratio 權重設定，以該Ratio 權重優先
+                            if (score.Ratio != null)
                             {
-                                _scoreRatioTotalDict.Add(key_subject, _scoreRatioDict[key_score_assessment]);
+                                subject_score_partial = assementScore *  decimal.Parse(score.Ratio + "");
                             }
                             else
                             {
-                                _scoreRatioTotalDict[key_subject] += _scoreRatioDict[key_score_assessment];
+                                subject_score_partial = assementScore * _scoreRatioDict[key_score_assessment];
+                            }
+
+                            
+                            // 處理 subject分母
+                            if (!_scoreRatioTotalDict.ContainsKey(key_subject))
+                            {
+                                if (score.Ratio != null)
+                                {
+                                    _scoreRatioTotalDict.Add(key_subject, decimal.Parse(score.Ratio + ""));
+                                }
+                                else
+                                {
+                                    _scoreRatioTotalDict.Add(key_subject, _scoreRatioDict[key_score_assessment]);
+                                }                                
+                            }
+                            else
+                            {
+                                if (score.Ratio != null)
+                                {                                    
+                                    _scoreRatioTotalDict[key_subject] += decimal.Parse(score.Ratio + "");
+                                }
+                                else
+                                {
+                                    _scoreRatioTotalDict[key_subject] += _scoreRatioDict[key_score_assessment];
+                                }                                
                             }
 
                             // 處理 subject分母(定期、平時)
@@ -649,11 +625,25 @@ namespace ESL_System
                             {
                                 if (!_scoreRatioTotalDict.ContainsKey(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]))
                                 {
-                                    _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], _scoreRatioDict[key_score_assessment]);
+                                    if (score.Ratio != null)
+                                    {                                        
+                                        _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], decimal.Parse(score.Ratio + ""));
+                                    }
+                                    else
+                                    {
+                                        _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], _scoreRatioDict[key_score_assessment]);
+                                    }                                    
                                 }
                                 else
                                 {
-                                    _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += _scoreRatioDict[key_score_assessment];
+                                    if (score.Ratio != null)
+                                    {                                        
+                                        _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += decimal.Parse(score.Ratio + "");
+                                    }
+                                    else
+                                    {
+                                        _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += _scoreRatioDict[key_score_assessment];
+                                    }                                    
                                 }
                             }
 
@@ -714,14 +704,11 @@ namespace ESL_System
                                         // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的                                                                         
                                     }                                    
                                 }
-
-                            }
-
-                            
+                            }                            
                         }
                         else
                         {
-                            //assementScore = 0; // 轉失敗(可能沒有輸入)，當0 分
+                            //assementScore = 0; // 轉失敗(可能沒有輸入)，當0 分 >> 不可以!!!
                         }
                     }
                 }
@@ -1423,8 +1410,21 @@ WHERE action ='INSERT'", Data);
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
+            if (e.Error != null)
+            {
+                MsgBox.Show("計算失敗!!，錯誤訊息:" + e.Error.Message);
 
-            MsgBox.Show("計算完成!");
+            }
+            else if(e.Cancelled)
+            {
+                MsgBox.Show("計算中止!!，中止訊息: 所選擇ESL課程，並無任何ESL 成績資料，請檢查。");
+            }
+            else
+            {
+                MsgBox.Show("計算完成!");
+            }
+
+            
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
