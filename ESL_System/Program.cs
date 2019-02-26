@@ -63,26 +63,29 @@ namespace ESL_System
 
             };
 
-            Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
-            ribbon3.Add(new RibbonFeature("ESL成績單", "ESL報表"));
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+            //2019/02/26 穎驊註解， 依據ESL 寒假優化項目 課程上的 ESL 報表功能 將移除，日後會統一在學生上列印
 
-            K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
-            {
-                MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
-            };
+            //Catalog ribbon3 = RoleAclSource.Instance["課程"]["ESL報表"];
+            //ribbon3.Add(new RibbonFeature("ESL成績單", "ESL報表"));
+
+            //MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0;
+
+            //K12.Presentation.NLDPanels.Course.SelectedSourceChanged += delegate
+            //{
+            //    MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Enable = UserAcl.Current["ESL成績單"].Executable && (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0);
+            //};
 
 
-            MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Click += delegate
-            {
-                List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
+            //MotherForm.RibbonBarItems["課程", "資料統計"]["報表"]["ESL報表"]["ESL成績單"].Click += delegate
+            //{
+            //    List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
-                Form.PrintESLReportForm printform = new Form.PrintESLReportForm(eslCouseList);
+            //    Form.PrintESLReportForm printform = new Form.PrintESLReportForm(eslCouseList);
 
-                printform.ShowDialog();
+            //    printform.ShowDialog();
 
-            };
+            //};
 
 
             Catalog ribbon4 = RoleAclSource.Instance["課程"]["ESL課程"];

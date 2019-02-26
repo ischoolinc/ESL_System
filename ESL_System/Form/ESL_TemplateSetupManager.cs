@@ -1020,6 +1020,7 @@ namespace ESL_System.Form
                 new_subject_node_name.Cells[0].Editable = false;
                 new_subject_node_name.Cells[2].Editable = false;
                 new_subject_node_percentage.Cells[0].Editable = false;
+                new_subject_node_percentage.Cells[1].Editable = false; // ESL 寒假調整， Subject 比例不再讓使用者調整，直接從子項目Aessessment 加總上來
                 new_subject_node_percentage.Cells[2].Editable = false;
 
                 //設定為不能拖曳，避免使用者誤用
@@ -1253,16 +1254,30 @@ namespace ESL_System.Form
             bool isFirstLoad = firstLoad;
 
 
-            #region 試別
-            decimal term_total = 0;
+            #region 試別 Term
+            
+
+            Dictionary<string, decimal> node_term_total_Dict = new Dictionary<string, decimal>();
 
             foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
                 {
-                    if (node_subject.Text == "比例:" && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
                     {
-                        term_total += decimal.Parse(node_subject.Cells[1].Text);
+                        if (node_assessment.Text == "比例:" && decimal.TryParse(node_assessment.Cells[1].Text, out decimal i))
+                        {
+                            if (!node_term_total_Dict.ContainsKey(node_term.Text))
+                            {
+                                node_term_total_Dict.Add(node_term.Text, 0);
+
+                                node_term_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
+                            }
+                            else
+                            {
+                                node_term_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
+                            }
+                        }
                     }
                 }
             }
@@ -1271,17 +1286,17 @@ namespace ESL_System.Form
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
                 {
-                    if (node_subject.Text == "比例:" && term_total != 0 && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
+                    if (node_subject.Text == "比例:" && node_term_total_Dict.ContainsKey(node_term.Text) && node_term_total_Dict[node_term.Text] != 0 && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
                     {
                         if (isFirstLoad)
                         {
                             // 去掉尾端括弧之後 加上百分比
-                            node_term.Text = node_term.Text.Substring(0, node_term.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / term_total, 2) + "%)";
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict[node_term.Text], 2) + "%)";
                         }
                         else
                         {
                             // 砍到最後一個逗號, 加上百分比
-                            node_term.Text = node_term.Text.Substring(0, node_term.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / term_total, 2) + "%)";
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict[node_term.Text], 2) + "%)";
                         }
 
                     }
@@ -1289,7 +1304,7 @@ namespace ESL_System.Form
             }
             #endregion
 
-            #region 科目
+            #region 科目 Subject
             //decimal subject_total = 0;
 
             Dictionary<string, decimal> node_subject_total_Dict = new Dictionary<string, decimal>();
@@ -1342,7 +1357,7 @@ namespace ESL_System.Form
             }
             #endregion
 
-            #region 評量            
+            #region 評量 Assessment           
             Dictionary<string, decimal> node_assessment_total_Dict = new Dictionary<string, decimal>();
 
             foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
@@ -1355,15 +1370,15 @@ namespace ESL_System.Form
                         {
                             if (node_assessment_sub.Text == "比例:" && decimal.TryParse(node_assessment_sub.Cells[1].Text, out decimal i))
                             {
-                                if (!node_assessment_total_Dict.ContainsKey(node_term.Text + "_" + node_subject.Text))
+                                if (!node_assessment_total_Dict.ContainsKey(node_term.Text))
                                 {
-                                    node_assessment_total_Dict.Add(node_term.Text + "_" + node_subject.Text, 0);
+                                    node_assessment_total_Dict.Add(node_term.Text, 0);
 
-                                    node_assessment_total_Dict[node_term.Text + "_" + node_subject] += decimal.Parse(node_assessment_sub.Cells[1].Text);
+                                    node_assessment_total_Dict[node_term.Text] += decimal.Parse(node_assessment_sub.Cells[1].Text);
                                 }
                                 else
                                 {
-                                    node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text] += decimal.Parse(node_assessment_sub.Cells[1].Text);
+                                    node_assessment_total_Dict[node_term.Text] += decimal.Parse(node_assessment_sub.Cells[1].Text);
                                 }
                             }
                         }
@@ -1379,17 +1394,17 @@ namespace ESL_System.Form
                     {
                         foreach (DevComponents.AdvTree.Node node_assessment_sub in node_assessment.Nodes)
                         {
-                            if (node_assessment_sub.Text == "比例:" && node_assessment_total_Dict.ContainsKey(node_term.Text + "_" + node_subject.Text) && node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text] != 0 && decimal.TryParse(node_assessment_sub.Cells[1].Text, out decimal i))
+                            if (node_assessment_sub.Text == "比例:" && node_assessment_total_Dict.ContainsKey(node_term.Text) && node_assessment_total_Dict[node_term.Text] != 0 && decimal.TryParse(node_assessment_sub.Cells[1].Text, out decimal i))
                             {
                                 if (isFirstLoad)
                                 {
                                     // 去掉尾端括弧之後 加上百分比
-                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text], 2) + "%)";
+                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text], 2) + "%)";
                                 }
                                 else
                                 {
                                     // 砍到最後一個逗號, 加上百分比
-                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text + "_" + node_subject.Text], 2) + "%)";
+                                    node_assessment.Text = node_assessment.Text.Substring(0, node_assessment.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_assessment_sub.Cells[1].Text) * 100 / node_assessment_total_Dict[node_term.Text], 2) + "%)";
                                 }
 
                             }
@@ -1793,6 +1808,7 @@ namespace ESL_System.Form
             new_subject_node_name.Cells[0].Editable = false;
             new_subject_node_name.Cells[2].Editable = false;
             new_subject_node_percentage.Cells[0].Editable = false;
+            new_subject_node_percentage.Cells[1].Editable = false; // ESL 寒假調整， Subject 比例不再讓使用者調整，直接從子項目Aessessment 加總上來
             new_subject_node_percentage.Cells[2].Editable = false;
 
             //設定為不能拖曳，避免使用者誤用
@@ -2091,6 +2107,13 @@ namespace ESL_System.Form
             {
                 ExportXmlBtn.Visible = true;
                 importXmlBtn.Visible = true;
+
+                // 2019/02/26 穎驊註解， 因應ESL 寒假調整項目， 課程的上的ESL報表列印功能 即將移除
+                // 日後ESL報表 將統一在 學生上列印， 舊功能設定如果需要開啟 將先用此種方式支援
+                // 待 本學期結束後，會完全移掉。
+                linkLabel1.Visible = true;
+                linkLabel2.Visible = true;
+                linkLabel3.Visible = true;
             }
         }
 

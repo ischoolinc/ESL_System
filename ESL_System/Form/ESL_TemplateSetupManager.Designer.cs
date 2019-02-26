@@ -41,6 +41,7 @@
             this.btnDelete = new DevComponents.DotNetBar.ButtonX();
             this.buttonItem4 = new DevComponents.DotNetBar.ButtonItem();
             this.peTemplateName1 = new DevComponents.DotNetBar.PanelEx();
+            this.numericUpDown = new DevComponents.Editors.IntegerInput();
             this.lblpt02 = new DevComponents.DotNetBar.LabelX();
             this.labelX2 = new DevComponents.DotNetBar.LabelX();
             this.ipt01 = new DevComponents.Editors.IntegerInput();
@@ -102,16 +103,15 @@
             this.elementStyle1 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle2 = new DevComponents.DotNetBar.ElementStyle();
             this.elementStyle3 = new DevComponents.DotNetBar.ElementStyle();
-            this.numericUpDown = new DevComponents.Editors.IntegerInput();
             this.npLeft.SuspendLayout();
             this.navigationPanePanel1.SuspendLayout();
             this.ipList.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.loading)).BeginInit();
             this.panel2.SuspendLayout();
             this.peTemplateName1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ipt01)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.advTree1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).BeginInit();
             this.SuspendLayout();
             // 
             // npLeft
@@ -311,6 +311,26 @@
             this.peTemplateName1.TabIndex = 6;
             this.peTemplateName1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.peTemplateName1_MouseDoubleClick);
             // 
+            // numericUpDown
+            // 
+            this.numericUpDown.BackColor = System.Drawing.Color.White;
+            // 
+            // 
+            // 
+            this.numericUpDown.BackgroundStyle.Class = "DateTimeInputBackground";
+            this.numericUpDown.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.numericUpDown.ButtonFreeText.Shortcut = DevComponents.DotNetBar.eShortcut.F2;
+            this.numericUpDown.Enabled = false;
+            this.numericUpDown.Location = new System.Drawing.Point(105, 37);
+            this.numericUpDown.MaxValue = 100;
+            this.numericUpDown.MinValue = 0;
+            this.numericUpDown.Name = "numericUpDown";
+            this.numericUpDown.ShowUpDown = true;
+            this.numericUpDown.Size = new System.Drawing.Size(43, 25);
+            this.numericUpDown.TabIndex = 30;
+            this.numericUpDown.Value = 2;
+            this.numericUpDown.ValueChanged += new System.EventHandler(this.numericUpDown_ValueChanged_1);
+            // 
             // lblpt02
             // 
             this.lblpt02.AutoSize = true;
@@ -439,10 +459,11 @@
             this.linkLabel2.Enabled = false;
             this.linkLabel2.Location = new System.Drawing.Point(324, 67);
             this.linkLabel2.Name = "linkLabel2";
-            this.linkLabel2.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel2.Size = new System.Drawing.Size(146, 17);
             this.linkLabel2.TabIndex = 20;
             this.linkLabel2.TabStop = true;
-            this.linkLabel2.Text = "設定學期報表樣板";
+            this.linkLabel2.Text = "設定學期報表樣板(廢除)";
+            this.linkLabel2.Visible = false;
             this.linkLabel2.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel2_LinkClicked);
             // 
             // linkLabel1
@@ -453,10 +474,11 @@
             this.linkLabel1.Enabled = false;
             this.linkLabel1.Location = new System.Drawing.Point(169, 67);
             this.linkLabel1.Name = "linkLabel1";
-            this.linkLabel1.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel1.Size = new System.Drawing.Size(146, 17);
             this.linkLabel1.TabIndex = 19;
             this.linkLabel1.TabStop = true;
-            this.linkLabel1.Text = "設定期末報表樣板";
+            this.linkLabel1.Text = "設定期末報表樣板(廢除)";
+            this.linkLabel1.Visible = false;
             this.linkLabel1.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel1_LinkClicked);
             // 
             // linkLabel3
@@ -467,10 +489,11 @@
             this.linkLabel3.Enabled = false;
             this.linkLabel3.Location = new System.Drawing.Point(16, 67);
             this.linkLabel3.Name = "linkLabel3";
-            this.linkLabel3.Size = new System.Drawing.Size(112, 17);
+            this.linkLabel3.Size = new System.Drawing.Size(146, 17);
             this.linkLabel3.TabIndex = 18;
             this.linkLabel3.TabStop = true;
-            this.linkLabel3.Text = "設定期中報表樣板";
+            this.linkLabel3.Text = "設定期中報表樣板(廢除)";
+            this.linkLabel3.Visible = false;
             this.linkLabel3.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel3_LinkClicked);
             // 
             // labelX3
@@ -974,26 +997,6 @@
             this.elementStyle3.PaddingTop = 1;
             this.elementStyle3.TextColor = System.Drawing.Color.Black;
             // 
-            // numericUpDown
-            // 
-            this.numericUpDown.BackColor = System.Drawing.Color.White;
-            // 
-            // 
-            // 
-            this.numericUpDown.BackgroundStyle.Class = "DateTimeInputBackground";
-            this.numericUpDown.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.numericUpDown.ButtonFreeText.Shortcut = DevComponents.DotNetBar.eShortcut.F2;
-            this.numericUpDown.Enabled = false;
-            this.numericUpDown.Location = new System.Drawing.Point(105, 37);
-            this.numericUpDown.MaxValue = 100;
-            this.numericUpDown.MinValue = 0;
-            this.numericUpDown.Name = "numericUpDown";
-            this.numericUpDown.ShowUpDown = true;
-            this.numericUpDown.Size = new System.Drawing.Size(43, 25);
-            this.numericUpDown.TabIndex = 30;
-            this.numericUpDown.Value = 2;
-            this.numericUpDown.ValueChanged += new System.EventHandler(this.numericUpDown_ValueChanged_1);
-            // 
             // ESL_TemplateSetupManager
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 17F);
@@ -1015,9 +1018,9 @@
             this.panel2.ResumeLayout(false);
             this.peTemplateName1.ResumeLayout(false);
             this.peTemplateName1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.ipt01)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.advTree1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.numericUpDown)).EndInit();
             this.ResumeLayout(false);
 
         }
