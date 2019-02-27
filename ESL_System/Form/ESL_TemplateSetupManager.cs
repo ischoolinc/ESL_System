@@ -1014,7 +1014,8 @@ namespace ESL_System.Form
 
                 //說明
                 new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_name.Tag]));
-                new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_percentage.Tag]));
+                //new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_percentage.Tag]));
+                new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("科目比例將會由其所屬評量項目比例自動加總"));
 
                 //設定為不能點選編輯，避免使用者誤用
                 new_subject_node_name.Cells[0].Editable = false;
@@ -1254,8 +1255,55 @@ namespace ESL_System.Form
             bool isFirstLoad = firstLoad;
 
 
+            #region 計算 新的科目比例總和
+            // 2019/02/27  穎驊新增，依據ESL 寒假修正項目， subject 項目的比例 將會是其下面所有Assessment 比例總和
+            Dictionary<string, decimal> node_subject_newRatio_Dict = new Dictionary<string, decimal>();
+
+            // 整理子項目比例總和
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {                    
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        foreach (DevComponents.AdvTree.Node node_assessment_sub in node_assessment.Nodes)
+                        {
+                            if (node_assessment_sub.Text == "比例:" && decimal.TryParse(node_assessment_sub.Cells[1].Text, out decimal i))
+                            {
+                                if (!node_subject_newRatio_Dict.ContainsKey(node_term.Text + "_" + node_subject.Text))
+                                {
+                                    node_subject_newRatio_Dict.Add(node_term.Text + "_" + node_subject.Text, 0);
+
+                                    node_subject_newRatio_Dict[node_term.Text + "_" + node_subject.Text] += i;
+                                }
+                                else
+                                {
+                                    node_subject_newRatio_Dict[node_term.Text + "_" + node_subject.Text] += i;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
+            {
+                foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
+                {                                        
+                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    {
+                        if (node_assessment.Text == "比例:")
+                        {
+                            node_assessment.Cells[1].Text = "" + node_subject_newRatio_Dict[node_term.Text + "_" + node_subject.Text];
+                        }
+                    }
+                }
+            }
+            #endregion
+
+
             #region 試別 Term
-            
+
 
             Dictionary<string, decimal> node_term_total_Dict = new Dictionary<string, decimal>();
 
@@ -1802,7 +1850,8 @@ namespace ESL_System.Form
 
             //說明
             new_subject_node_name.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_name.Tag]));
-            new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_percentage.Tag]));
+            //new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell(_hintGuideDict["" + new_subject_node_percentage.Tag]));
+            new_subject_node_percentage.Cells.Add(new DevComponents.AdvTree.Cell("科目比例將會由其所屬評量項目比例自動加總"));
 
             //設定為不能點選編輯，避免使用者誤用
             new_subject_node_name.Cells[0].Editable = false;
