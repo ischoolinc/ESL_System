@@ -283,6 +283,8 @@ namespace ESL_System.Form
                         {
                             scoreItem.Value = "" + row.Cells[5].Value; // 新分數
 
+                            scoreItem.Value = scoreItem.Value.Trim().Replace("'", "''"); // trim 掉空白、 單引號特殊字
+
                             updateESLscoreList.Add(scoreItem);
                         }
 
@@ -290,6 +292,8 @@ namespace ESL_System.Form
                         if (!scoreItem.HasValue && "" + row.Cells[5].Value != "")
                         {
                             scoreItem.Value = "" + row.Cells[5].Value; // 新分數
+
+                            scoreItem.Value = scoreItem.Value.Trim().Replace("'", "''"); // trim 掉空白、 單引號特殊字
 
                             scoreItem.HasValue = true;
 
