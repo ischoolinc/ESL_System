@@ -816,6 +816,8 @@ namespace ESL_System.Form
                 // 字串，名稱必定要輸入，且不能重覆
                 case "string":
 
+                    node_now.SelectedCell.Text = node_now.SelectedCell.Text.Trim();  // trim 掉空白
+
                     if (node_now.SelectedCell.Text == "" || CheckDuplicated())
                     {
                         //node_now.Style = DevComponents.AdvTree.NodeStyles.Red;
@@ -1470,6 +1472,7 @@ namespace ESL_System.Form
 
             string description_xml = GetXmlDesriptionInTree();
 
+            description_xml = description_xml.Trim().Replace("'", "''");  // trim 掉空白、 單引號特殊字
 
             string xmlStr = "<root>" + description_xml + "</root>";
             XElement elmRoot = XElement.Parse(xmlStr);
