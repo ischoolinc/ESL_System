@@ -9,6 +9,8 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FISCA.Presentation.Controls;
 using K12.Data;
+using FISCA.LogAgent;
+using FISCA.Authentication;
 
 
 namespace ESL_System.Form
@@ -39,37 +41,14 @@ namespace ESL_System.Form
         // 目前本課程的 ESL 評分樣版
         private ESLTemplate _eslTemplate;
 
-        // ESL 分數 <subjectName,List<ESL分數>w2>
+        // ESL 分數 <subjectName,List<ESL分數>>
         private Dictionary<string, List<ESLScore>> _scoreDict = new Dictionary<string, List<ESLScore>>();
 
         // 修課學生 List
         private List<K12.Data.SCAttendRecord> _scaList;
 
         private BackgroundWorker _worker;
-
-       // 舊版的輸入介面 還要選擇 科目、評量
-        public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, List<K12.Data.SCAttendRecord> scaList)
-        {
-            InitializeComponent();
-
-            _targetCourseName = targetCourseName;
-            _targetTermName = targetTermName;
-
-            _eslTemplate = eslTemplate;
-
-            
-
-            _scoreDict = scoreDict;
-
-            _scaList = scaList;
-
-            labelX1.Text = _targetCourseName; // 課程名稱
-
-            FillCboSubject(); // 填科目選項
-
-
-        }
-
+      
         // 新版會依照 使用者點選的評分項目 直接顯示對應的分數項目
         public ESLScoreInputForm(string targetCourseName, ESLTemplate eslTemplate, Dictionary<string, List<ESLScore>> scoreDict, string targetTermName, string targetSubjectName, string targetAssessmentName, List<K12.Data.SCAttendRecord> scaList)
         {
@@ -114,61 +93,15 @@ namespace ESL_System.Form
                     break;
             }
 
-            cboSubject.Visible = false;
-            cboAssessment.Visible = false;
-            labelX2.Visible = false;
-            labelX3.Visible = false;
-
             // 填入分數
             FillScore();
         }
 
-        private void cboSubject_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            cboAssessment.Enabled = true;
 
-            FillcboAssessment();
 
-        }
 
-        private void cboAssessment_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            _targetAssessmentName = "" + cboAssessment.SelectedItem;
-            FillScore();
-        }
 
-        private void FillcboAssessment()
-        {
-            cboAssessment.Items.Clear();
 
-            _targetSubjectName = "" + cboSubject.SelectedItem;
-
-            List<string> assessmentList = new List<string>();
-
-            foreach (ESLScore scoreItem in _scoreDict[_targetSubjectName])
-            {
-                if (!assessmentList.Contains(scoreItem.Assessment))
-                {
-                    assessmentList.Add(scoreItem.Assessment);
-                }
-            }
-
-            foreach (string assessmentName in assessmentList)
-            {
-                cboAssessment.Items.Add(assessmentName);
-            }
-        }
-
-        private void FillCboSubject()
-        {
-
-            cboSubject.Items.Clear();
-
-            foreach (string subjectName in _scoreDict.Keys)
-            {
-                cboSubject.Items.Add(subjectName);
-            }
-        }
 
         private void FillScore()
         {
@@ -248,8 +181,6 @@ namespace ESL_System.Form
             _worker.WorkerReportsProgress = true;
 
             // 暫停畫面控制項
-            cboSubject.SuspendLayout();
-            cboAssessment.SuspendLayout();
             dataGridViewX1.SuspendLayout();
             buttonX1.Enabled = false;
            
@@ -281,8 +212,10 @@ namespace ESL_System.Form
                         // 本來有成績， 但值不同了 加入 更新名單
                         if (scoreItem.HasValue && scoreItem.Value != "" + row.Cells[5].Value)
                         {
-                            scoreItem.Value = "" + row.Cells[5].Value; // 新分數
+                            scoreItem.OldValue = ""+ scoreItem.Value; // 舊分數
 
+                            scoreItem.Value = "" + row.Cells[5].Value; // 新分數
+                            
                             scoreItem.Value = scoreItem.Value.Trim().Replace("'", "''"); // trim 掉空白、 單引號特殊字
 
                             updateESLscoreList.Add(scoreItem);
@@ -312,15 +245,17 @@ namespace ESL_System.Form
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
-                    ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,'{4}'::TEXT AS subject
-                    ,'{5}'::TEXT AS assessment
-                    ,'{6}'::TEXT AS custom_assessment
-                    ,'{7}'::TEXT AS value
-                    ,'{8}'::INTEGER AS uid
+                    ,'{2}'::BIGINT AS ref_sc_attend_id
+                    ,'{3}'::BIGINT AS ref_teacher_id
+                    ,'{4}'::TEXT AS term
+                    ,'{5}'::TEXT AS subject
+                    ,'{6}'::TEXT AS assessment
+                    ,'{7}'::TEXT AS custom_assessment
+                    ,'{8}'::TEXT AS value
+                    ,'{9}'::TEXT AS old_value
+                    ,'{10}'::INTEGER AS uid
                     ,'UPDATE'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value, score.ID);
+                ", score.RefStudentID, score.RefCourseID, score.RefScAttendID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value, score.OldValue, score.ID);
 
                 dataList.Add(data);
             }
@@ -331,15 +266,17 @@ namespace ESL_System.Form
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
-                    ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,'{4}'::TEXT AS subject
-                    ,'{5}'::TEXT AS assessment
-                    ,'{6}'::TEXT AS custom_assessment
-                    ,'{7}'::TEXT AS value
-                    ,'{8}'::INTEGER AS uid
+                    ,'{2}'::BIGINT AS ref_sc_attend_id
+                    ,'{3}'::BIGINT AS ref_teacher_id
+                    ,'{4}'::TEXT AS term
+                    ,'{5}'::TEXT AS subject
+                    ,'{6}'::TEXT AS assessment
+                    ,'{7}'::TEXT AS custom_assessment
+                    ,'{8}'::TEXT AS value
+                    ,'{9}'::TEXT AS old_value
+                    ,'{10}'::INTEGER AS uid
                     ,'INSERT'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value, 0);  // insert 給 uid = 0
+                ", score.RefStudentID, score.RefCourseID, score.RefScAttendID, score.RefTeacherID, score.Term, score.Subject,score.Assessment,"",score.Value,"", 0);  // insert 給 oldValue ""、 uid = 0
 
                 dataList.Add(data);
             }
@@ -348,19 +285,44 @@ namespace ESL_System.Form
             {
                 return;
             }
-                
+
 
             string Data = string.Join(" UNION ALL", dataList);
+
+            // LOG 資訊
+            string _actor = DSAServices.UserAccount; ;
+            string _client_info = ClientInfo.GetCurrentClientInfo().OutputResult().OuterXml;
 
 
             string sql = string.Format(@"
 WITH score_data_row AS(			 
                 {0}     
+),score_data_row_with_log_data AS(
+	SELECT 
+	score_data_row.ref_student_id
+	,score_data_row.ref_course_id
+	,score_data_row.ref_sc_attend_id
+	,score_data_row.ref_teacher_id
+	,score_data_row.term
+	,score_data_row.subject
+	,score_data_row.assessment
+	,score_data_row.custom_assessment
+	,score_data_row.value
+	,score_data_row.old_value
+	,score_data_row.uid
+	,score_data_row.action	
+	,student.name AS student_name	
+	,student.student_number AS student_number	
+	,course.course_name AS course_name	
+	FROM score_data_row 
+	LEFT JOIN student ON score_data_row.ref_student_id = student.id
+	LEFT JOIN course ON score_data_row.ref_course_id = course.id
 ),update_score AS(	    
     Update $esl.gradebook_assessment_score
     SET
         ref_student_id = score_data_row.ref_student_id
         ,ref_course_id = score_data_row.ref_course_id
+        ,ref_sc_attend_id = score_data_row.ref_sc_attend_id
         ,ref_teacher_id = score_data_row.ref_teacher_id
         ,term = score_data_row.term
         ,subject = score_data_row.subject
@@ -372,11 +334,12 @@ WITH score_data_row AS(
         score_data_row    
     WHERE $esl.gradebook_assessment_score.uid = score_data_row.uid  
         AND score_data_row.action ='UPDATE'
-    RETURNING  $esl.gradebook_assessment_score.* 
-)
+    --RETURNING  $esl.gradebook_assessment_score.* 
+),insert_score AS (
 INSERT INTO $esl.gradebook_assessment_score(
 	ref_student_id	
 	,ref_course_id
+    ,ref_sc_attend_id
 	,ref_teacher_id
 	,term
 	,subject
@@ -387,6 +350,7 @@ INSERT INTO $esl.gradebook_assessment_score(
 SELECT 
 	score_data_row.ref_student_id::BIGINT AS ref_student_id	
 	,score_data_row.ref_course_id::BIGINT AS ref_course_id	
+    ,score_data_row.ref_sc_attend_id::BIGINT AS ref_sc_attend_id	
 	,score_data_row.ref_teacher_id::BIGINT AS ref_teacher_id	
 	,score_data_row.term::TEXT AS term	
 	,score_data_row.subject::TEXT AS subject	
@@ -395,7 +359,58 @@ SELECT
 	,score_data_row.value::TEXT AS value	
 FROM
 	score_data_row
-WHERE action ='INSERT'", Data);
+WHERE action ='INSERT'
+),insert_log AS(
+INSERT INTO log(
+	actor
+	, action_type
+	, action
+	, target_category
+	, target_id
+	, server_time
+	, client_info
+	, action_by
+	, description
+)
+SELECT 
+	'{1}'::TEXT AS actor
+	, 'Record' AS action_type
+	, 'ESL後端成績輸入' AS action
+	, 'student'::TEXT AS target_category
+	, score_data_row_with_log_data.ref_student_id AS target_id
+	, now() AS server_time
+	, '{2}' AS client_info
+	, 'ESL後端成績輸入'AS action_by   
+	, '學號「'|| score_data_row_with_log_data.student_number||'」，學生「'|| score_data_row_with_log_data.student_name ||'」，ESL課程「'|| score_data_row_with_log_data.course_name || '」，試別「'||score_data_row_with_log_data.term|| '」，科目 「'||score_data_row_with_log_data.subject|| '」，評量「'||score_data_row_with_log_data.assessment|| '」，新增成績「'||score_data_row_with_log_data.value|| '」  ' AS description 
+FROM
+	score_data_row_with_log_data
+WHERE action ='INSERT'
+)
+INSERT INTO log(
+	actor
+	, action_type
+	, action
+	, target_category
+	, target_id
+	, server_time
+	, client_info
+	, action_by
+	, description
+)
+SELECT 
+	'{1}'::TEXT AS actor
+	, 'Record' AS action_type
+	, 'ESL後端成績輸入' AS action
+	, 'student'::TEXT AS target_category
+	, score_data_row_with_log_data.ref_student_id AS target_id
+	, now() AS server_time
+	, '{2}' AS client_info
+	, 'ESL後端成績輸入'AS action_by   
+	, '學號「'|| score_data_row_with_log_data.student_number||'」，學生「'|| score_data_row_with_log_data.student_name ||'」，ESL課程「'|| score_data_row_with_log_data.course_name || '」，試別「'||score_data_row_with_log_data.term|| '」，科目 「'||score_data_row_with_log_data.subject|| '」，評量「'||score_data_row_with_log_data.assessment|| '」，成績自「'||score_data_row_with_log_data.old_value|| '」修改為「'||score_data_row_with_log_data.value|| '」  ' AS description 
+FROM
+	score_data_row_with_log_data
+WHERE action ='UPDATE'
+", Data,_actor,_client_info);
 
 
 
@@ -404,21 +419,37 @@ WHERE action ='INSERT'", Data);
             _worker.ReportProgress(90, "上傳成績...");
 
             //執行sql
-            uh.Execute(sql);
-
-            _worker.ReportProgress(100, "ESL 評量成績上傳完成。");
-
+            try
+            {
+                uh.Execute(sql);
+                _worker.ReportProgress(100, "ESL 評量成績上傳完成。");
+            }
+            catch(Exception ex)
+            {
+                throw ex;
+            }
+                       
         }
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            // 繼續 畫面控制項
-            cboSubject.ResumeLayout();
-            cboAssessment.ResumeLayout();
             dataGridViewX1.ResumeLayout();            
             buttonX1.Enabled = true;
 
-            MsgBox.Show("上傳完成!");
+            if (e.Error != null)
+            {
+                MsgBox.Show("上傳失敗!!，錯誤訊息:" + e.Error.Message);
+
+            }
+            else if (e.Cancelled)
+            {
+                MsgBox.Show("上傳中止!!");
+            }
+            else
+            {
+                MsgBox.Show("上傳完成!");
+            }
+            
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)

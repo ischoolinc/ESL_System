@@ -28,12 +28,10 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             this.labelX3 = new DevComponents.DotNetBar.LabelX();
             this.cboExam = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.chkDisplayNotFinish = new System.Windows.Forms.CheckBox();
-            this.listView = new DevComponents.DotNetBar.Controls.ListViewEx();
-            this.chCourseName = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.btnExport = new DevComponents.DotNetBar.ButtonX();
             this.btnClose = new DevComponents.DotNetBar.ButtonX();
             this.saveFileDialog1 = new System.Windows.Forms.SaveFileDialog();
@@ -91,34 +89,6 @@
             this.chkDisplayNotFinish.Text = "僅顯示未完成輸入之課程";
             this.chkDisplayNotFinish.UseVisualStyleBackColor = false;
             this.chkDisplayNotFinish.CheckedChanged += new System.EventHandler(this.chkDisplayNotFinish_CheckedChanged);
-            // 
-            // listView
-            // 
-            this.listView.Anchor = System.Windows.Forms.AnchorStyles.None;
-            // 
-            // 
-            // 
-            this.listView.Border.Class = "ListViewBorder";
-            this.listView.Border.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.chCourseName});
-            this.listView.FullRowSelect = true;
-            this.listView.ImeMode = System.Windows.Forms.ImeMode.Off;
-            this.listView.Location = new System.Drawing.Point(6, 364);
-            this.listView.MultiSelect = false;
-            this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(992, 51);
-            this.listView.TabIndex = 4;
-            this.listView.UseCompatibleStateImageBehavior = false;
-            this.listView.View = System.Windows.Forms.View.Details;
-            this.listView.Visible = false;
-            this.listView.ItemSelectionChanged += new System.Windows.Forms.ListViewItemSelectionChangedEventHandler(this.listView_ItemSelectionChanged);
-            this.listView.DoubleClick += new System.EventHandler(this.listView_DoubleClick);
-            // 
-            // chCourseName
-            // 
-            this.chCourseName.Text = "課程名稱";
-            this.chCourseName.Width = 240;
             // 
             // btnExport
             // 
@@ -202,14 +172,14 @@
             this.dataGridViewX1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.ColCourseName,
             this.ColTotalStatus});
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dataGridViewX1.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(136)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dataGridViewX1.DefaultCellStyle = dataGridViewCellStyle1;
             this.dataGridViewX1.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
             this.dataGridViewX1.GridColor = System.Drawing.Color.FromArgb(((int)(((byte)(208)))), ((int)(((byte)(215)))), ((int)(((byte)(229)))));
             this.dataGridViewX1.ImeMode = System.Windows.Forms.ImeMode.Off;
@@ -264,7 +234,6 @@
             this.Controls.Add(this.btnRefresh);
             this.Controls.Add(this.btnClose);
             this.Controls.Add(this.btnExport);
-            this.Controls.Add(this.listView);
             this.Controls.Add(this.chkDisplayNotFinish);
             this.Controls.Add(this.cboExam);
             this.Controls.Add(this.labelX3);
@@ -285,8 +254,6 @@
         private DevComponents.DotNetBar.LabelX labelX3;
         private DevComponents.DotNetBar.Controls.ComboBoxEx cboExam;
         private System.Windows.Forms.CheckBox chkDisplayNotFinish;
-        private DevComponents.DotNetBar.Controls.ListViewEx listView;
-        private System.Windows.Forms.ColumnHeader chCourseName;
         private DevComponents.DotNetBar.ButtonX btnExport;
         private DevComponents.DotNetBar.ButtonX btnClose;
         private System.Windows.Forms.SaveFileDialog saveFileDialog1;

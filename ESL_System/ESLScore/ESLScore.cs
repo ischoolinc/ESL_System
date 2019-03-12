@@ -25,6 +25,11 @@ namespace ESL_System
         public string RefStudentID { get; set; }
 
         /// <summary>
+        /// 參考修課紀錄ID(依據ESL2019寒假優化，成績參考修課紀錄ID，將廢除RefCourseID、RefStudentID)
+        /// </summary>
+        public string RefScAttendID { get; set; }
+
+        /// <summary>
         /// 參考教師ID
         /// </summary>
         public string RefTeacherID { get; set; }
@@ -65,6 +70,12 @@ namespace ESL_System
         /// </summary>
         public string Custom_Assessment { get; set; }
 
+        /// <summary>
+        /// 舊成績值 (可能是分數:100、指標:G、評語:Good Job!， 本欄位作為紀錄LOG 前一筆成績使用)
+        /// </summary>
+        public string OldValue { get; set; }
+
+    
         /// <summary>
         /// 成績值 (可能是分數:100、指標:G、評語:Good Job!)
         /// </summary>

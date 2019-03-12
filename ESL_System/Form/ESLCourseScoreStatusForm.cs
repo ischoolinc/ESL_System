@@ -265,36 +265,7 @@ namespace ESL_System.Form
             if (cboExam.SelectedItem == null) return;
 
             _targetTermName = "" + cboExam.SelectedItem;
-
-            #region ListView 舊介面
-            // 清內容
-            listView.Items.Clear();
-
-            // 清表頭
-            listView.Columns.Clear();
-
-            listView.Columns.Add("課程名稱", 200);
-
-            listView.Columns.Add("填寫完畢項目", 130);
-
-
-            // 依目前 所選樣板、試別 動態產生 listView 表頭
-            foreach (Term term in _ESLTemplateDict[_targetTemplateID].TermList)
-            {
-                if (term.Name == _targetTermName)
-                {
-                    foreach (Subject subject in term.SubjectList)
-                    {
-                        foreach (Assessment assessment in subject.AssessmentList)
-                        {
-                            listView.Columns.Add(subject.Name + " / " + assessment.Name, (subject.Name.Length + assessment.Name.Length) * 9);
-                        }
-                    }
-                }
-            }
-            #endregion
-
-
+           
             #region DataGridView  新介面
             // 清內容
             dataGridViewX1.Rows.Clear();
@@ -355,13 +326,9 @@ namespace ESL_System.Form
             chkDisplayNotFinish.Enabled = false;
             cboTemplate.SuspendLayout();
             cboExam.SuspendLayout();
-            listView.SuspendLayout();
             dataGridViewX1.SuspendLayout();
 
-
             _worker.RunWorkerAsync();
-
-
         }
 
 
@@ -442,6 +409,7 @@ namespace ESL_System.Form
 
                                     scoreItem.RefCourseID = scaRecord.RefCourseID;
                                     scoreItem.RefStudentID = scaRecord.RefStudentID;
+                                    scoreItem.RefScAttendID = scaRecord.ID;  // 參考修課紀錄ID(依據ESL2019寒假優化，成績參考修課紀錄ID，將廢除RefCourseID、RefStudentID)
                                     scoreItem.RefTeacherID = teacher != null ? teacher.TeacherID : ""; // 教師ID
 
                                     scoreItem.RefCourseName = scaRecord.Course.Name;                                    
@@ -486,6 +454,7 @@ namespace ESL_System.Form
 
                                     scoreItem.RefCourseID = scaRecord.RefCourseID;
                                     scoreItem.RefStudentID = scaRecord.RefStudentID;
+                                    scoreItem.RefScAttendID = scaRecord.ID;  // 參考修課紀錄ID(依據ESL2019寒假優化，成績參考修課紀錄ID，將廢除RefCourseID、RefStudentID)
                                     scoreItem.RefTeacherID = teacher != null ? teacher.TeacherID : ""; // 教師ID
 
                                     scoreItem.RefCourseName = scaRecord.Course.Name;
@@ -521,7 +490,7 @@ namespace ESL_System.Form
 
             _courseListViewItemList = new List<CourseListViewItem>();
 
-            #region 取得 本試別 ESL 課程成績資料
+            #region 取得 本試別 ESL 課程成績資料 (參考修課紀錄ID(依據ESL2019寒假優化，成績參考修課紀錄ID，將廢除RefCourseID、RefStudentID))
 
             string query = @"
                     SELECT
@@ -530,21 +499,23 @@ namespace ESL_System.Form
                         ,$esl.gradebook_assessment_score.subject
                         ,$esl.gradebook_assessment_score.assessment
                         ,$esl.gradebook_assessment_score.custom_assessment
-                        ,$esl.gradebook_assessment_score.value
-                        ,$esl.gradebook_assessment_score.ref_course_id
-                        ,$esl.gradebook_assessment_score.ref_student_id
+                        ,$esl.gradebook_assessment_score.value                        
+                        ,$esl.gradebook_assessment_score.ref_sc_attend_id
                         ,$esl.gradebook_assessment_score.ref_teacher_id
+                        ,course.id AS ref_course_id
+                        ,student.id AS ref_student_id 
                         ,course.course_name 
                         ,teacher.teacher_name 
                         ,student.name AS student_name
                     FROM $esl.gradebook_assessment_score 
-                    LEFT JOIN  course ON  $esl.gradebook_assessment_score.ref_course_id = course.id  
+                    LEFT JOIN  sc_attend ON  $esl.gradebook_assessment_score.ref_sc_attend_id = sc_attend.id  
+                    LEFT JOIN  course ON  sc_attend.ref_course_id = course.id                      
+                    LEFT JOIN  student ON  sc_attend.ref_student_id= student.id
                     LEFT JOIN  teacher ON  $esl.gradebook_assessment_score.ref_teacher_id= teacher.id  
-                    LEFT JOIN  student ON  $esl.gradebook_assessment_score.ref_student_id= student.id  
                     WHERE 
                     assessment IS NOT NULL
                     AND term = '" + targetTermName + @"'
-                    AND $esl.gradebook_assessment_score.ref_course_id IN( " + targetCourseIDs + ")";
+                    AND sc_attend.ref_course_id IN( " + targetCourseIDs + ")";
 
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
@@ -575,7 +546,7 @@ namespace ESL_System.Form
                                 {
                                     foreach (ESLScore scoreItem in _scoreDict[courseID][subjectName])
                                     {
-                                        if (scoreItem.Assessment == "" + dr["assessment"] && scoreItem.RefStudentID == "" + dr["ref_student_id"] && scoreItem.RefTeacherID == "" + dr["ref_teacher_id"])
+                                        if (scoreItem.Assessment == "" + dr["assessment"] && scoreItem.RefStudentID == "" + dr["ref_student_id"] )
                                         {
                                             scoreItem.ID = "" + dr["uid"]; // 填入 uid 之後可以做為更新使用
 
@@ -637,22 +608,6 @@ namespace ESL_System.Form
 
 
         /// <summary>
-        /// 將課程填入ListView
-        /// </summary>
-        private void FillCourses(List<CourseListViewItem> list)
-        {
-            if (list.Count <= 0) return;
-
-
-            listView.SuspendLayout();
-            listView.Items.Clear();
-            listView.Items.AddRange(list.ToArray());
-            listView.ResumeLayout();
-
-        }
-
-
-        /// <summary>
         /// 將課程填入 DataGridView
         /// </summary>
         private void FillCourses(List<CourseDataGridViewRow> list)
@@ -685,8 +640,7 @@ namespace ESL_System.Form
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void chkDisplayNotFinish_CheckedChanged(object sender, EventArgs e)
-        {
-            FillCourses(GetDisplayList());
+        {            
             FillCourses(GetDisplayDataGridViewList());
         }
 
@@ -1161,8 +1115,7 @@ namespace ESL_System.Form
 
         private void cboTemplate_SelectedIndexChanged(object sender, EventArgs e)
         {
-            listView.Clear();
-
+           
             cboExam.Enabled = true;
 
             _targetTemplateID = _ExamTemNameExamTermIDDict["" + cboTemplate.SelectedItem];
@@ -1180,23 +1133,6 @@ namespace ESL_System.Form
             }
         }
 
-        private void listView_ItemSelectionChanged(object sender, ListViewItemSelectionChangedEventArgs e)
-        {
-            if (listView.SelectedItems.Count == 1)
-            {
-                _targetCourseID = "" + listView.SelectedItems[0].Tag; //設定只能一次選一個， 所以是第一項
-            }            
-        }
-
-        private void listView_DoubleClick(object sender, EventArgs e)
-        {
-            Form.ESLScoreInputForm inputForm = new ESLScoreInputForm(_ESLCourseIDNameDict[_targetCourseID], _ESLTemplateDict[_targetTemplateID], _scoreDict[_targetCourseID], _targetTermName, _scaList);
-
-            inputForm.ShowDialog();
-
-            RefreshListView(); // 更改完成績後，重整畫面
-
-        }
 
         private void Worker_DoWork(object sender, DoWorkEventArgs e)
         {
@@ -1212,12 +1148,9 @@ namespace ESL_System.Form
             chkDisplayNotFinish.Enabled = true;            
             cboTemplate.ResumeLayout();
             cboExam.ResumeLayout();
-            listView.ResumeLayout();
+            
             dataGridViewX1.ResumeLayout();
-
-
-            listView.Sort(); // 排序
-            FillCourses(GetDisplayList()); //填畫面
+                        
             FillCourses(GetDisplayDataGridViewList());
 
             FISCA.Presentation.MotherForm.SetStatusBarMessage("取得ESL課程教師輸入狀態完成");
