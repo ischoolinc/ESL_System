@@ -19,7 +19,7 @@ namespace ESL_System.Form
     public partial class ESLCourseScoreStatusForm : FISCA.Presentation.Controls.BaseForm
     {
 
-        private List<CourseListViewItem> _courseListViewItemList;
+        
 
         private List<CourseDataGridViewRow> _courseDataGridViewRowList;
 
@@ -477,18 +477,12 @@ namespace ESL_System.Form
                             }
                         }
                     }
-
-
                 }
-
-
-
-
             }
             #endregion
 
 
-            _courseListViewItemList = new List<CourseListViewItem>();
+            
 
             #region 取得 本試別 ESL 課程成績資料 (參考修課紀錄ID(依據ESL2019寒假優化，成績參考修課紀錄ID，將廢除RefCourseID、RefStudentID))
 
@@ -566,25 +560,7 @@ namespace ESL_System.Form
             #endregion
 
             int scoreCount = 0;
-
-            // 舊的填寫 ListView 方式
-            foreach (string courseID in _scoreDict.Keys)
-            {
-
-                _worker.ReportProgress(60 + 30 * (scoreCount++ / _scoreDict.Keys.Count), "取得學生成績資料...");
-
-                // 假如該課程 為採用目前所選 樣板
-                if (_ESLCourseIDExamTermIDDict[courseID] == _targetTemplateID)
-                {
-                    CourseListViewItem clvi = new CourseListViewItem(_ESLCourseIDNameDict[courseID], _scoreDict[courseID], _ESLTemplateDict[_targetTemplateID], _targetTermName);
-
-                    clvi.Tag = courseID; // 用課程ID 當作 Tag
-
-
-                    _courseListViewItemList.Add(clvi);
-                }
-            }
-
+            
             // 填 DataGridView
             _courseDataGridViewRowList = new List< CourseDataGridViewRow>();
 
@@ -644,27 +620,7 @@ namespace ESL_System.Form
             FillCourses(GetDisplayDataGridViewList());
         }
 
-        /// <summary>
-        /// 取得要顯示的 CourseListViewItemList
-        /// </summary>
-        /// <returns></returns>
-        private List<CourseListViewItem> GetDisplayList()
-        {
-            if (chkDisplayNotFinish.Checked == true)
-            {
-                List<CourseListViewItem> list = new List<CourseListViewItem>();
-                foreach (CourseListViewItem item in _courseListViewItemList)
-                {
-                    if (item.IsFinish) continue;
-                    list.Add(item);
-                }
-                return list;
-            }
-            else
-            {
-                return _courseListViewItemList;
-            }
-        }
+
 
 
         /// <summary>
@@ -770,168 +726,6 @@ namespace ESL_System.Form
             RefreshListView();
         }
 
-        /// <summary>
-        /// 每一筆課程的評量狀況 (listView)
-        /// </summary>
-        private class CourseListViewItem : ListViewItem
-        {
-            //  已輸入人數 / 總人數 (教師名稱)
-            private const string Format = "{0}/{1} ({2})";
-
-            private bool _is_finish;
-            public bool IsFinish { get { return _is_finish; } }
-
-
-            // 紀錄每一個 subject_assessment 的 分子
-            private Dictionary<string, int> assessmentCountDict = new Dictionary<string, int>();
-
-            // 紀錄每一個 subject_assessment 的 total 分母
-            private Dictionary<string, int> assessmentTotalCountDict = new Dictionary<string, int>();
-
-            // 紀錄每一個 subject_assessment 與老師名字的配對
-            private Dictionary<string, string> assessmentTeacherNametDict = new Dictionary<string, string>();
-
-
-            //每一次 傳一筆 Course 有的 subjectDict 進來，還有目前 template ，targetTermName
-            public CourseListViewItem(string courseName, Dictionary<string, List<ESLScore>> subjectDict, ESLTemplate ESLTemplateDict, string targetTermName)
-            {
-                _is_finish = true;
-
-                // 數出 個項目的 輸入情況
-                foreach (Term term in ESLTemplateDict.TermList)
-                {
-                    if (term.Name == targetTermName)
-                    {
-                        foreach (Subject subject in term.SubjectList)
-                        {
-                            foreach (Assessment assessment in subject.AssessmentList)
-                            {
-                                foreach (string subjectName in subjectDict.Keys)
-                                {
-                                    if (subject.Name == subjectName)
-                                    {
-                                        foreach (ESLScore scoreItem in subjectDict[subjectName])
-                                        {
-                                            if (assessment.Name == scoreItem.Assessment)
-                                            {
-                                                // 有值 才加分子 ，且不能為空字串(web 前端成績輸入會存到如此資料，恩正說，此狀況視為沒有輸入)
-                                                if (scoreItem.HasValue && scoreItem.Value!="")
-                                                {
-                                                    // 子項目 分子
-                                                    if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
-                                                    {
-                                                        assessmentCountDict.Add(subject.Name + "_" + assessment.Name, 1);
-                                                    }
-                                                    else
-                                                    {
-                                                        assessmentCountDict[subject.Name + "_" + assessment.Name]++;
-                                                    }
-                                                }
-                                                else
-                                                {
-                                                    // 子項目 分子
-                                                    if (!assessmentCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
-                                                    {
-                                                        assessmentCountDict.Add(subject.Name + "_" + assessment.Name, 0);
-                                                    }
-
-                                                }
-
-                                                // 子項目 分母
-                                                if (!assessmentTotalCountDict.ContainsKey(subject.Name + "_" + assessment.Name))
-                                                {
-                                                    assessmentTotalCountDict.Add(subject.Name + "_" + assessment.Name, 1);
-                                                }
-                                                else
-                                                {
-                                                    assessmentTotalCountDict[subject.Name + "_" + assessment.Name]++;
-                                                }
-
-                                                // 子項目 老師名稱
-                                                if (!assessmentTeacherNametDict.ContainsKey(subject.Name + "_" + assessment.Name))
-                                                {
-                                                    assessmentTeacherNametDict.Add(subject.Name + "_" + assessment.Name, scoreItem.RefTeacherName);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                // 依目前 所選樣板、試別 對出 與表頭 相應的內容
-
-                // 數出總項目 未填寫完畢項目
-                foreach (Term term in ESLTemplateDict.TermList)
-                {
-                    if (term.Name == targetTermName)
-                    {
-                        int total = 0;
-                        int scoreCount = 0;
-
-
-                        foreach (Subject subject in term.SubjectList)
-                        {
-                            foreach (Assessment assessment in subject.AssessmentList)
-                            {
-                                total++;
-
-                                int assessmentTotal = assessmentTotalCountDict[subject.Name + "_" + assessment.Name];
-                                int assessmentScoreCount = assessmentCountDict[subject.Name + "_" + assessment.Name];
-
-                                // 子項目 總數 等於 有分數 的數量，就是 完成
-                                if (assessmentTotal == assessmentScoreCount)
-                                {
-                                    scoreCount++;
-                                }
-                            }
-                        }
-
-                        string ScoreField = string.Format("{0}/{1}", scoreCount, total);
-
-                        // 填總項目 已完成 數量
-                        this.SubItems.Add(ScoreField).ForeColor = (total == scoreCount) ? Color.Black : Color.Red;
-                    }
-                }
-
-                // 子項目 每一個學生分數的填寫 狀態
-                foreach (Term term in ESLTemplateDict.TermList)
-                {
-                    if (term.Name == targetTermName)
-                    {
-                        foreach (Subject subject in term.SubjectList)
-                        {
-                            foreach (Assessment assessment in subject.AssessmentList)
-                            {
-                                int total = assessmentTotalCountDict[subject.Name + "_" + assessment.Name];
-                                int scoreCount = assessmentCountDict[subject.Name + "_" + assessment.Name];
-                                string ScoreField = string.Format(Format, scoreCount, total, assessmentTeacherNametDict[subject.Name + "_" + assessment.Name]);
-
-                                if (total != scoreCount)
-                                {
-                                    _is_finish = false;
-                                }
-
-                                this.SubItems.Add(ScoreField).ForeColor = (total == scoreCount) ? Color.Black : Color.Red;
-
-
-                            }
-                        }
-                    }
-                }
-
-
-
-                this.Text = courseName;
-
-
-
-            }
-
-
-        }
 
 
         /// <summary>
