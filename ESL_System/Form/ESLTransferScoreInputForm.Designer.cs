@@ -252,7 +252,7 @@
             this.MaximumSize = new System.Drawing.Size(1268, 726);
             this.MinimumSize = new System.Drawing.Size(1268, 726);
             this.Name = "ESLTransferScoreInputForm";
-            this.Text = "ESL課程轉學生成績補輸入";
+            this.Text = "ESL課程缺考成績處理";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridViewX1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.picLoading)).EndInit();
             this.ResumeLayout(false);

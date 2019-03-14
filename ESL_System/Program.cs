@@ -216,27 +216,27 @@ namespace ESL_System
 
 
             Catalog ribbon9 = RoleAclSource.Instance["課程"]["ESL課程"];
-            ribbon4.Add(new RibbonFeature("DA908268-F1E6-4514-B69D-386EC37184A9", "ESL課程轉學生成績補輸入(指定比例)"));
+            ribbon4.Add(new RibbonFeature("DA908268-F1E6-4514-B69D-386EC37184A9", "缺考成績處理(指定比例)"));
 
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Enable = false;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Enable = false;
 
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
             {
                 // 一次只能選一個 課程 補輸入 轉班生成績
                 if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0 & K12.Presentation.NLDPanels.Course.SelectedSource.Count <2)
                 {
-                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Enable = UserAcl.Current["DA908268-F1E6-4514-B69D-386EC37184A9"].Executable;
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Enable = UserAcl.Current["DA908268-F1E6-4514-B69D-386EC37184A9"].Executable;
                 }
                 else
                 {
-                    MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Enable = false;
+                    MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Enable = false;
                 }
             };
 
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Image = Properties.Resources.calc_64;
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Size = RibbonBarButton.MenuButtonSize.Medium;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Image = Properties.Resources.calc_64;
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Size = RibbonBarButton.MenuButtonSize.Medium;
 
-            MotherForm.RibbonBarItems["課程", "ESL課程"]["ESL課程轉學生成績補輸入(指定比例)"].Click += delegate
+            MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Click += delegate
             {
 
                 List<string> eslCouseIDList = K12.Presentation.NLDPanels.Course.SelectedSource;

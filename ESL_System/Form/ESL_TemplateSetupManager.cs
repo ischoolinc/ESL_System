@@ -1313,20 +1313,17 @@ namespace ESL_System.Form
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
                 {
-                    foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
+                    if (node_subject.Text == "比例:" && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
                     {
-                        if (node_assessment.Text == "比例:" && decimal.TryParse(node_assessment.Cells[1].Text, out decimal i))
+                        if (!node_term_total_Dict.ContainsKey("總termRatio"))
                         {
-                            if (!node_term_total_Dict.ContainsKey(node_term.Text))
-                            {
-                                node_term_total_Dict.Add(node_term.Text, 0);
+                            node_term_total_Dict.Add("總termRatio", 0);
 
-                                node_term_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
-                            }
-                            else
-                            {
-                                node_term_total_Dict[node_term.Text] += decimal.Parse(node_assessment.Cells[1].Text);
-                            }
+                            node_term_total_Dict["總termRatio"] += decimal.Parse(node_subject.Cells[1].Text);
+                        }
+                        else
+                        {
+                            node_term_total_Dict["總termRatio"] += decimal.Parse(node_subject.Cells[1].Text);
                         }
                     }
                 }
@@ -1336,17 +1333,17 @@ namespace ESL_System.Form
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
                 {
-                    if (node_subject.Text == "比例:" && node_term_total_Dict.ContainsKey(node_term.Text) && node_term_total_Dict[node_term.Text] != 0 && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
+                    if (node_subject.Text == "比例:" && node_term_total_Dict.ContainsKey("總termRatio") && node_term_total_Dict["總termRatio"] != 0 && decimal.TryParse(node_subject.Cells[1].Text, out decimal i))
                     {
                         if (isFirstLoad)
                         {
                             // 去掉尾端括弧之後 加上百分比
-                            node_term.Text = node_term.Text.Substring(0, node_term.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict[node_term.Text], 2) + "%)";
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.Length - 1) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict["總termRatio"], 2) + "%)";
                         }
                         else
                         {
                             // 砍到最後一個逗號, 加上百分比
-                            node_term.Text = node_term.Text.Substring(0, node_term.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict[node_term.Text], 2) + "%)";
+                            node_term.Text = node_term.Text.Substring(0, node_term.Text.LastIndexOf(",")) + "," + Math.Round(decimal.Parse(node_subject.Cells[1].Text) * 100 / node_term_total_Dict["總termRatio"], 2) + "%)";
                         }
 
                     }
