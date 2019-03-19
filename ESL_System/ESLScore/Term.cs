@@ -29,6 +29,16 @@ namespace ESL_System
         public string InputEndTime { get; set; }
 
         /// <summary>
+        /// 自訂義子項目分數輸入開始時間
+        /// </summary>
+        public string CustomInputStartTime { get; set; }
+
+        /// <summary>
+        /// 自訂義子項目分數輸入結束時間
+        /// </summary>
+        public string CustomInputEndTime { get; set; }
+
+        /// <summary>
         /// 參考試別id
         /// </summary>
         public string Ref_exam_id { get; set; }

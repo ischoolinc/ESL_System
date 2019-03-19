@@ -1082,7 +1082,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                             if (_courseScattendDict[coursrID][i].Score == null)
                             {
                                 //沒有課程成績，跳過
-                                break;
+                                continue;
                             }
 
                             ref_studentID = _courseScattendDict[coursrID][i].RefStudentID;
