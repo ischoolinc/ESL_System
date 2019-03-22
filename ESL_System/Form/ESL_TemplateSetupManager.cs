@@ -2234,6 +2234,7 @@ namespace ESL_System.Form
 
             SaveFileDialog saveDialog = new SaveFileDialog();
 
+            saveDialog.FileName = "" + currentItem.Text;
             //saveDialog.Filter = "*.xml|all Files(*.*)|*.*";
             saveDialog.Filter = "XML files(.xml)|*.xml|all Files(*.*)|*.*";
             if (saveDialog.ShowDialog() == DialogResult.OK)

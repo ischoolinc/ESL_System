@@ -975,6 +975,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
         // 填寫 課程成績EXCEL
         private void FillCourseScoreExcelColunm(Workbook wb)
         {
+            int wscount = 1;
+
             // 一種ESL樣板 開一個 Worksheet
             foreach (string assessmentSetupID in _courseTermScoreDict.Keys)
             {
@@ -984,7 +986,14 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 ws.Copy(wb.Worksheets["樣板一"]);
 
                 // 一種樣板 一個sheet 名稱
-                ws.Name = "ESL樣板_" + _assessmentSetupIDNamePairDict[assessmentSetupID] + "_課程";
+                string wsName = wscount +".ESL樣板_" + _assessmentSetupIDNamePairDict[assessmentSetupID] + "_課程";
+
+                wscount++;
+
+                // excel sheet Name 最多只能 31 個字
+                wsName = wsName.Length > 31 ? wsName.Substring(0, 27) +"..." : wsName;
+                
+                ws.Name = wsName;
 
                 #region 填表頭
                 // 填表頭 
