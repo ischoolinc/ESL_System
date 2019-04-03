@@ -372,6 +372,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(sql);
 
+            
 
             foreach (DataRow row in dt.Rows)
             {

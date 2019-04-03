@@ -381,10 +381,11 @@ namespace ESL_System.Form
                     _configure.Template = new Aspose.Words.Document(dialog.FileName);
                     _configure.Encode();
                     _configure.Save();
+                    MessageBox.Show("樣板上傳成功。");
                 }
                 catch
                 {
-                    MessageBox.Show("樣板開啟失敗");
+                    MessageBox.Show("樣板開啟失敗。");
                 }
             }
             linklabel2.Enabled = true;
@@ -1119,12 +1120,7 @@ namespace ESL_System.Form
 
             #region 取得ESL 課程成績
             _bw.ReportProgress(20, "取得ESL課程成績");
-
-
-            int progress = 80;
-            decimal per = (decimal)(100 - progress) / studentIDList.Count;
-            int count = 0;
-
+            
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
@@ -1136,15 +1132,43 @@ namespace ESL_System.Form
             }
 
             // 按照時間順序抓， 如果有相同的成績結構， 以後來新的 取代前的
-            string sqlScore = "SELECT * FROM $esl.gradebook_assessment_score WHERE ref_course_id IN ('" + course_ids + "') AND ref_student_id IN ('" + student_ids + "') ORDER BY last_update,ref_student_id ";
+            string sqlScore = @"    
+SELECT 
+        $esl.gradebook_assessment_score.last_update
+        ,$esl.gradebook_assessment_score.term
+        ,$esl.gradebook_assessment_score.subject
+        ,$esl.gradebook_assessment_score.assessment
+        ,$esl.gradebook_assessment_score.custom_assessment
+        ,$esl.gradebook_assessment_score.ref_course_id
+        ,$esl.gradebook_assessment_score.ref_student_id
+        ,$esl.gradebook_assessment_score.ref_teacher_id
+        ,$esl.gradebook_assessment_score.ref_sc_attend_id
+        ,$esl.gradebook_assessment_score.value
+        ,$esl.gradebook_assessment_score.ratio  
+        ,exam_template.name AS exam_template_name
+FROM $esl.gradebook_assessment_score    
+        LEFT JOIN course ON course.id =$esl.gradebook_assessment_score.ref_course_id
+        LEFT JOIN exam_template ON exam_template.id =  course.ref_exam_template_id
+WHERE 
+        ref_course_id IN ('" + course_ids + @"') 
+        AND ref_student_id IN('" + student_ids + @"')
+ORDER BY last_update,ref_student_id ";
 
             DataTable dtScore = qh.Select(sqlScore);
 
+            decimal progress = 20;            
+            decimal per = (decimal)(100 - progress) / (dtScore.Rows.Count !=0 ? dtScore.Rows.Count:1);
+            
             foreach (DataRow row in dtScore.Rows)
-            {
+            {                
+                progress += (decimal)(per);                
+                _bw.ReportProgress((int)progress);
+
                 string termWord = "" + row["term"];
                 string subjectWord = "" + row["subject"];
                 string assessmentWord = "" + row["assessment"];
+
+                string examTemplateName = "" + row["exam_template_name"];
 
                 string id = "" + row["ref_student_id"];
 
@@ -1153,9 +1177,6 @@ namespace ESL_System.Form
                 {
                     continue;
                 }
-
-                // 要設計一個模式 處理 三種成績
-                CourseRecord courseRecord = courseList.Find(c => c.ID == "" + row["ref_course_id"]);
 
                 // 項目都有，為assessment 成績
                 if (termWord != "" && "" + subjectWord != "" && "" + assessmentWord != "")
@@ -1219,9 +1240,9 @@ namespace ESL_System.Form
                             {
                                 _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
 
-                                if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                                if (_itemDict[examTemplateName].ContainsKey(scoreKey + "_" + "比重"))
                                 {
-                                    _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                                    _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[examTemplateName][scoreKey + "_" + "比重"]);
                                 }
                             }
                             else
@@ -1253,9 +1274,9 @@ namespace ESL_System.Form
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
 
-                            if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                            if (_itemDict[examTemplateName].ContainsKey(scoreKey + "_" + "比重"))
                             {
-                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[examTemplateName][scoreKey + "_" + "比重"]);
                             }
                         }
                         else
@@ -1272,15 +1293,15 @@ namespace ESL_System.Form
                     if (_scoreDict.ContainsKey(id))
                     {
                         // 2018/10/29 穎驊註解，和恩正討論後，不同樣板之間的 Term 名稱 會分不清楚， 因此在前面加 評分樣板作區別
-                        string scoreKey = courseRecord.AssessmentSetup.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_');
+                        string scoreKey = examTemplateName.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_');
 
                         if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "分數"))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "分數", "" + row["value"]);
 
-                            if (_itemDict[courseRecord.AssessmentSetup.Name].ContainsKey(scoreKey + "_" + "比重"))
+                            if (_itemDict[examTemplateName].ContainsKey(scoreKey + "_" + "比重"))
                             {
-                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[courseRecord.AssessmentSetup.Name][scoreKey + "_" + "比重"]);
+                                _scoreDict[id].Add(scoreKey + "_" + "比重", _itemDict[examTemplateName][scoreKey + "_" + "比重"]);
                             }
                         }
                         else
@@ -1460,9 +1481,6 @@ WHERE course.id IN ('" + course_ids + "') " +
             }
 
 
-
-
-
             #endregion
 
 
@@ -1605,9 +1623,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                 _mergeDataTable.Rows.Add(row);
 
-                count++;
-                progress += (int)(count * per);
-                _bw.ReportProgress(progress);
+
 
             }
 
