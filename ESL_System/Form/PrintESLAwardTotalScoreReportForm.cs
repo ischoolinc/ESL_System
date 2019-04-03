@@ -339,41 +339,43 @@ WHERE course.id IN( " + courseIDs + ")";
 
             string sql = @"
 SELECT 
-course.ref_exam_template_id
-,course.course_name AS english_class
-,course.id AS course_id 
-,student.student_number AS student_number
-,student.name AS student_chinese_name
-,student.english_name AS student_english_name
-,student.gender AS gender
-,class.class_name AS home_room
-,student.ref_class_id AS ref_class_id
-,student.id AS student_id
- ,teacher.teacher_name
- ,sc_attend.id AS sc_attend_id
-,$esl.gradebook_assessment_score.ref_teacher_id
-,$esl.gradebook_assessment_score.ref_course_id
-,$esl.gradebook_assessment_score.ref_student_id
-,$esl.gradebook_assessment_score.term
-,$esl.gradebook_assessment_score.subject
-,$esl.gradebook_assessment_score.assessment
-,$esl.gradebook_assessment_score.custom_assessment
-,$esl.gradebook_assessment_score.value 
+    course.ref_exam_template_id
+    ,course.course_name AS english_class
+    ,course.id AS course_id 
+    ,student.student_number AS student_number
+    ,student.name AS student_chinese_name
+    ,student.english_name AS student_english_name
+    ,student.gender AS gender
+    ,class.class_name AS home_room
+    ,student.ref_class_id AS ref_class_id
+    ,student.id AS student_id
+     ,teacher.teacher_name
+     ,sc_attend.id AS sc_attend_id
+    ,$esl.gradebook_assessment_score.ref_teacher_id
+    ,$esl.gradebook_assessment_score.ref_course_id
+    ,$esl.gradebook_assessment_score.ref_student_id
+    ,$esl.gradebook_assessment_score.term
+    ,$esl.gradebook_assessment_score.subject
+    ,$esl.gradebook_assessment_score.assessment
+    ,$esl.gradebook_assessment_score.custom_assessment
+    ,$esl.gradebook_assessment_score.value 
 FROM $esl.gradebook_assessment_score  
-LEFT JOIN course ON $esl.gradebook_assessment_score .ref_course_id = course.id
-LEFT JOIN student ON $esl.gradebook_assessment_score .ref_student_id = student.id
-LEFT JOIN class ON student.ref_class_id = class.id
-LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id
-LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_student_id = sc_attend.ref_student_id AND  $esl.gradebook_assessment_score.ref_course_id = sc_attend.ref_course_id
+    LEFT JOIN course ON $esl.gradebook_assessment_score .ref_course_id = course.id
+    LEFT JOIN student ON $esl.gradebook_assessment_score .ref_student_id = student.id
+    LEFT JOIN class ON student.ref_class_id = class.id
+    LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id
+    LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_student_id = sc_attend.ref_student_id AND  $esl.gradebook_assessment_score.ref_course_id = sc_attend.ref_course_id
 WHERE $esl.gradebook_assessment_score.ref_course_id IN ('" + course_ids + @"')
 ORDER BY $esl.gradebook_assessment_score.last_update";
             ;
 
             QueryHelper qh = new QueryHelper();
-            DataTable dt = qh.Select(sql);
 
-            
+            DataTable dt = new DataTable();
 
+            dt = qh.Select(sql);
+
+                        
             foreach (DataRow row in dt.Rows)
             {
                 string termWord = "" + row["term"];
@@ -545,8 +547,24 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL課程班級取前N名產生完成");
 
+            if (e.Error != null)
+            {
+                MsgBox.Show("計算名次失敗!!，錯誤訊息:" + e.Error.Message);
+                return;
+
+            }
+            else if (e.Cancelled)
+            {
+                //MsgBox.Show("");
+                return;
+            }
+            else
+            {
+                FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL課程班級取前N名產生完成");
+            }
+
+            
             Workbook wb = (Workbook)e.Result;
 
 

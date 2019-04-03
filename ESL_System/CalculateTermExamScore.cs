@@ -333,6 +333,7 @@ namespace ESL_System
                         score.RefCourseID = "" + dr["ref_course_id"];
                         score.RefStudentID = "" + dr["ref_student_id"];
                         score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.RefScAttendID = "" + dr["ref_sc_attend_id"];
                         score.Term = "" + dr["term"];
                         score.Subject = "" + dr["subject"];
                         score.Assessment = "" + dr["assessment"];
@@ -357,6 +358,7 @@ namespace ESL_System
                         score.RefCourseID = "" + dr["ref_course_id"];
                         score.RefStudentID = "" + dr["ref_student_id"];
                         score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.RefScAttendID = "" + dr["ref_sc_attend_id"];
                         score.Term = "" + dr["term"];
                         score.Subject = "" + dr["subject"];
                         score.Assessment = "" + dr["assessment"];
@@ -412,6 +414,7 @@ namespace ESL_System
                         score.RefCourseID = "" + dr["ref_course_id"];
                         score.RefStudentID = "" + dr["ref_student_id"];
                         score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.RefScAttendID = "" + dr["ref_sc_attend_id"];
                         score.Term = "" + dr["term"];
                         score.Subject = "" + dr["subject"];
                         score.Assessment = "" + dr["assessment"];
@@ -430,6 +433,7 @@ namespace ESL_System
                         score.RefCourseID = "" + dr["ref_course_id"];
                         score.RefStudentID = "" + dr["ref_student_id"];
                         score.RefTeacherID = "" + dr["ref_teacher_id"];
+                        score.RefScAttendID = "" + dr["ref_sc_attend_id"];
                         score.Term = "" + dr["term"];
                         score.Subject = "" + dr["subject"];
                         score.Assessment = "" + dr["assessment"];
@@ -656,6 +660,7 @@ namespace ESL_System
                                 subjectScore.RefCourseID = score.RefCourseID;
                                 subjectScore.RefStudentID = score.RefStudentID;
                                 subjectScore.RefTeacherID = score.RefTeacherID;
+                                subjectScore.RefScAttendID = score.RefScAttendID;
                                 subjectScore.Term = score.Term;
                                 subjectScore.Subject = score.Subject;
                                 subjectScore.Score = subject_score_partial;
@@ -677,6 +682,7 @@ namespace ESL_System
                                     subjectScore.RefCourseID = score.RefCourseID;
                                     subjectScore.RefStudentID = score.RefStudentID;
                                     subjectScore.RefTeacherID = score.RefTeacherID;
+                                    subjectScore.RefScAttendID = score.RefScAttendID;
                                     subjectScore.Term = score.Term;
                                     subjectScore.Subject = score.Subject;
 
@@ -779,6 +785,7 @@ namespace ESL_System
                             termScore.RefCourseID = subjectScore.RefCourseID;
                             termScore.RefStudentID = subjectScore.RefStudentID;
                             termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.RefScAttendID = subjectScore.RefScAttendID;
                             termScore.Term = subjectScore.Term;
                             termScore.Score = term_score_partial;
 
@@ -800,6 +807,7 @@ namespace ESL_System
                             termScore.RefCourseID = subjectScore.RefCourseID;
                             termScore.RefStudentID = subjectScore.RefStudentID;
                             termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.RefScAttendID = subjectScore.RefScAttendID;
                             termScore.Term = subjectScore.Term;
                             termScore.Score = term_score_partial;
 
@@ -821,6 +829,7 @@ namespace ESL_System
                             termScore.RefCourseID = subjectScore.RefCourseID;
                             termScore.RefStudentID = subjectScore.RefStudentID;
                             termScore.RefTeacherID = subjectScore.RefTeacherID;
+                            termScore.RefScAttendID = subjectScore.RefScAttendID;
                             termScore.Term = subjectScore.Term;
                             termScore.Score = term_score_partial;
 
@@ -1326,12 +1335,13 @@ WHERE action ='INSERT'", examData);
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
                     ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,{4} AS subject
-                    ,'{5}'::TEXT AS value
-                    ,'{6}'::INTEGER AS uid
+                    ,'{3}'::BIGINT AS ref_sc_attend_id
+                    ,'{4}'::TEXT AS term
+                    ,{5} AS subject
+                    ,'{6}'::TEXT AS value
+                    ,'{7}'::INTEGER AS uid
                     ,'UPDATE'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.RefScAttendID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
 
                 dataList.Add(data);
             }
@@ -1343,12 +1353,13 @@ WHERE action ='INSERT'", examData);
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
                     ,'{2}'::BIGINT AS ref_teacher_id
-                    ,'{3}'::TEXT AS term
-                    ,{4} AS subject
-                    ,'{5}'::TEXT AS value
-                    ,{6}::INTEGER AS uid
+                    ,'{3}'::BIGINT AS ref_sc_attend_id
+                    ,'{4}'::TEXT AS term
+                    ,{5} AS subject
+                    ,'{6}'::TEXT AS value
+                    ,{7}::INTEGER AS uid
                     ,'INSERT'::TEXT AS action
-                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
+                ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.RefScAttendID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
 
                 dataList.Add(data);
             }
@@ -1365,6 +1376,7 @@ WITH score_data_row AS(
         ref_student_id = score_data_row.ref_student_id
         ,ref_course_id = score_data_row.ref_course_id
         ,ref_teacher_id = score_data_row.ref_teacher_id
+        ,ref_sc_attend_id = score_data_row.ref_sc_attend_id
         ,term = score_data_row.term
         ,subject = score_data_row.subject
         ,value = score_data_row.value
@@ -1379,6 +1391,7 @@ INSERT INTO $esl.gradebook_assessment_score(
 	ref_student_id	
 	,ref_course_id
     ,ref_teacher_id
+    ,ref_sc_attend_id
 	,term
 	,subject
 	,value
@@ -1387,6 +1400,7 @@ SELECT
 	score_data_row.ref_student_id::BIGINT AS ref_student_id	
 	,score_data_row.ref_course_id::BIGINT AS ref_course_id
     ,score_data_row.ref_teacher_id::BIGINT AS ref_teacher_id
+    ,score_data_row.ref_sc_attend_id::BIGINT AS ref_sc_attend_id
 	,score_data_row.term::TEXT AS term	
 	,score_data_row.subject::TEXT AS subject	
 	,score_data_row.value::TEXT AS value	
