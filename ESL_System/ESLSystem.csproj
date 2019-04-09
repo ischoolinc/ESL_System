@@ -130,6 +130,7 @@
     <Compile Include="ESLScore\ESLTemplate.cs" />
     <Compile Include="ESLScore\ESLCourse.cs" />
     <Compile Include="ESLScore\ESLScore.cs" />
+    <Compile Include="ExportESLscore_New.cs" />
     <Compile Include="ExportESLscore.cs" />
     <Compile Include="Form\CloneConfigure.cs">
       <SubType>Form</SubType>

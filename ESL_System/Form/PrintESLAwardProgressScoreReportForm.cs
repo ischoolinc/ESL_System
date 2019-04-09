@@ -28,11 +28,7 @@ namespace ESL_System.Form
 
         // 小於多少人數 取幾人
         private int _lessThanPeople;
-
-        // 使用者是否選擇 "課程總成績" (因為其顯示的 excel 介面不太一樣)
-        private bool _isSemesterCourseScore = false;
-
-
+    
         private List<string> _courseIDList;
 
         private List<K12.Data.CourseRecord> _eslCouseList;
@@ -136,7 +132,7 @@ namespace ESL_System.Form
                 return;
             }
 
-            if (comboBoxEx1.Text  == comboBoxEx2.Text)
+            if (comboBoxEx1.Text == comboBoxEx2.Text)
             {
                 MsgBox.Show("進步獎項，兩次比較試別不得相同!");
                 return;
@@ -169,7 +165,7 @@ namespace ESL_System.Form
                     ExamDict.Add(exam.Name, exam.ID);
                 }
             }
-            
+
             comboBoxEx1.SelectedIndex = 0;
             comboBoxEx2.SelectedIndex = 1;
 
@@ -234,7 +230,7 @@ WHERE course.id IN( " + courseIDs + ")";
                     {
                         _courseProgressScoreDict["" + dr["ref_exam_template_id"]].Add("" + dr["id"], new List<ESLScore>());
                     }
-                    
+
                     // 將選擇的課程 依照評分樣版 分類 建立
                     if (!_courseAssessmentScoreDict.ContainsKey("" + dr["ref_exam_template_id"]))
                     {
@@ -268,7 +264,7 @@ WHERE course.id IN( " + courseIDs + ")";
 
             _examID1 = ExamDict[_examName1];
             _examID2 = ExamDict[_examName2];
-            
+
             _worker = new BackgroundWorker();
             _worker.DoWork += new DoWorkEventHandler(Worker_DoWork);
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
@@ -355,49 +351,72 @@ WHERE course.id IN( " + courseIDs + ")";
             #region 取得、整理ESL成績
             _worker.ReportProgress(20, "取得ESL課程成績");
 
-
-            int progress = 80;
-
-            int count = 0;
-
-            string course_ids = string.Join("','", _courseIDList);
-
-
-            string sql = @"
-SELECT 
-course.ref_exam_template_id
-,course.course_name AS english_class
-,course.id AS course_id 
-,student.student_number AS student_number
-,student.name AS student_chinese_name
-,student.english_name AS student_english_name
-,student.gender AS gender
-,class.class_name AS home_room
-,student.ref_class_id AS ref_class_id
-,student.id AS student_id
- ,teacher.teacher_name
- ,sc_attend.id AS sc_attend_id
-,$esl.gradebook_assessment_score.ref_teacher_id
-,$esl.gradebook_assessment_score.ref_course_id
-,$esl.gradebook_assessment_score.ref_student_id
-,$esl.gradebook_assessment_score.term
-,$esl.gradebook_assessment_score.subject
-,$esl.gradebook_assessment_score.assessment
-,$esl.gradebook_assessment_score.custom_assessment
-,$esl.gradebook_assessment_score.value 
-FROM $esl.gradebook_assessment_score  
-LEFT JOIN course ON $esl.gradebook_assessment_score .ref_course_id = course.id
-LEFT JOIN student ON $esl.gradebook_assessment_score .ref_student_id = student.id
-LEFT JOIN class ON student.ref_class_id = class.id
-LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id
-LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_student_id = sc_attend.ref_student_id AND  $esl.gradebook_assessment_score.ref_course_id = sc_attend.ref_course_id
-WHERE $esl.gradebook_assessment_score.ref_course_id IN ('" + course_ids + @"')
-ORDER BY $esl.gradebook_assessment_score.last_update";
-            ;
+            List<String> _courseIDListBatch = new List<string>();
 
             QueryHelper qh = new QueryHelper();
-            DataTable dt = qh.Select(sql);
+            DataTable dt = new DataTable();
 
+            // 2019/4/09 穎驊優化， 原本的取法，可能會因為筆數過多 造成伺服器資源過載，在此處做分批處理優化(10筆課程一次查詢)
+            for (int i = 0; i < _courseIDList.Count; i++)
+            {
+                if (_courseIDListBatch.Count <= 9 && i + 1 != _courseIDList.Count)
+                {
+                    _courseIDListBatch.Add(_courseIDList[i]);
+                }
+                else
+                {
+                    _courseIDListBatch.Add(_courseIDList[i]);
+
+                    string course_ids = string.Join("','", _courseIDListBatch);
+
+                    string sql = @"
+SELECT 
+    course.ref_exam_template_id
+    ,course.course_name AS english_class
+    ,course.id AS course_id 
+    ,student.student_number AS student_number
+    ,student.name AS student_chinese_name
+    ,student.english_name AS student_english_name
+    ,student.gender AS gender
+    ,class.class_name AS home_room
+    ,student.ref_class_id AS ref_class_id
+    ,student.id AS student_id
+     ,teacher.teacher_name
+     ,sc_attend.id AS sc_attend_id
+    ,$esl.gradebook_assessment_score.ref_teacher_id
+    ,$esl.gradebook_assessment_score.ref_course_id
+    ,$esl.gradebook_assessment_score.ref_student_id
+    ,$esl.gradebook_assessment_score.term
+    ,$esl.gradebook_assessment_score.subject
+    ,$esl.gradebook_assessment_score.assessment
+    ,$esl.gradebook_assessment_score.custom_assessment
+    ,$esl.gradebook_assessment_score.value 
+FROM $esl.gradebook_assessment_score  
+    LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_sc_attend_id = sc_attend.id 
+    LEFT JOIN course ON sc_attend.ref_course_id = course.id
+    LEFT JOIN student ON sc_attend.ref_student_id = student.id
+    LEFT JOIN class ON student.ref_class_id = class.id
+    LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id    
+WHERE $esl.gradebook_assessment_score.ref_course_id IN ('" + course_ids + @"')
+ORDER BY $esl.gradebook_assessment_score.last_update";
+                    
+                    
+                    _courseIDListBatch.Clear();
+
+                    try
+                    {
+                        DataTable dt_batch = new DataTable();
+                        dt_batch = qh.Select(sql);
+
+                        dt.Merge(dt_batch);
+                    }
+                    catch (Exception ex)
+                    {
+                        throw ex;
+                    }
+                }
+            }
+                        
 
             foreach (DataRow row in dt.Rows)
             {
@@ -539,7 +558,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                             // 進步的分數為 兩次試別 相減
                             progressScore.Score = eslscoreTerm2.Score - eslscoreTerm1.Score;
 
-                            _courseProgressScoreDict[assessmentSetupID][coursrID].Add(progressScore);                            
+                            _courseProgressScoreDict[assessmentSetupID][coursrID].Add(progressScore);
                         }
                     }
                 }
@@ -588,7 +607,24 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
         private void Worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL課程進步獎產生完成");
+            if (e.Error != null)
+            {
+                MsgBox.Show("計算進步失敗!!，錯誤訊息:" + e.Error.Message);
+                FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL課程進步獎產生產生失敗");
+                this.Close();
+                return;
+            }
+            else if (e.Cancelled)
+            {
+                //MsgBox.Show("");
+                return;
+            }
+            else
+            {
+                FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL課程進步獎產生完成");
+            }
+
+
 
             Workbook wb = (Workbook)e.Result;
 
@@ -642,7 +678,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(""+e.UserState, e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage("" + e.UserState, e.ProgressPercentage);
         }
 
 
@@ -834,6 +870,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
         // 填寫 課程成績EXCEL
         private void FillProgressScoreExcelColunm(Workbook wb)
         {
+            int wscount = 1;
+
             // 一種ESL樣板 開一個 Worksheet
             foreach (string assessmentSetupID in _courseProgressScoreDict.Keys)
             {
@@ -843,7 +881,14 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 ws.Copy(wb.Worksheets["樣板一"]);
 
                 // 一種樣板 一個sheet 名稱
-                ws.Name = "ESL樣板_" + _assessmentSetupIDNamePairDict[assessmentSetupID] + "_課程";
+                string wsName = wscount + ".ESL樣板_" + _assessmentSetupIDNamePairDict[assessmentSetupID] + "_課程";
+
+                wscount++;
+
+                // excel sheet Name 最多只能 31 個字
+                wsName = wsName.Length > 26 ? wsName.Substring(0, 22) + "..." : wsName;
+
+                ws.Name = wsName;
 
                 #region 填表頭
                 // 填表頭 
@@ -892,7 +937,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                 Cell cell = ws.Cells[1, col];
                                 cell.Copy(wb.Worksheets["樣板一"].Cells["M2"]);
 
-                                cell.Value = assessment.Name;
+                                cell.Value = "(" + subject.Name + ")\n" + assessment.Name;
 
                                 col++;
                             }
@@ -917,6 +962,15 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 cell_semesterScore.Copy(wb.Worksheets["樣板一"].Cells["M2"]);
 
                 cell_semesterScore.Value = "Progress";
+
+                #region 總表樣板
+                Worksheet ws_total = wb.Worksheets[wb.Worksheets.Add()];
+
+                // 複製樣板
+                ws_total.Copy(ws);
+
+                ws_total.Name = wsName + "(總表)";
+                #endregion
 
                 // 依據 表頭的名稱 填入分數
                 foreach (string coursrID in _courseProgressScoreDict[assessmentSetupID].Keys)
@@ -950,7 +1004,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         {
                             if (_courseProgressScoreDict[assessmentSetupID][coursrID][i].Score == null)
                             {
-                               
+
                                 break;
                             }
 
@@ -1006,14 +1060,14 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                         {
                                             assessmentTotal++;
                                         }
-                                        
+
                                     }
                                 }
 
                                 // 填 assesssment 成績
                                 for (int assesssmentCol = initialCol; assesssmentCol < initialCol + assessmentTotal; assesssmentCol++)
                                 {
-                                    string assesssmentName = "" + ws.Cells[1, assesssmentCol].Value;
+                                    string subjectAssesssmentName = "" + ws.Cells[1, assesssmentCol].Value;
 
                                     Cell assesssmentCell = ws.Cells[totalAwardsCount + 2, assesssmentCol];
 
@@ -1021,7 +1075,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                                     foreach (ESLScore eslScore in _courseAssessmentScoreDict[assessmentSetupID][coursrID])
                                     {
-                                        if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName && eslScore.Assessment == assesssmentName)
+                                        string key = "(" + eslScore.Subject + ")\n" + eslScore.Assessment;
+                                        if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName && key == subjectAssesssmentName)
                                         {
                                             assesssmentCell.Value = eslScore.Score;
                                         }
@@ -1049,7 +1104,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                     }
                                 }
 
-                                initialCol = initialCol + assessmentTotal +1;
+                                initialCol = initialCol + assessmentTotal + 1;
                             }
 
 
@@ -1094,11 +1149,182 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                 //把多餘的右半邊CELL欄位 砍掉                
                 ws.Cells.ClearRange(1, progressScoreCol + 1, totalAwardsCount + 2, 50);
+
+                totalAwardsCount = 0;
+
+                // 依據 表頭的名稱 填入分數 (總表)
+                foreach (string coursrID in _courseProgressScoreDict[assessmentSetupID].Keys)
+                {
+                    // 取幾名
+                    int rankedNumber = 0;
+
+                    rankedNumber = _courseProgressScoreDict[assessmentSetupID][coursrID].Count;
+
+                    // 依照設定看要取幾名
+                    for (int i = 0; i < rankedNumber; i++)
+                    {
+                        K12.Data.CourseRecord courseRecord = _eslCouseList.Find(x => x.ID == coursrID);
+
+                        // 學生 系統 ID 
+                        string ref_studentID;
+
+                        // 分數
+                        if (_courseProgressScoreDict[assessmentSetupID][coursrID].Count >= i + 1)
+                        {
+                            if (_courseProgressScoreDict[assessmentSetupID][coursrID][i].Score == null)
+                            {
+                                break;
+                            }
+
+                            ref_studentID = _courseProgressScoreDict[assessmentSetupID][coursrID][i].RefStudentID;
+
+                            // 自樣板 把資料第一Row 的格式都Copy
+                            ws_total.Cells.CopyRows(wb.Worksheets["樣板一"].Cells, 2, totalAwardsCount + 2, 1);
+
+                            //進步 分數
+                            Cell cell = ws_total.Cells[totalAwardsCount + 2, progressScoreCol];
+                            //cell.Copy(wb.Worksheets["樣板一"].Cells["T2"]);
+                            // 先清空值， 預設是沒有分數
+                            cell.Value = "N/A";
+
+                            //進步 分數 值
+                            cell.Value = _courseProgressScoreDict[assessmentSetupID][coursrID][i].Score;
+
+                            // 如果目前分數 與下一筆分數 同分， 則再增額選進，直到 沒有同分
+                            if (_courseProgressScoreDict[assessmentSetupID][coursrID].Count > i + 1)
+                            {
+                                if (_courseProgressScoreDict[assessmentSetupID][coursrID][i].Score != null && _courseProgressScoreDict[assessmentSetupID][coursrID][i].Score == _courseProgressScoreDict[assessmentSetupID][coursrID][i + 1].Score)
+                                {
+                                    rankedNumber++;
+                                }
+                            }
+
+                            // 初始欄位置
+                            int initialCol = 11;
+
+                            // 填入每一個 樣板的 成績
+                            foreach (Term term in _assessmentSetupDataTableDict[assessmentSetupID])
+                            {
+                                string targetTerm1 = _assessmentSetupExamTermDict[assessmentSetupID].ContainsKey(_examID1) ? _assessmentSetupExamTermDict[assessmentSetupID][_examID1] : "";
+
+                                string targetTerm2 = _assessmentSetupExamTermDict[assessmentSetupID].ContainsKey(_examID2) ? _assessmentSetupExamTermDict[assessmentSetupID][_examID2] : "";
+
+                                // 不是 使用者選的 兩次評量 項目 跳過
+                                if (term.Name != targetTerm1 && term.Name != targetTerm2)
+                                {
+                                    break;
+                                }
+
+                                string termName = term.Name;
+
+                                int assessmentTotal = 0;
+
+                                foreach (Subject subject in term.SubjectList)
+                                {
+                                    foreach (Assessment assessment in subject.AssessmentList)
+                                    {
+                                        // 計算一個Term 之下 有幾個 分數 Assessment
+                                        if (assessment.Type == "Score")
+                                        {
+                                            assessmentTotal++;
+                                        }
+
+                                    }
+                                }
+
+                                // 填 assesssment 成績
+                                for (int assesssmentCol = initialCol; assesssmentCol < initialCol + assessmentTotal; assesssmentCol++)
+                                {
+                                    string subjectAssesssmentName = "" + ws.Cells[1, assesssmentCol].Value;
+
+                                    Cell assesssmentCell = ws_total.Cells[totalAwardsCount + 2, assesssmentCol];
+
+                                    assesssmentCell.Value = "N/A";
+
+                                    foreach (ESLScore eslScore in _courseAssessmentScoreDict[assessmentSetupID][coursrID])
+                                    {
+                                        string key = "(" + eslScore.Subject + ")\n" + eslScore.Assessment;
+                                        if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName && key == subjectAssesssmentName)
+                                        {
+                                            assesssmentCell.Value = eslScore.Score;
+                                        }
+                                    }
+                                }
+
+                                // 填 term 成績
+                                Cell termCell = ws_total.Cells[totalAwardsCount + 2, initialCol + assessmentTotal];
+
+                                termCell.Value = "N/A";
+
+                                foreach (ESLScore eslScore in _courseTerm1ScoreDict[assessmentSetupID][coursrID])
+                                {
+                                    if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName)
+                                    {
+                                        termCell.Value = eslScore.Score;
+                                    }
+                                }
+
+                                foreach (ESLScore eslScore in _courseTerm2ScoreDict[assessmentSetupID][coursrID])
+                                {
+                                    if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName)
+                                    {
+                                        termCell.Value = eslScore.Score;
+                                    }
+                                }
+
+                                initialCol = initialCol + assessmentTotal + 1;
+                            }
+
+
+                        }
+                        else
+                        {
+                            // 人數 不足， 跳離迴圈
+                            break;
+                        }
+
+                        // 學號 (Student Number)
+                        ws_total.Cells[totalAwardsCount + 2, 0].Value = _studentRecordDict[ref_studentID].StudentNumber;
+
+                        // 英文姓名 (English Name)
+                        ws_total.Cells[totalAwardsCount + 2, 1].Value = _studentRecordDict[ref_studentID].EnglishName;
+
+                        // 中文姓名 (Chinese Name)
+                        ws_total.Cells[totalAwardsCount + 2, 2].Value = _studentRecordDict[ref_studentID].ChineseName;
+
+                        // 性別 (Gender)
+                        ws_total.Cells[totalAwardsCount + 2, 3].Value = _studentRecordDict[ref_studentID].Gender;
+
+                        // 原班級 (Home Room)  
+                        ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict[ref_studentID].HomeRoom;
+
+                        // 課程名稱
+                        ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.Name;
+                        // 教師一
+                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.Teachers.Count > 0 ? courseRecord.Teachers[0].TeacherName : "";
+                        // 教師二
+                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.Teachers.Count > 1 ? courseRecord.Teachers[1].TeacherName : "";
+                        // 教師三
+                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.Teachers.Count > 2 ? courseRecord.Teachers[2].TeacherName : "";
+
+                        // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
+                        // 目前預計是等 寒假，在補齊課程欄位
+
+
+                        totalAwardsCount++;
+                    }
+                }
+
+                //把多餘的右半邊CELL欄位 砍掉 (總表)             
+                ws_total.Cells.ClearRange(1, progressScoreCol + 1, totalAwardsCount + 2, 50);
             }
 
         }
 
     }
+
+
+        
 }
 
 

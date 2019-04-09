@@ -161,12 +161,15 @@ namespace ESL_System
 
             MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Click += delegate
             {
-
+                
                 List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
-                ExportESLscore exporter = new ExportESLscore(eslCouseList);
+                // 舊課程成績匯出，其格式 為SQL 抓出來的資料Excel， 不符合使用者直觀的介面，
+                // 將用新的介面功能取代(從取前N名功能改寫過來)
+                ExportESLscore_New exporter = new ExportESLscore_New(eslCouseList);
+                exporter.PrintReport();
 
-                exporter.export();
+
             };
 
             //MotherForm.RibbonBarItems["課程", "ESL課程"]["匯入新竹成績(暫時)"].Click += delegate
