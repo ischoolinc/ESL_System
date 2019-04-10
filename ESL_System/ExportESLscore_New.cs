@@ -439,15 +439,15 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             _worker.ReportProgress(60, "成績排序中...");
 
             #region 排序
-            // 每一個課程的  Term 成績List 排序
+            // 每一個課程的  Term 成績List 排序 (學號)
             foreach (string assessmentSetupID in _courseTermScoreDict.Keys)
             {
                 foreach (string coursrID in _courseTermScoreDict[assessmentSetupID].Keys)
                 {
-                    // 填 -x 由大排到小 (100、99、98...)
+                    
                     try
                     {
-                        _courseTermScoreDict[assessmentSetupID][coursrID].Sort((x, y) => { return -x.Score.CompareTo(y.Score); });
+                        _courseTermScoreDict[assessmentSetupID][coursrID].Sort((x, y) => { return  _studentRecordDict[x.RefStudentID].StudentNumber.CompareTo(_studentRecordDict[y.RefStudentID].StudentNumber); });
                     }
                     catch
                     {
@@ -456,13 +456,13 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 }
             }
 
-            // 學期 課程成績排序
+            // 學期 課程成績排序  (學號)
             foreach (string coursrID in _courseScattendDict.Keys)
             {
-                // 填 -x 由大排到小 (100、99、98...)
+                
                 try
                 {
-                    _courseScattendDict[coursrID].Sort((x, y) => { return (x.Score != null & y.Score != null) ? -x.Score.Value.CompareTo(y.Score.Value) : 0; });
+                    _courseScattendDict[coursrID].Sort((x, y) => { return _studentRecordDict[x.RefStudentID].StudentNumber.CompareTo(_studentRecordDict[y.RefStudentID].StudentNumber); });
                 }
                 catch
                 {
@@ -861,37 +861,30 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 學生 系統 ID 
                         string ref_studentID;
 
+
                         // 分數
                         if (_courseScattendDict[coursrID].Count >= i + 1)
                         {
-                            if (_courseScattendDict[coursrID][i].Score == null)
+                            ref_studentID = _courseScattendDict[coursrID][i].RefStudentID;
+
+                            if (!_studentRecordDict.ContainsKey(ref_studentID))
                             {
-                                //沒有課程成績，跳過
                                 continue;
                             }
-
-                            ref_studentID = _courseScattendDict[coursrID][i].RefStudentID;
 
                             // 自樣板 把資料第一Row 的格式都Copy
                             ws_total.Cells.CopyRows(wb.Worksheets["樣板一"].Cells, 2, totalAwardsCount + 2, 1);
 
-                            //term 分數
                             Cell cell = ws_total.Cells[totalAwardsCount + 2, semesterScoreCol];
                             //cell.Copy(wb.Worksheets["樣板一"].Cells["T2"]);
                             // 先清空值， 預設是沒有分數
                             cell.Value = "N/A";
 
-                            //term 分數 值
-                            cell.Value = _courseScattendDict[coursrID][i].Score;
-
-                            // 如果目前分數 與下一筆分數 同分， 則再增額選進，直到 沒有同分
-                            if (_courseScattendDict[coursrID].Count > i + 1)
-                            {
-                                if (_courseScattendDict[coursrID][i].Score != null && _courseScattendDict[coursrID][i].Score == _courseScattendDict[coursrID][i + 1].Score)
-                                {
-                                    rankedNumber++;
-                                }
+                            if (_courseScattendDict[coursrID][i].Score != null)
+                            {                                
+                                cell.Value = _courseScattendDict[coursrID][i].Score;
                             }
+
 
                             // 初始欄位置
                             int initialCol = 11;
@@ -960,19 +953,19 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         }
 
                         // 學號 (Student Number)
-                        ws_total.Cells[totalAwardsCount + 2, 0].Value = _studentRecordDict[ref_studentID].StudentNumber;
+                        ws_total.Cells[totalAwardsCount + 2, 0].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].StudentNumber :"";
 
                         // 英文姓名 (English Name)
-                        ws_total.Cells[totalAwardsCount + 2, 1].Value = _studentRecordDict[ref_studentID].EnglishName;
+                        ws_total.Cells[totalAwardsCount + 2, 1].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].EnglishName : "";
 
                         // 中文姓名 (Chinese Name)
-                        ws_total.Cells[totalAwardsCount + 2, 2].Value = _studentRecordDict[ref_studentID].ChineseName;
+                        ws_total.Cells[totalAwardsCount + 2, 2].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].ChineseName : "";
 
                         // 性別 (Gender)
-                        ws_total.Cells[totalAwardsCount + 2, 3].Value = _studentRecordDict[ref_studentID].Gender;
+                        ws_total.Cells[totalAwardsCount + 2, 3].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].Gender : "";
 
                         // 原班級 (Home Room)  
-                        ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict[ref_studentID].HomeRoom;
+                        ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict.ContainsKey(ref_studentID) ?  _studentRecordDict[ref_studentID].HomeRoom : "";
 
                         // 課程名稱
                         ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.Name;
