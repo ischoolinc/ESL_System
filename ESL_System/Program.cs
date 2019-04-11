@@ -161,7 +161,7 @@ namespace ESL_System
 
             MotherForm.RibbonBarItems["課程", "ESL課程"]["課程成績匯出"].Click += delegate
             {
-                
+
                 List<string> eslCouseList = K12.Presentation.NLDPanels.Course.SelectedSource.ToList();
 
                 // 舊課程成績匯出，其格式 為SQL 抓出來的資料Excel， 不符合使用者直觀的介面，
@@ -226,7 +226,7 @@ namespace ESL_System
             K12.Presentation.NLDPanels.Course.SelectedSourceChanged += (sender, e) =>
             {
                 // 一次只能選一個 課程 補輸入 轉班生成績
-                if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0 & K12.Presentation.NLDPanels.Course.SelectedSource.Count <2)
+                if (K12.Presentation.NLDPanels.Course.SelectedSource.Count > 0 & K12.Presentation.NLDPanels.Course.SelectedSource.Count < 2)
                 {
                     MotherForm.RibbonBarItems["課程", "ESL課程"]["缺考成績處理(指定比例)"].Enable = UserAcl.Current["DA908268-F1E6-4514-B69D-386EC37184A9"].Executable;
                 }
@@ -248,6 +248,12 @@ namespace ESL_System
 
                 form.ShowDialog();
             };
+
+
+            //課程基本資訊 (課程難度(Level)、上課地點)
+            //K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
+            
+            
         }
     }
 }

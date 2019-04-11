@@ -356,18 +356,18 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     continue;
                 }
 
-                // 指標型成績
-                if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
-                {
-                    //獎項只排 分數型成績、指標不納入
-                    continue;
-                }
-                // 評語型成績
-                else if (_commentList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
-                {
-                    //獎項只排 分數型成績、評語不納入
-                    continue;
-                }
+                //// 指標型成績
+                //if (_indicatorList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
+                //{
+                //    //獎項只排 分數型成績、指標不納入
+                //    continue;
+                //}
+                //// 評語型成績
+                //else if (_commentList.Contains("" + row["ref_course_id"] + "_" + termWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + subjectWord.Trim().Replace(' ', '_').Replace('"', '_') + "_" + assessmentWord.Trim().Replace(' ', '_').Replace('"', '_')))
+                //{
+                //    //獎項只排 分數型成績、評語不納入
+                //    continue;
+                //}
 
                 // 上列狀況排除 剩下的都是分數型成績
 
@@ -382,7 +382,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                 if ("" + row["value"] != "")
                 {
-                    eslScore.Score = decimal.Parse("" + row["value"]);
+                    eslScore.Value = "" + row["value"];
                 }
 
                 // 項目都有，為assessment 成績
@@ -436,7 +436,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             }
             #endregion
 
-            _worker.ReportProgress(60, "成績排序中...");
+            _worker.ReportProgress(60, "排序中...");
 
             #region 排序
             // 每一個課程的  Term 成績List 排序 (學號)
@@ -809,16 +809,13 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     {
                         foreach (Assessment assessment in subject.AssessmentList)
                         {
-                            //分數型成績
-                            if (assessment.Type == "Score")
-                            {
-                                Cell cell = ws_total.Cells[1, col];
-                                cell.Copy(wb.Worksheets["樣板一"].Cells["M2"]);
 
-                                cell.Value = "(" + subject.Name + ")\n" + assessment.Name;
+                            Cell cell = ws_total.Cells[1, col];
+                            cell.Copy(wb.Worksheets["樣板一"].Cells["M2"]);
 
-                                col++;
-                            }
+                            cell.Value = "(" + subject.Name + ")\n" + assessment.Name;
+
+                            col++;
                         }
                     }
 
@@ -900,12 +897,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                 {
                                     foreach (Assessment assessment in subject.AssessmentList)
                                     {
-                                        // 計算一個Term 之下 有幾個 分數 Assessment
-                                        if (assessment.Type == "Score")
-                                        {
-                                            assessmentTotal++;
-                                        }
-
+                                        assessmentTotal++;
                                     }
                                 }
 
@@ -923,7 +915,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                         string key = "(" + eslScore.Subject + ")\n" + eslScore.Assessment;
                                         if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName && key == subjectAssesssmentName)
                                         {
-                                            assesssmentCell.Value = eslScore.Score;
+                                            assesssmentCell.Value = eslScore.Value;
                                         }
                                     }
                                 }
@@ -937,7 +929,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                                 {
                                     if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName)
                                     {
-                                        termCell.Value = eslScore.Score;
+                                        termCell.Value = eslScore.Value;
                                     }
                                 }
 

@@ -122,6 +122,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CourseExtentControls\BasicInfoItem.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="CourseExtentControls\BasicInfoItem.designer.cs">
+      <DependentUpon>BasicInfoItem.cs</DependentUpon>
+    </Compile>
     <Compile Include="DegreeMapper.cs" />
     <Compile Include="ESLScore\Assessment.cs" />
     <Compile Include="CalculateTermExamScore.cs" />
@@ -308,6 +314,10 @@
     <None Include="Resource\協助新竹康橋匯入ESL成績Excel範例.xlsx" />
   </ItemGroup>
   <ItemGroup>
+    <EmbeddedResource Include="CourseExtentControls\BasicInfoItem.resx">
+      <DependentUpon>BasicInfoItem.cs</DependentUpon>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
     <EmbeddedResource Include="Form\CloneConfigure.resx">
       <DependentUpon>CloneConfigure.cs</DependentUpon>
     </EmbeddedResource>
