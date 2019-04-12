@@ -251,9 +251,9 @@ namespace ESL_System
 
 
             //課程基本資訊 (課程難度(Level)、上課地點)
-            //K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
-            
-            
+            K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
+
+
         }
     }
 }

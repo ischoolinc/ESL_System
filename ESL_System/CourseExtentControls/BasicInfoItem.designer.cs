@@ -38,87 +38,89 @@ namespace ESL_System.CourseExtendControls
         /// </summary>
         private void InitializeComponent()
         {
-            this.labelX1 = new DevComponents.DotNetBar.LabelX();
-            this.txtCourseName = new DevComponents.DotNetBar.Controls.TextBoxX();
-            this.labelX2 = new DevComponents.DotNetBar.LabelX();
-            this.textBoxX1 = new DevComponents.DotNetBar.Controls.TextBoxX();
+            this.lbDifficulty = new DevComponents.DotNetBar.LabelX();
+            this.txtDifficulty = new DevComponents.DotNetBar.Controls.TextBoxX();
+            this.lbClassroom = new DevComponents.DotNetBar.LabelX();
+            this.txtClassroom = new DevComponents.DotNetBar.Controls.TextBoxX();
             this.SuspendLayout();
             // 
-            // labelX1
+            // lbDifficulty
             // 
             // 
             // 
             // 
-            this.labelX1.BackgroundStyle.Class = "";
-            this.labelX1.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX1.Location = new System.Drawing.Point(0, 9);
-            this.labelX1.Name = "labelX1";
-            this.labelX1.Size = new System.Drawing.Size(104, 23);
-            this.labelX1.TabIndex = 2;
-            this.labelX1.Text = "課程難度(Level)";
-            this.labelX1.TextAlignment = System.Drawing.StringAlignment.Far;
+            this.lbDifficulty.BackgroundStyle.Class = "";
+            this.lbDifficulty.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.lbDifficulty.Location = new System.Drawing.Point(3, 2);
+            this.lbDifficulty.Name = "lbDifficulty";
+            this.lbDifficulty.Size = new System.Drawing.Size(104, 23);
+            this.lbDifficulty.TabIndex = 2;
+            this.lbDifficulty.Text = "課程難度(Level)";
+            this.lbDifficulty.TextAlignment = System.Drawing.StringAlignment.Far;
             // 
-            // txtCourseName
-            // 
-            // 
-            // 
-            // 
-            this.txtCourseName.Border.Class = "TextBoxBorder";
-            this.txtCourseName.Border.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.txtCourseName.Location = new System.Drawing.Point(110, 6);
-            this.txtCourseName.MaxLength = 50;
-            this.txtCourseName.Name = "txtCourseName";
-            this.txtCourseName.Size = new System.Drawing.Size(151, 25);
-            this.txtCourseName.TabIndex = 3;
-            // 
-            // labelX2
+            // txtDifficulty
             // 
             // 
             // 
             // 
-            this.labelX2.BackgroundStyle.Class = "";
-            this.labelX2.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.labelX2.Location = new System.Drawing.Point(281, 8);
-            this.labelX2.Name = "labelX2";
-            this.labelX2.Size = new System.Drawing.Size(70, 23);
-            this.labelX2.TabIndex = 4;
-            this.labelX2.Text = "上課地點";
-            this.labelX2.TextAlignment = System.Drawing.StringAlignment.Far;
+            this.txtDifficulty.Border.Class = "TextBoxBorder";
+            this.txtDifficulty.Border.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.txtDifficulty.Location = new System.Drawing.Point(113, 2);
+            this.txtDifficulty.MaxLength = 50;
+            this.txtDifficulty.Name = "txtDifficulty";
+            this.txtDifficulty.Size = new System.Drawing.Size(151, 25);
+            this.txtDifficulty.TabIndex = 3;
+            this.txtDifficulty.TextChanged += new System.EventHandler(this.txtDifficulty_TextChanged);
             // 
-            // textBoxX1
-            // 
-            // 
+            // lbClassroom
             // 
             // 
-            this.textBoxX1.Border.Class = "TextBoxBorder";
-            this.textBoxX1.Border.CornerType = DevComponents.DotNetBar.eCornerType.Square;
-            this.textBoxX1.Location = new System.Drawing.Point(357, 7);
-            this.textBoxX1.MaxLength = 50;
-            this.textBoxX1.Name = "textBoxX1";
-            this.textBoxX1.Size = new System.Drawing.Size(151, 25);
-            this.textBoxX1.TabIndex = 5;
+            // 
+            // 
+            this.lbClassroom.BackgroundStyle.Class = "";
+            this.lbClassroom.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.lbClassroom.Location = new System.Drawing.Point(288, 2);
+            this.lbClassroom.Name = "lbClassroom";
+            this.lbClassroom.Size = new System.Drawing.Size(70, 23);
+            this.lbClassroom.TabIndex = 4;
+            this.lbClassroom.Text = "上課地點";
+            this.lbClassroom.TextAlignment = System.Drawing.StringAlignment.Far;
+            // 
+            // txtClassroom
+            // 
+            // 
+            // 
+            // 
+            this.txtClassroom.Border.Class = "TextBoxBorder";
+            this.txtClassroom.Border.CornerType = DevComponents.DotNetBar.eCornerType.Square;
+            this.txtClassroom.Location = new System.Drawing.Point(364, 2);
+            this.txtClassroom.MaxLength = 50;
+            this.txtClassroom.Name = "txtClassroom";
+            this.txtClassroom.Size = new System.Drawing.Size(151, 25);
+            this.txtClassroom.TabIndex = 5;
+            this.txtClassroom.TextChanged += new System.EventHandler(this.txtClassroom_TextChanged);
             // 
             // BasicInfoItem
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.Transparent;
-            this.Controls.Add(this.labelX2);
-            this.Controls.Add(this.textBoxX1);
-            this.Controls.Add(this.labelX1);
-            this.Controls.Add(this.txtCourseName);
-            this.Font = new System.Drawing.Font("微軟正黑體", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.Controls.Add(this.lbClassroom);
+            this.Controls.Add(this.txtClassroom);
+            this.Controls.Add(this.lbDifficulty);
+            this.Controls.Add(this.txtDifficulty);
+            this.Font = new System.Drawing.Font("Microsoft JhengHei", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MinimumSize = new System.Drawing.Size(550, 0);
             this.Name = "BasicInfoItem";
-            this.Size = new System.Drawing.Size(550, 50);
+            this.Size = new System.Drawing.Size(550, 40);
             this.ResumeLayout(false);
 
         }
 
         #endregion
 
-        private DevComponents.DotNetBar.LabelX labelX1;
-        protected DevComponents.DotNetBar.Controls.TextBoxX txtCourseName;
-        private DevComponents.DotNetBar.LabelX labelX2;
-        protected DevComponents.DotNetBar.Controls.TextBoxX textBoxX1;
+        private DevComponents.DotNetBar.LabelX lbDifficulty;
+        protected DevComponents.DotNetBar.Controls.TextBoxX txtDifficulty;
+        private DevComponents.DotNetBar.LabelX lbClassroom;
+        protected DevComponents.DotNetBar.Controls.TextBoxX txtClassroom;
     }
 }
