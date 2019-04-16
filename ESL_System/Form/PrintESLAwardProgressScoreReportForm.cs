@@ -28,10 +28,12 @@ namespace ESL_System.Form
 
         // 小於多少人數 取幾人
         private int _lessThanPeople;
-    
+
         private List<string> _courseIDList;
 
-        private List<K12.Data.CourseRecord> _eslCouseList;
+        private List<K12.Data.CourseRecord> _courseList;
+
+        private List<ESLCourseRecord> _eslCourseList;
 
         private List<string> _refAssessmentSetupIDList;
 
@@ -288,13 +290,17 @@ WHERE course.id IN( " + courseIDs + ")";
 
 
             #region 取得課程 設定樣板、 基本資料整理
-            _eslCouseList = new List<K12.Data.CourseRecord>();
+            _courseList = new List<K12.Data.CourseRecord>();
 
-            _eslCouseList = K12.Data.Course.SelectByIDs(_courseIDList);
+            _eslCourseList = new List<ESLCourseRecord>();
+
+            _courseList = K12.Data.Course.SelectByIDs(_courseIDList);
+
+            _eslCourseList = ESLCourseRecord.ToESLCourseRecords(_courseList);
 
             _refAssessmentSetupIDList = new List<string>();
 
-            foreach (K12.Data.CourseRecord courseRecord in _eslCouseList)
+            foreach (K12.Data.CourseRecord courseRecord in _courseList)
             {
                 if (!_refAssessmentSetupIDList.Contains("'" + courseRecord.RefAssessmentSetupID + "'"))
                 {
@@ -399,8 +405,8 @@ FROM $esl.gradebook_assessment_score
     LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id    
 WHERE $esl.gradebook_assessment_score.ref_course_id IN ('" + course_ids + @"')
 ORDER BY $esl.gradebook_assessment_score.last_update";
-                    
-                    
+
+
                     _courseIDListBatch.Clear();
 
                     try
@@ -416,7 +422,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     }
                 }
             }
-                        
+
 
             foreach (DataRow row in dt.Rows)
             {
@@ -729,7 +735,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     }
 
 
-                    GetAssessmentSetup(termList, _eslCouseList.FindAll(x => x.AssessmentSetup.ID == "" + dr["id"]));
+                    GetAssessmentSetup(termList, _courseList.FindAll(x => x.AssessmentSetup.ID == "" + dr["id"]));
 
                     if (!_assessmentSetupDataTableDict.ContainsKey("" + dr["id"]))
                     {
@@ -994,7 +1000,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     // 依照設定看要取幾名
                     for (int i = 0; i < rankedNumber; i++)
                     {
-                        K12.Data.CourseRecord courseRecord = _eslCouseList.Find(x => x.ID == coursrID);
+                        ESLCourseRecord eslCourseRecord = _eslCourseList.First(x => x.ESLID == coursrID);
 
                         // 學生 系統 ID 
                         string ref_studentID;
@@ -1130,14 +1136,17 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 原班級 (Home Room)  
                         ws.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict[ref_studentID].HomeRoom;
 
+                        //課程難度(Level)
+                        ws.Cells[totalAwardsCount + 2, 5].Value = eslCourseRecord.ESLDifficulty;
+
                         // 課程名稱
-                        ws.Cells[totalAwardsCount + 2, 7].Value = courseRecord.Name;
+                        ws.Cells[totalAwardsCount + 2, 7].Value = eslCourseRecord.ESLName;
                         // 教師一
-                        ws.Cells[totalAwardsCount + 2, 8].Value = courseRecord.Teachers.Count > 0 ? courseRecord.Teachers[0].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers[0].TeacherName : "";
                         // 教師二
-                        ws.Cells[totalAwardsCount + 2, 9].Value = courseRecord.Teachers.Count > 1 ? courseRecord.Teachers[1].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers[1].TeacherName : "";
                         // 教師三
-                        ws.Cells[totalAwardsCount + 2, 10].Value = courseRecord.Teachers.Count > 2 ? courseRecord.Teachers[2].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers[2].TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位
@@ -1163,7 +1172,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     // 依照設定看要取幾名
                     for (int i = 0; i < rankedNumber; i++)
                     {
-                        K12.Data.CourseRecord courseRecord = _eslCouseList.Find(x => x.ID == coursrID);
+                        ESLCourseRecord eslCourseRecord = _eslCourseList.First(x => x.ESLID == coursrID);
 
                         // 學生 系統 ID 
                         string ref_studentID;
@@ -1298,14 +1307,17 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 原班級 (Home Room)  
                         ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict[ref_studentID].HomeRoom;
 
+                        //課程難度(Level)
+                        ws_total.Cells[totalAwardsCount + 2, 5].Value = eslCourseRecord.ESLDifficulty;
+
                         // 課程名稱
-                        ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.Name;
+                        ws_total.Cells[totalAwardsCount + 2, 7].Value = eslCourseRecord.ESLName;
                         // 教師一
-                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.Teachers.Count > 0 ? courseRecord.Teachers[0].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers[0].TeacherName : "";
                         // 教師二
-                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.Teachers.Count > 1 ? courseRecord.Teachers[1].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers[1].TeacherName : "";
                         // 教師三
-                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.Teachers.Count > 2 ? courseRecord.Teachers[2].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers[2].TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位
@@ -1324,7 +1336,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
     }
 
 
-        
+
 }
 
 

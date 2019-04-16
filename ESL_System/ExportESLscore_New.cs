@@ -36,7 +36,9 @@ namespace ESL_System
 
         private List<string> _courseIDList;
 
-        private List<K12.Data.CourseRecord> _eslCouseList;
+        private List<K12.Data.CourseRecord> _courseList;
+
+        private List<ESLCourseRecord> _eslCourseList;
 
         private List<string> _refAssessmentSetupIDList;
 
@@ -162,7 +164,7 @@ WHERE course.id IN( " + courseIDs + ")";
             }
         }
 
-        
+
         // 列印 ESL 報表
         public void PrintReport()
         {
@@ -194,13 +196,17 @@ WHERE course.id IN( " + courseIDs + ")";
 
 
             #region 取得課程 設定樣板、 基本資料整理
-            _eslCouseList = new List<K12.Data.CourseRecord>();
+            _courseList = new List<K12.Data.CourseRecord>();
 
-            _eslCouseList = K12.Data.Course.SelectByIDs(_courseIDList);
+            _eslCourseList = new List<ESLCourseRecord>();
+
+            _courseList = K12.Data.Course.SelectByIDs(_courseIDList);
+
+            _eslCourseList = ESLCourseRecord.ToESLCourseRecords(_courseList);
 
             _refAssessmentSetupIDList = new List<string>();
 
-            foreach (K12.Data.CourseRecord courseRecord in _eslCouseList)
+            foreach (K12.Data.CourseRecord courseRecord in _courseList)
             {
                 if (!_refAssessmentSetupIDList.Contains("'" + courseRecord.RefAssessmentSetupID + "'"))
                 {
@@ -444,10 +450,10 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             {
                 foreach (string coursrID in _courseTermScoreDict[assessmentSetupID].Keys)
                 {
-                    
+
                     try
                     {
-                        _courseTermScoreDict[assessmentSetupID][coursrID].Sort((x, y) => { return  _studentRecordDict[x.RefStudentID].StudentNumber.CompareTo(_studentRecordDict[y.RefStudentID].StudentNumber); });
+                        _courseTermScoreDict[assessmentSetupID][coursrID].Sort((x, y) => { return _studentRecordDict[x.RefStudentID].StudentNumber.CompareTo(_studentRecordDict[y.RefStudentID].StudentNumber); });
                     }
                     catch
                     {
@@ -459,7 +465,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             // 學期 課程成績排序  (學號)
             foreach (string coursrID in _courseScattendDict.Keys)
             {
-                
+
                 try
                 {
                     _courseScattendDict[coursrID].Sort((x, y) => { return _studentRecordDict[x.RefStudentID].StudentNumber.CompareTo(_studentRecordDict[y.RefStudentID].StudentNumber); });
@@ -484,7 +490,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
             // 把當作樣板的 第一張 移掉
             wb.Worksheets.RemoveAt(0);
-            
+
             e.Result = wb;
 
             _worker.ReportProgress(100, "ESL 課程成績 列印完成。");
@@ -499,7 +505,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
             if (e.Error != null)
             {
                 MsgBox.Show("ESL 課程成績 列印失敗!!，錯誤訊息:" + e.Error.Message);
-                FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL 課程成績產生失敗");                
+                FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL 課程成績產生失敗");
                 return;
             }
             else if (e.Cancelled)
@@ -558,7 +564,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     MessageBox.Show("檔案儲存失敗");
                 }
             }
-            
+
         }
 
 
@@ -615,7 +621,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                     }
 
 
-                    GetAssessmentSetup(termList, _eslCouseList.FindAll(x => x.AssessmentSetup.ID == "" + dr["id"]));
+                    GetAssessmentSetup(termList, _courseList.FindAll(x => x.AssessmentSetup.ID == "" + dr["id"]));
 
                     if (!_assessmentSetupDataTableDict.ContainsKey("" + dr["id"]))
                     {
@@ -841,28 +847,29 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 totalAwardsCount = 0;
 
                 // 依據 表頭的名稱 填入分數 (總表)
-                foreach (string coursrID in _courseTermScoreDict[assessmentSetupID].Keys)
+                foreach (string courseID in _courseTermScoreDict[assessmentSetupID].Keys)
                 {
                     // 取幾名
                     int rankedNumber = 0;
 
                     // 總表 取全部學生
-                    rankedNumber = _courseScattendDict[coursrID].Count;
+                    rankedNumber = _courseScattendDict[courseID].Count;
 
 
                     // 依照設定看要取幾名
                     for (int i = 0; i < rankedNumber; i++)
                     {
-                        K12.Data.CourseRecord courseRecord = _eslCouseList.Find(x => x.ID == coursrID);
+                        ESLCourseRecord courseRecord = new ESLCourseRecord();
+                        courseRecord = _eslCourseList.First(x => x.ESLID == courseID);
 
                         // 學生 系統 ID 
                         string ref_studentID;
 
 
                         // 分數
-                        if (_courseScattendDict[coursrID].Count >= i + 1)
+                        if (_courseScattendDict[courseID].Count >= i + 1)
                         {
-                            ref_studentID = _courseScattendDict[coursrID][i].RefStudentID;
+                            ref_studentID = _courseScattendDict[courseID][i].RefStudentID;
 
                             if (!_studentRecordDict.ContainsKey(ref_studentID))
                             {
@@ -877,9 +884,9 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                             // 先清空值， 預設是沒有分數
                             cell.Value = "N/A";
 
-                            if (_courseScattendDict[coursrID][i].Score != null)
-                            {                                
-                                cell.Value = _courseScattendDict[coursrID][i].Score;
+                            if (_courseScattendDict[courseID][i].Score != null)
+                            {
+                                cell.Value = _courseScattendDict[courseID][i].Score;
                             }
 
 
@@ -910,7 +917,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                                     assesssmentCell.Value = "N/A";
 
-                                    foreach (ESLScore eslScore in _courseAssessmentScoreDict[assessmentSetupID][coursrID])
+                                    foreach (ESLScore eslScore in _courseAssessmentScoreDict[assessmentSetupID][courseID])
                                     {
                                         string key = "(" + eslScore.Subject + ")\n" + eslScore.Assessment;
                                         if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName && key == subjectAssesssmentName)
@@ -925,7 +932,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                                 termCell.Value = "N/A";
 
-                                foreach (ESLScore eslScore in _courseTermScoreDict[assessmentSetupID][coursrID])
+                                foreach (ESLScore eslScore in _courseTermScoreDict[assessmentSetupID][courseID])
                                 {
                                     if (eslScore.RefStudentID == ref_studentID && eslScore.Term == termName)
                                     {
@@ -945,7 +952,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         }
 
                         // 學號 (Student Number)
-                        ws_total.Cells[totalAwardsCount + 2, 0].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].StudentNumber :"";
+                        ws_total.Cells[totalAwardsCount + 2, 0].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].StudentNumber : "";
 
                         // 英文姓名 (English Name)
                         ws_total.Cells[totalAwardsCount + 2, 1].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].EnglishName : "";
@@ -957,16 +964,19 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         ws_total.Cells[totalAwardsCount + 2, 3].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].Gender : "";
 
                         // 原班級 (Home Room)  
-                        ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict.ContainsKey(ref_studentID) ?  _studentRecordDict[ref_studentID].HomeRoom : "";
+                        ws_total.Cells[totalAwardsCount + 2, 4].Value = _studentRecordDict.ContainsKey(ref_studentID) ? _studentRecordDict[ref_studentID].HomeRoom : "";
+
+                        // 課程難度
+                        ws_total.Cells[totalAwardsCount + 2, 5].Value = courseRecord.ESLDifficulty;
 
                         // 課程名稱
-                        ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.Name;
+                        ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.ESLName;
                         // 教師一
-                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.Teachers.Count > 0 ? courseRecord.Teachers[0].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.ESLTeachers.Count > 0 ? courseRecord.ESLTeachers[0].TeacherName : "";
                         // 教師二
-                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.Teachers.Count > 1 ? courseRecord.Teachers[1].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.ESLTeachers.Count > 1 ? courseRecord.ESLTeachers[1].TeacherName : "";
                         // 教師三
-                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.Teachers.Count > 2 ? courseRecord.Teachers[2].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.ESLTeachers.Count > 2 ? courseRecord.ESLTeachers[2].TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位

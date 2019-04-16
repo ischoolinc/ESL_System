@@ -129,6 +129,7 @@
       <DependentUpon>BasicInfoItem.cs</DependentUpon>
     </Compile>
     <Compile Include="DegreeMapper.cs" />
+    <Compile Include="ESLCourseRecord.cs" />
     <Compile Include="ESLScore\Assessment.cs" />
     <Compile Include="CalculateTermExamScore.cs" />
     <Compile Include="ESLScore\ESLAwardStudentRecord.cs" />
