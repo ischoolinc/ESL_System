@@ -217,6 +217,12 @@
     <Compile Include="Form\InsertNewTemplateForm.Designer.cs">
       <DependentUpon>InsertNewTemplateForm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Form\PrintWeeklyReportForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Form\PrintWeeklyReportForm.Designer.cs">
+      <DependentUpon>PrintWeeklyReportForm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form\PrintStudentESLReportForm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -253,6 +259,7 @@
     </Compile>
     <Compile Include="ESLScore\Subject.cs" />
     <Compile Include="ESLScore\Term.cs" />
+    <Compile Include="UDT\UDT_WeeklyReportTemplate.cs" />
     <Compile Include="UDT\UDT_ReportTemplate.cs" />
     <Compile Include="Utility.cs" />
   </ItemGroup>
@@ -309,6 +316,7 @@
     </Content>
     <Content Include="Resource\calc_64.png" />
     <None Include="Resource\ESL課程班級取前N名%28樣板%29.xlsx" />
+    <None Include="Resource\WeeklyReport樣板.docx" />
     <None Include="Resource\預設ESL等第對照表.xml" />
     <None Include="Resource\meeting_refresh_64.png" />
     <None Include="Resource\loading.gif" />
@@ -358,6 +366,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Form\InsertNewTemplateForm.resx">
       <DependentUpon>InsertNewTemplateForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Form\PrintWeeklyReportForm.resx">
+      <DependentUpon>PrintWeeklyReportForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Form\PrintStudentESLReportForm.resx">
       <DependentUpon>PrintStudentESLReportForm.cs</DependentUpon>

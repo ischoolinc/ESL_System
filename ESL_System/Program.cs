@@ -21,6 +21,7 @@ namespace ESL_System
             FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
 
             accessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
+            accessHelper.Select<UDT_WeeklyReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
 
             Catalog ribbon = RoleAclSource.Instance["教務作業"]["功能按鈕"];
             ribbon.Add(new RibbonFeature("ESL評分樣版設定", "ESL評分樣版設定"));
@@ -250,8 +251,28 @@ namespace ESL_System
             };
 
 
-            //課程基本資訊 (課程難度(Level)、上課地點)
+            //課程基本資訊 (課程難度(Level)、上課地點) 
+            // 此外掛方式，會讓只有 加掛 ESL 模組學校  才可以在 課程上 有 課程難度(Level)、上課地點 兩個欄位可以編輯
             K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
+
+
+            Catalog ribbon10 = RoleAclSource.Instance["學生"]["報表"];
+            ribbon10.Add(new RibbonFeature("1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D", "WeeklyReport報表"));
+
+            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0;
+
+            K12.Presentation.NLDPanels.Student.SelectedSourceChanged += delegate
+            {
+                MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0);
+            };
+
+
+            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Click += delegate
+            {
+                Form.PrintWeeklyReportForm form = new Form.PrintWeeklyReportForm();
+
+                form.ShowDialog();
+            };
 
 
         }
