@@ -44,7 +44,6 @@
             this.labelX2 = new DevComponents.DotNetBar.LabelX();
             this.comboBoxEx3 = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.labelX3 = new DevComponents.DotNetBar.LabelX();
-            this.linkLabel4 = new System.Windows.Forms.LinkLabel();
             this.cboConfigure = new DevComponents.DotNetBar.Controls.ComboBoxEx();
             this.lnkDelConfig = new System.Windows.Forms.LinkLabel();
             this.lnkCopyConfig = new System.Windows.Forms.LinkLabel();
@@ -383,19 +382,6 @@
             this.labelX3.TabIndex = 43;
             this.labelX3.Text = "列印科目：";
             // 
-            // linkLabel4
-            // 
-            this.linkLabel4.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.linkLabel4.AutoSize = true;
-            this.linkLabel4.BackColor = System.Drawing.Color.Transparent;
-            this.linkLabel4.Location = new System.Drawing.Point(126, 244);
-            this.linkLabel4.Name = "linkLabel4";
-            this.linkLabel4.Size = new System.Drawing.Size(60, 17);
-            this.linkLabel4.TabIndex = 45;
-            this.linkLabel4.TabStop = true;
-            this.linkLabel4.Text = "等第設定";
-            this.linkLabel4.LinkClicked += new System.Windows.Forms.LinkLabelLinkClickedEventHandler(this.linkLabel4_LinkClicked);
-            // 
             // cboConfigure
             // 
             this.cboConfigure.DisplayMember = "Name";
@@ -495,7 +481,6 @@
             this.Controls.Add(this.lnkDelConfig);
             this.Controls.Add(this.lnkCopyConfig);
             this.Controls.Add(this.labelX11);
-            this.Controls.Add(this.linkLabel4);
             this.Controls.Add(this.comboBoxEx3);
             this.Controls.Add(this.labelX3);
             this.Controls.Add(this.comboBoxEx2);
@@ -543,7 +528,6 @@
         private DevComponents.DotNetBar.LabelX labelX2;
         private DevComponents.DotNetBar.Controls.ComboBoxEx comboBoxEx3;
         private DevComponents.DotNetBar.LabelX labelX3;
-        private System.Windows.Forms.LinkLabel linkLabel4;
         private DevComponents.DotNetBar.Controls.ComboBoxEx cboConfigure;
         private System.Windows.Forms.LinkLabel lnkDelConfig;
         private System.Windows.Forms.LinkLabel lnkCopyConfig;

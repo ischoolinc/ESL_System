@@ -22,49 +22,29 @@ namespace ESL_System.Form
     public partial class PrintWeeklyReportForm : FISCA.Presentation.Controls.BaseForm
     {
         private BackgroundWorker _bw = new BackgroundWorker();
-
-        private string _wordURL = "";
-
+      
         private bool _isOrderBySubject = false;
         private string _orderedSubject = ""; // 排序科目
 
         private string school_year = "";
         private string semester = "";
 
-        // 儲放樣板 id 與 樣板名稱的對照
-        private Dictionary<string, string> _templateIDNameDict = new Dictionary<string, string>();
+        // 儲放weeklyReport 學生 behaviorItem 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
+        private Dictionary<string, Dictionary<string, string>> _behaviorItemDict = new Dictionary<string, Dictionary<string, string>>();
 
-        // 儲放學生ESL 成績的dict 其結構為 <studentID,<scoreKey,scoreValue>
-        private Dictionary<string, Dictionary<string, string>> _scoreDict = new Dictionary<string, Dictionary<string, string>>();
-
-        // 儲放ESL 成績單 科目、比重設定 的dict 
-        private Dictionary<string, Dictionary<string, string>> _itemDict = new Dictionary<string, Dictionary<string, string>>();
-
-        // 紀錄成績 為 指標型indicator 的 key值 ， 作為對照 key 為 courseID_termName_subjectName_assessment_Name
-        private List<string> _indicatorList = new List<string>();
-
-        // 紀錄成績 為 評語型comment 的 key值
-        private List<string> _commentList = new List<string>();
+        // 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
+        private Dictionary<string, Dictionary<string, string>> _weeklyScoreDict = new Dictionary<string, Dictionary<string, string>>();
 
         // 儲放 所有課程的科目名稱
         private List<string> _subjectList = new List<string>();
 
-        // 缺曠區間統計
-        Dictionary<string, Dictionary<string, int>> _AttendanceDict = new Dictionary<string, Dictionary<string, int>>();
-
-        // 獎懲統計
-        Dictionary<string, Dictionary<string, int>> _DisciplineCountDict = new Dictionary<string, Dictionary<string, int>>();
-
         BackgroundWorker bkw;
-
 
         // 開始日期
         private DateTime _BeginDate;
         // 結束日期
         private DateTime _EndDate;
-
-        
-       
+              
         private Document _doc;
 
         private DataTable _mergeDataTable = new DataTable();
@@ -72,7 +52,6 @@ namespace ESL_System.Form
         private List<UDT_WeeklyReportTemplate> _configuresList = new List<UDT_WeeklyReportTemplate>();
 
         private UDT_WeeklyReportTemplate _configure { get; set; }
-
 
         public PrintWeeklyReportForm()
         {
@@ -145,8 +124,6 @@ namespace ESL_System.Form
             #endregion
 
 
-
-
             bkw.ReportProgress(80);
 
             FISCA.UDT.AccessHelper _AccessHelper = new FISCA.UDT.AccessHelper();
@@ -183,8 +160,6 @@ namespace ESL_System.Form
 
         }
 
-
-
         // 列印
         private void btnPrint_Click(object sender, EventArgs e)
         {
@@ -214,8 +189,7 @@ namespace ESL_System.Form
             btnClose.Enabled = false;
             linklabel1.Enabled = false;
             linklabel2.Enabled = false;
-            linklabel3.Enabled = false;
-            linkLabel4.Enabled = false;
+            linklabel3.Enabled = false;       
 
             school_year = comboBoxEx1.Text;
             semester = comboBoxEx2.Text;
@@ -370,7 +344,6 @@ namespace ESL_System.Form
             builder.Writeln();
             #endregion
 
-
             #region WeeklyReport報表統計
 
             builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
@@ -460,78 +433,7 @@ namespace ESL_System.Form
             #endregion
         }
 
-        private List<Term> ElmRootToTermlist(XElement elmRoot)
-        {
-            List<Term> termList = new List<Term>();
-
-            //解析讀下來的 descriptiony 資料，打包成物件群 
-            if (elmRoot != null)
-            {
-                if (elmRoot.Element("ESLTemplate") != null)
-                {
-                    foreach (XElement ele_term in elmRoot.Element("ESLTemplate").Elements("Term"))
-                    {
-                        Term t = new Term();
-
-                        t.Name = ele_term.Attribute("Name").Value;
-                        t.Weight = ele_term.Attribute("Weight").Value;
-                        t.InputStartTime = ele_term.Attribute("InputStartTime").Value;
-                        t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
-
-                        t.SubjectList = new List<Subject>();
-
-                        foreach (XElement ele_subject in ele_term.Elements("Subject"))
-                        {
-                            Subject s = new Subject();
-
-                            s.Name = ele_subject.Attribute("Name").Value;
-                            s.Weight = ele_subject.Attribute("Weight").Value;
-
-                            s.AssessmentList = new List<Assessment>();
-
-                            foreach (XElement ele_assessment in ele_subject.Elements("Assessment"))
-                            {
-                                Assessment a = new Assessment();
-
-                                a.Name = ele_assessment.Attribute("Name").Value;
-                                a.Weight = ele_assessment.Attribute("Weight").Value;
-                                a.TeacherSequence = ele_assessment.Attribute("TeacherSequence").Value;
-                                a.Type = ele_assessment.Attribute("Type").Value;
-                                a.AllowCustomAssessment = ele_assessment.Attribute("AllowCustomAssessment").Value;
-
-                                if (a.Type == "Comment") // 假如是 評語類別，多讀一項 輸入限制屬性
-                                {
-                                    a.InputLimit = ele_assessment.Attribute("InputLimit").Value;
-                                }
-
-                                a.IndicatorsList = new List<Indicators>();
-
-                                if (ele_assessment.Element("Indicators") != null)
-                                {
-
-                                    foreach (XElement ele_Indicator in ele_assessment.Element("Indicators").Elements("Indicator"))
-                                    {
-                                        Indicators i = new Indicators();
-
-                                        i.Name = ele_Indicator.Attribute("Name").Value;
-                                        i.Description = ele_Indicator.Attribute("Description").Value;
-
-                                        a.IndicatorsList.Add(i);
-                                    }
-                                }
-                                s.AssessmentList.Add(a);
-                            }
-                            t.SubjectList.Add(s);
-                        }
-
-                        termList.Add(t); // 整理成大包的termList 後面用此來拚功能變數總表
-                    }
-                }
-            }
-
-            return termList;
-        }
-
+      
         private void MergeFieldGenerator(Aspose.Words.DocumentBuilder builder, string eslTemplateName, List<Term> termList)
         {
             #region 成績變數
@@ -860,7 +762,7 @@ namespace ESL_System.Form
             studentIDList = K12.Presentation.NLDPanels.Student.SelectedSource;
 
 
-            #region 取得本學期有設定ESL 評分樣版的課程清單
+            #region 取得本學期有設定ESL 評分樣版的課程清單 (才會有weeklyReport 的資料)
             QueryHelper qh = new QueryHelper();
 
             // 選出 本學期有設定ESL 評分樣版的清單
@@ -896,101 +798,99 @@ namespace ESL_System.Form
             }
             #endregion
 
-
-            #region  解讀　description　XML
-
-            // 取得ESL 描述 in description
-            DataTable dtTemplateDescription;
-
-            string selQuery = "SELECT id,name,description FROM exam_template WHERE description IS NOT NULL";
-
-            dtTemplateDescription = qh.Select(selQuery);
-
-            Dictionary<string, List<Term>> termListDict = new Dictionary<string, List<Term>>();
-
-            List<List<Term>> termListCollection = new List<List<Term>>();
-
-            //整理目前的ESL 課程資料
-            if (dtTemplateDescription.Rows.Count > 0)
-            {
-                foreach (DataRow dr in dtTemplateDescription.Rows)
-                {
-                    List<Term> termList = new List<Term>();
-
-                    string xmlStr = "<root>" + dr["description"].ToString() + "</root>";
-                    XElement elmRoot = XElement.Parse(xmlStr);
-
-                    termList = ElmRootToTermlist(elmRoot);
-
-                    termListDict.Add(dr["name"].ToString(), termList);
-
-                }
-
-                _mergeDataTable = GetMergeField(termListDict);
-            }
-
-
-            #endregion
-
-            
+                        
             //取得學生基本資料
             List<K12.Data.StudentRecord> studentList = K12.Data.Student.SelectByIDs(studentIDList);
 
 
-            #region 取得ESL 課程成績
-            _bw.ReportProgress(20, "取得ESL課程成績");
+            #region 取得Weekly 資料
+            _bw.ReportProgress(20, "取得ESL課程WeeklyReport 資料");
             
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
 
-            // 建立成績結構
+            // 建立 weeklyScore結構
             foreach (string stuID in studentIDList)
             {
-                _scoreDict.Add(stuID, new Dictionary<string, string>());
+                _weeklyScoreDict.Add(stuID, new Dictionary<string, string>());
+            }
+
+            // 建立 behaviorItem結構
+            foreach (string stuID in studentIDList)
+            {
+                _behaviorItemDict.Add(stuID, new Dictionary<string, string>());
             }
 
             // 按照時間順序抓WeeklyReport
-            string sqlScore = @"    
+            string sqlWeeklyReport = @"
 SELECT 
-        $esl.gradebook_assessment_score.last_update
-        ,$esl.gradebook_assessment_score.term
-        ,$esl.gradebook_assessment_score.subject
-        ,$esl.gradebook_assessment_score.assessment
-        ,$esl.gradebook_assessment_score.custom_assessment
-        ,$esl.gradebook_assessment_score.ref_course_id
-        ,$esl.gradebook_assessment_score.ref_student_id
-        ,$esl.gradebook_assessment_score.ref_teacher_id
-        ,$esl.gradebook_assessment_score.ref_sc_attend_id
-        ,$esl.gradebook_assessment_score.value
-        ,$esl.gradebook_assessment_score.ratio  
-        ,exam_template.name AS exam_template_name
-FROM $esl.gradebook_assessment_score    
-        LEFT JOIN course ON course.id =$esl.gradebook_assessment_score.ref_course_id
-        LEFT JOIN exam_template ON exam_template.id =  course.ref_exam_template_id
+	$esl.weekly_report.ref_course_id AS ref_course_id
+	,$esl.weekly_report.ref_teacher_id AS ref_teacher_id
+	,$esl.weekly_data.ref_student_id AS ref_student_id
+	,$esl.weekly_report.begin_date
+	,$esl.weekly_report.end_date
+	,$esl.weekly_data.grade_book_data
+	,$esl.weekly_data.behavior_data	
+	,$esl.weekly_report.general_comment 	
+	,$esl.weekly_data.personal_comment
+FROM $esl.weekly_report
+LEFT JOIN $esl.weekly_data 
+ON $esl.weekly_data.ref_weekly_report_uid = $esl.weekly_report.uid
 WHERE 
-        ref_course_id IN ('" + course_ids + @"') 
-        AND ref_student_id IN('" + student_ids + @"')
-ORDER BY last_update,ref_student_id ";
+'" + _BeginDate.ToShortDateString() + " 00:00:00'" + @" <=$esl.weekly_report.begin_date
+AND '" + _EndDate.ToShortDateString() + " 23:59:59'" +@" >=$esl.weekly_report.begin_date
+AND ref_course_id IN ('" + course_ids + @"') 
+AND ref_student_id IN('" + student_ids + @"')
+ORDER BY ref_student_id ";
 
-            DataTable dtScore = qh.Select(sqlScore);
+            DataTable dtWeeklyData = qh.Select(sqlWeeklyReport);
 
             decimal progress = 20;            
-            decimal per = (decimal)(100 - progress) / (dtScore.Rows.Count !=0 ? dtScore.Rows.Count:1);
-            
-            foreach (DataRow row in dtScore.Rows)
-            {                
-               
+            decimal per = (decimal)(100 - progress) / (dtWeeklyData.Rows.Count !=0 ? dtWeeklyData.Rows.Count:1);
+
+            foreach (DataRow row in dtWeeklyData.Rows)
+            {
+                string id = "" + row["ref_student_id"];
+
+                string grade_book_data = "" + row["grade_book_data"];
+
+                string behavior_data = "" + row["behavior_data"];
+
+                string general_comment = "" + row["general_comment"];
+
+                string personal_comment = "" + row["personal_comment"];
+
+                if (_weeklyScoreDict.ContainsKey(id))
+                {
+                    if (!_weeklyScoreDict[id].ContainsKey(grade_book_data))
+                    {
+                        _weeklyScoreDict[id].Add("Score資料", grade_book_data);
+                    }
+
+                    if (!_behaviorItemDict[id].ContainsKey(behavior_data))
+                    {
+                        _behaviorItemDict[id].Add("Performance資料", behavior_data);
+                    }
+
+                    if (!_behaviorItemDict[id].ContainsKey(general_comment))
+                    {
+                        _behaviorItemDict[id].Add("GeneralComment", general_comment);
+                    }
+
+                    if (!_behaviorItemDict[id].ContainsKey(personal_comment))
+                    {
+                        _behaviorItemDict[id].Add("PersonalComment", personal_comment);
+                    }
+                }
             }
                                                               
             #endregion
 
             // BY subject 排序 ，將studentList 順序重新整理
             if (_isOrderBySubject)
-            {
-                // 2018/12/18 穎驊 備註 這一個API 有問題， 按下列所示，結果會抓不到東西。
-                //List<K12.Data.SCAttendRecord> scaList = K12.Data.SCAttend.SelectByStudentIDAndCourseID(courseIDList, studentIDList);
-
+            {                
+                // 
                 List<K12.Data.SCAttendRecord> scaList = K12.Data.SCAttend.SelectByCourseIDs(courseIDList);
 
                 List<K12.Data.StudentRecord> studentList_new = new List<StudentRecord>();
@@ -1041,6 +941,8 @@ ORDER BY last_update,ref_student_id ";
                 studentList = studentList_new;
             }
 
+            // 將欄位 指派給 DataTable
+            _mergeDataTable = GetMergeField();
 
             foreach (StudentRecord stuRecord in studentList)
             {
@@ -1063,14 +965,26 @@ ORDER BY last_update,ref_student_id ";
                 row["區間結束日期"] = _EndDate.ToShortDateString();
 
 
-
-                if (_scoreDict.ContainsKey(id))
+                // grade book 資料
+                if (_weeklyScoreDict.ContainsKey(id))
                 {
-                    foreach (string mergeKey in _scoreDict[id].Keys)
+                    foreach (string mergeKey in _weeklyScoreDict[id].Keys)
                     {
                         if (row.Table.Columns.Contains(mergeKey))
                         {
-                            row[mergeKey] = _scoreDict[id][mergeKey];
+                            row[mergeKey] = _weeklyScoreDict[id][mergeKey];
+                        }
+                    }
+                }
+
+                // behavior 資料
+                if (_behaviorItemDict.ContainsKey(id))
+                {
+                    foreach (string mergeKey in _behaviorItemDict[id].Keys)
+                    {
+                        if (row.Table.Columns.Contains(mergeKey))
+                        {
+                            row[mergeKey] = _behaviorItemDict[id][mergeKey];
                         }
                     }
                 }
@@ -1083,9 +997,7 @@ ORDER BY last_update,ref_student_id ";
 
             try
             {
-                //// 載入使用者所選擇的 word 檔案
-                //_doc = new Document(_wordURL);
-
+          
                 // 樣板的設定
                 _doc = _configure.Template;
             }
@@ -1110,7 +1022,7 @@ ORDER BY last_update,ref_student_id ";
                 return;
             }
 
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(" ESL學生成績單產生完成。");
+            FISCA.Presentation.MotherForm.SetStatusBarMessage(" WeeklyReport報表產生完成。");
 
             Document doc = (Document)e.Result;
             doc.MailMerge.DeleteFields();
@@ -1143,7 +1055,7 @@ ORDER BY last_update,ref_student_id ";
 
             SaveFileDialog sd = new SaveFileDialog();
             sd.Title = "另存新檔";
-            sd.FileName = "ESL學生成績單.docx";
+            sd.FileName = "WeeklyReport 報表.docx";
             sd.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
             if (sd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -1166,12 +1078,8 @@ ORDER BY last_update,ref_student_id ";
             FISCA.Presentation.MotherForm.SetStatusBarMessage("" + e.UserState, e.ProgressPercentage);
         }
 
-        private DataTable GetMergeField(Dictionary<string, List<Term>> termListDict)
+        private DataTable GetMergeField()
         {
-            // 計算權重用的字典(因為使用者在介面設定的權重數值 不一定就是想在報表上顯示的)
-            // 目前康橋報表希望能夠將，每一個Subject、assessment 的比重 換算成為對於期中考的比例
-            Dictionary<string, float> weightCalDict = new Dictionary<string, float>();
-
             DataTable dataTable = new DataTable();
 
             #region 固定變數
@@ -1200,11 +1108,6 @@ ORDER BY last_update,ref_student_id ";
             return dataTable;
         }
 
-        // ESL 成績 等第 設定
-        private void linkLabel4_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            new ScoreMappingTable().ShowDialog();
-        }
 
         private void PrintStudentESLReportForm_Load(object sender, EventArgs e)
         {
