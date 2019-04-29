@@ -17,12 +17,18 @@ using System.IO;
 using Aspose.Words;
 using K12.Data.Configuration;
 
+using System.Web.Script.Serialization;
+using System.Collections.Specialized;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
+
 namespace ESL_System.Form
 {
     public partial class PrintWeeklyReportForm : FISCA.Presentation.Controls.BaseForm
     {
         private BackgroundWorker _bw = new BackgroundWorker();
-      
+
         private bool _isOrderBySubject = false;
         private string _orderedSubject = ""; // 排序科目
 
@@ -32,8 +38,13 @@ namespace ESL_System.Form
         // 儲放weeklyReport 學生 behaviorItem 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
         private Dictionary<string, Dictionary<string, string>> _behaviorItemDict = new Dictionary<string, Dictionary<string, string>>();
 
-        // 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
+        // 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<scoreItemKey,scoreItemValue>
         private Dictionary<string, Dictionary<string, string>> _weeklyScoreDict = new Dictionary<string, Dictionary<string, string>>();
+
+        // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，新增可輸出 課程名稱、教師名稱
+        // 儲放weeklyReport 學生 其他 資料 的dict
+        private Dictionary<string, Dictionary<string, string>> _otherItemDict = new Dictionary<string, Dictionary<string, string>>();
+
 
         // 儲放 所有課程的科目名稱
         private List<string> _subjectList = new List<string>();
@@ -44,7 +55,7 @@ namespace ESL_System.Form
         private DateTime _BeginDate;
         // 結束日期
         private DateTime _EndDate;
-              
+
         private Document _doc;
 
         private DataTable _mergeDataTable = new DataTable();
@@ -67,11 +78,26 @@ namespace ESL_System.Form
             bkw.ProgressChanged += new ProgressChangedEventHandler(bkw_ProgressChanged);
             bkw.WorkerReportsProgress = true;
             bkw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bkw_RunWorkerCompleted);
+            
+            // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，預設時間為當週
+            // 預設都為今天之當週週一至週五   
+            DateTime date = DateTime.Now;
+            if (date.DayOfWeek != DayOfWeek.Monday)
+            {
+                if (date.DayOfWeek == DayOfWeek.Sunday)
+                {
+                    date.AddDays(-1);
+                }
 
-            // 預設都為今天
-            dtBegin.Value = DateTime.Now;
-            dtEnd.Value = DateTime.Now;
-
+                DateTime modified_date = date.AddDays(Convert.ToDouble(1 - (int)date.DayOfWeek)); //把date調整至週一
+                dtBegin.Value = modified_date;
+                dtEnd.Value = modified_date.AddDays(4);
+            }
+            else
+            {
+                dtBegin.Value = date;
+                dtEnd.Value = date.AddDays(4);
+            }
 
             // 因應康橋國小學制(6年)，提供目前學年度往後六年的學年度選擇
             comboBoxEx1.Items.Add(int.Parse(School.DefaultSchoolYear) - 6);
@@ -119,7 +145,7 @@ namespace ESL_System.Form
             foreach (DataRow row in dtCourseID.Rows)
             {
                 string subject = "" + row["subject"];
-                _subjectList.Add(subject);                
+                _subjectList.Add(subject);
             }
             #endregion
 
@@ -127,11 +153,11 @@ namespace ESL_System.Form
             bkw.ReportProgress(80);
 
             FISCA.UDT.AccessHelper _AccessHelper = new FISCA.UDT.AccessHelper();
-            
+
             //string qry = "TemplateStream IS NOT null";
 
             _configuresList = _AccessHelper.Select<UDT_WeeklyReportTemplate>();
-           
+
             bkw.ReportProgress(100);
         }
 
@@ -189,7 +215,7 @@ namespace ESL_System.Form
             btnClose.Enabled = false;
             linklabel1.Enabled = false;
             linklabel2.Enabled = false;
-            linklabel3.Enabled = false;       
+            linklabel3.Enabled = false;
 
             school_year = comboBoxEx1.Text;
             semester = comboBoxEx2.Text;
@@ -219,7 +245,7 @@ namespace ESL_System.Form
             linklabel1.Enabled = false;
             #region 儲存檔案
 
-            string reportName = "WeeklyReport樣板(" + _configure.Name + ").docx";
+            string reportName = "WeeklyReport樣板(" + _configure.Name + ")";
 
             string path = Path.Combine(System.Windows.Forms.Application.StartupPath, "Reports");
             if (!Directory.Exists(path))
@@ -251,7 +277,7 @@ namespace ESL_System.Form
             }
             catch
             {
-               
+
             }
             linklabel1.Enabled = true;
             #endregion
@@ -360,15 +386,16 @@ namespace ESL_System.Form
             builder.EndRow();
 
             List<string> itemList = new List<string>();
-
+            // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
             itemList.Add("課程名稱");
+            itemList.Add("教師名稱");
             itemList.Add("區間開始日期");
-            itemList.Add("區間結束日期");            
+            itemList.Add("區間結束日期");
             itemList.Add("Performance資料");
             itemList.Add("Score資料");
             itemList.Add("GeneralComment");
             itemList.Add("PersonalComment");
-                        
+
             foreach (string key in itemList)
             {
                 builder.InsertCell();
@@ -382,7 +409,7 @@ namespace ESL_System.Form
 
             builder.Writeln();
             #endregion
-            
+
             #region 儲存檔案
             string inputReportName = "合併欄位總表";
             string reportName = inputReportName;
@@ -433,7 +460,7 @@ namespace ESL_System.Form
             #endregion
         }
 
-      
+
         private void MergeFieldGenerator(Aspose.Words.DocumentBuilder builder, string eslTemplateName, List<Term> termList)
         {
             #region 成績變數
@@ -666,7 +693,7 @@ namespace ESL_System.Form
             builder.InsertField("MERGEFIELD " + eslTemplateName.Replace(' ', '_').Replace('"', '_') + "_" + "課程學期成績等第" + " \\* MERGEFORMAT ", "«CSL»");
 
             builder.EndRow();
-            builder.EndTable(); 
+            builder.EndTable();
             #endregion
 
             #endregion
@@ -798,14 +825,14 @@ namespace ESL_System.Form
             }
             #endregion
 
-                        
+
             //取得學生基本資料
             List<K12.Data.StudentRecord> studentList = K12.Data.Student.SelectByIDs(studentIDList);
 
 
             #region 取得Weekly 資料
             _bw.ReportProgress(20, "取得ESL課程WeeklyReport 資料");
-            
+
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
@@ -822,6 +849,13 @@ namespace ESL_System.Form
                 _behaviorItemDict.Add(stuID, new Dictionary<string, string>());
             }
 
+            // 建立 otherItem結構，內含 課程名稱、教師名稱
+            foreach (string stuID in studentIDList)
+            {
+                _otherItemDict.Add(stuID, new Dictionary<string, string>());
+            }
+
+            // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，sql加入 課程名稱、教師名稱 資料
             // 按照時間順序抓WeeklyReport
             string sqlWeeklyReport = @"
 SELECT 
@@ -834,20 +868,25 @@ SELECT
 	,$esl.weekly_data.behavior_data	
 	,$esl.weekly_report.general_comment 	
 	,$esl.weekly_data.personal_comment
+    ,teacher.teacher_name
+    ,course.course_name
 FROM $esl.weekly_report
-LEFT JOIN $esl.weekly_data 
-ON $esl.weekly_data.ref_weekly_report_uid = $esl.weekly_report.uid
+LEFT JOIN teacher ON $esl.weekly_report.ref_teacher_id = teacher.id
+LEFT JOIN course ON $esl.weekly_report.ref_course_id = course.id
+LEFT JOIN $esl.weekly_data  ON $esl.weekly_data.ref_weekly_report_uid = $esl.weekly_report.uid
 WHERE 
 '" + _BeginDate.ToShortDateString() + " 00:00:00'" + @" <=$esl.weekly_report.begin_date
-AND '" + _EndDate.ToShortDateString() + " 23:59:59'" +@" >=$esl.weekly_report.begin_date
+AND '" + _EndDate.ToShortDateString() + " 23:59:59'" + @" >=$esl.weekly_report.begin_date
 AND ref_course_id IN ('" + course_ids + @"') 
 AND ref_student_id IN('" + student_ids + @"')
 ORDER BY ref_student_id ";
 
             DataTable dtWeeklyData = qh.Select(sqlWeeklyReport);
 
-            decimal progress = 20;            
-            decimal per = (decimal)(100 - progress) / (dtWeeklyData.Rows.Count !=0 ? dtWeeklyData.Rows.Count:1);
+            decimal progress = 20;
+            decimal per = (decimal)(100 - progress) / (dtWeeklyData.Rows.Count != 0 ? dtWeeklyData.Rows.Count : 1);
+
+
 
             foreach (DataRow row in dtWeeklyData.Rows)
             {
@@ -861,35 +900,85 @@ ORDER BY ref_student_id ";
 
                 string personal_comment = "" + row["personal_comment"];
 
+                // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
+                string course_name = "" + row["course_name"];
+
+                string teacher_name = "" + row["teacher_name"];
+
                 if (_weeklyScoreDict.ContainsKey(id))
                 {
-                    if (!_weeklyScoreDict[id].ContainsKey(grade_book_data))
+                    // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，分數跟behavior之json資料整理，輸出時分行列舉
+                    if (!_weeklyScoreDict[id].ContainsKey("Score資料"))
                     {
-                        _weeklyScoreDict[id].Add("Score資料", grade_book_data);
+                        string modified_text = grade_book_data.Insert(0, "{\"data\":");
+                        string modified_text_data = modified_text.Insert(modified_text.Length , "}");                        
+                        Json_deserialize_data json_grade_data = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Json_deserialize_data>(modified_text_data);
+                        string k = "";
+                        foreach (var item in json_grade_data.data)
+                        {                                                        
+                            List<string> gradelist = new List<string>();          
+                            gradelist.Add(item.customAssessment+ ": " + item.value);
+                           
+                            foreach (var i in gradelist)
+                            {
+                               k +=  i + "\r\n";
+                            }                                
+                        }
+                                        
+                        _weeklyScoreDict[id].Add("Score資料", k );
+                        
+
                     }
 
-                    if (!_behaviorItemDict[id].ContainsKey(behavior_data))
+                    if (!_behaviorItemDict[id].ContainsKey("Performance資料"))
                     {
-                        _behaviorItemDict[id].Add("Performance資料", behavior_data);
+                        string modified_text = behavior_data.Insert(0, "{\"data\":");
+                        string modified_text_data = modified_text.Insert(modified_text.Length, "}");                                               
+                        Json_deserialize_data json_behavior_data = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Json_deserialize_data>(modified_text_data);
+                        string k = "";
+                        foreach (var item in json_behavior_data.data)
+                        {
+                            List<string> behaviorcommentlist = new List<string>();
+                            behaviorcommentlist.Add(item.comment + "(" + item.createdate2 + ")");
+
+                            foreach (var i in behaviorcommentlist)
+                            {
+                                k += i + "\r\n";
+                            }
+                        }                      
+                        _behaviorItemDict[id].Add("Performance資料", k);
                     }
 
-                    if (!_behaviorItemDict[id].ContainsKey(general_comment))
+                    if (!_behaviorItemDict[id].ContainsKey("GeneralComment"))
                     {
                         _behaviorItemDict[id].Add("GeneralComment", general_comment);
                     }
 
-                    if (!_behaviorItemDict[id].ContainsKey(personal_comment))
+                    if (!_behaviorItemDict[id].ContainsKey("PersonalComment"))
                     {
                         _behaviorItemDict[id].Add("PersonalComment", personal_comment);
                     }
+
+                    // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
+                    if (!_otherItemDict[id].ContainsKey("課程名稱"))
+                    {
+                        _otherItemDict[id].Add("課程名稱", course_name);
+                    }
+
+                    if (!_otherItemDict[id].ContainsKey("教師名稱"))
+                    {
+                        _otherItemDict[id].Add("教師名稱", teacher_name);
+                    }
+
+
                 }
             }
-                                                              
+
             #endregion
 
             // BY subject 排序 ，將studentList 順序重新整理
             if (_isOrderBySubject)
-            {                
+            {
                 // 
                 List<K12.Data.SCAttendRecord> scaList = K12.Data.SCAttend.SelectByCourseIDs(courseIDList);
 
@@ -963,8 +1052,7 @@ ORDER BY ref_student_id ";
 
                 row["區間開始日期"] = _BeginDate.ToShortDateString();
                 row["區間結束日期"] = _EndDate.ToShortDateString();
-
-
+              
                 // grade book 資料
                 if (_weeklyScoreDict.ContainsKey(id))
                 {
@@ -972,6 +1060,7 @@ ORDER BY ref_student_id ";
                     {
                         if (row.Table.Columns.Contains(mergeKey))
                         {
+
                             row[mergeKey] = _weeklyScoreDict[id][mergeKey];
                         }
                     }
@@ -989,6 +1078,19 @@ ORDER BY ref_student_id ";
                     }
                 }
 
+                // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
+                // otherItem 資料
+                if (_otherItemDict.ContainsKey(id))
+                {
+                    foreach (string mergeKey in _otherItemDict[id].Keys)
+                    {
+                        if (row.Table.Columns.Contains(mergeKey))
+                        {
+                            row[mergeKey] = _otherItemDict[id][mergeKey];
+                        }
+                    }
+                }
+
                 _mergeDataTable.Rows.Add(row);
 
 
@@ -997,7 +1099,7 @@ ORDER BY ref_student_id ";
 
             try
             {
-          
+
                 // 樣板的設定
                 _doc = _configure.Template;
             }
@@ -1094,15 +1196,15 @@ ORDER BY ref_student_id ";
             dataTable.Columns.Add("學生中文姓名");
             dataTable.Columns.Add("電子報表辨識編號");
 
-
             dataTable.Columns.Add("課程名稱");
+            dataTable.Columns.Add("教師名稱");
             dataTable.Columns.Add("區間開始日期");
             dataTable.Columns.Add("區間結束日期");
             dataTable.Columns.Add("Performance資料");
             dataTable.Columns.Add("Score資料");
             dataTable.Columns.Add("GeneralComment");
             dataTable.Columns.Add("PersonalComment");
-            
+
             #endregion
 
             return dataTable;
@@ -1126,7 +1228,7 @@ ORDER BY ref_student_id ";
                 {
                     _configure = new UDT_WeeklyReportTemplate();
                     _configure.Name = dialog.ConfigName;
-                    _configure.Template = dialog.Template;                    
+                    _configure.Template = dialog.Template;
 
                     _configuresList.Add(_configure);
                     cboConfigure.Items.Insert(cboConfigure.SelectedIndex, _configure);
@@ -1147,11 +1249,11 @@ ORDER BY ref_student_id ";
                     btnPrint.Enabled = true;
                     _configure = _configuresList[cboConfigure.SelectedIndex];
                     if (_configure.Template == null)
-                        _configure.Decode();                    
+                        _configure.Decode();
                 }
                 else
                 {
-                    _configure = null;                             
+                    _configure = null;
                 }
 
             }
@@ -1161,7 +1263,7 @@ ORDER BY ref_student_id ";
         private void lnkDelConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             if (_configure == null) return;
-      
+
             if (MessageBox.Show("樣板刪除後將無法回復，確定刪除樣板?", "刪除樣板", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.OK)
             {
                 _configuresList.Remove(_configure);
@@ -1184,8 +1286,8 @@ ORDER BY ref_student_id ";
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 UDT_WeeklyReportTemplate conf = new UDT_WeeklyReportTemplate();
-                conf.Name = dialog.NewConfigureName;                
-                conf.Template = _configure.Template;    
+                conf.Name = dialog.NewConfigureName;
+                conf.Template = _configure.Template;
                 conf.Encode();
                 conf.Save();
                 _configuresList.Add(conf);
@@ -1193,7 +1295,28 @@ ORDER BY ref_student_id ";
                 cboConfigure.SelectedIndex = cboConfigure.Items.Count - 2;
             }
         }
-
-
     }
+    
+
+    /// 寫data屬性
+    public class Json_deserialize_data
+    {
+        public List<Json_data> data { get; set; }
+    }
+    public class Json_data
+    {   //behavior
+        public string createdate2 { get; set; }
+        public string comment { get; set; }
+        //score
+        public string assessment { get; set; }
+        public string customAssessment { get; set; }
+        public string subject { get; set; }
+        public string score_date { get; set; }
+        public string description { get; set; }
+        public string courseID { get; set; }
+        public string teacherID { get; set; }
+        public string value { get; set; }
+    }
+
+
 }

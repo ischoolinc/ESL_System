@@ -253,7 +253,7 @@ namespace ESL_System
 
             //課程基本資訊 (課程難度(Level)、上課地點) 
             // 此外掛方式，會讓只有 加掛 ESL 模組學校  才可以在 課程上 有 課程難度(Level)、上課地點 兩個欄位可以編輯
-            //K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
+            K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
 
 
             Catalog ribbon10 = RoleAclSource.Instance["學生"]["報表"];
