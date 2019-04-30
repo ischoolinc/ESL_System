@@ -34,3 +34,6 @@ ESL_System/obj/Debug/ESL_System.Form.PrintESLReportForm.resources
 ESL_System/obj/Debug/ESL_System.Form.ESLCourseScoreStatusForm.resources
 ESL_System/obj/Debug/ESL_System.Form.ESLTransferScoreInputForm.resources
 ESL_System/obj/Debug/ESL_System.Form.ESLTransferStudentSelectForm.resources
+ESL_System/bin/Debug/Newtonsoft.Json.xml
+ESL_System/obj/Debug/ESLSystem.csproj.CopyComplete
+ESL_System/bin/Debug/Newtonsoft.Json.dll
