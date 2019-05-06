@@ -875,8 +875,8 @@ LEFT JOIN teacher ON $esl.weekly_report.ref_teacher_id = teacher.id
 LEFT JOIN course ON $esl.weekly_report.ref_course_id = course.id
 LEFT JOIN $esl.weekly_data  ON $esl.weekly_data.ref_weekly_report_uid = $esl.weekly_report.uid
 WHERE 
-'" + _BeginDate.ToShortDateString() + " 00:00:00'" + @" <=$esl.weekly_report.begin_date
-AND '" + _EndDate.ToShortDateString() + " 23:59:59'" + @" >=$esl.weekly_report.begin_date
+'" + _BeginDate.ToString("yyyy/MM/dd") + " 00:00:00'" + @" <=$esl.weekly_report.begin_date
+AND '" + _EndDate.ToString("yyyy/MM/dd") + " 23:59:59'" + @" >=$esl.weekly_report.begin_date
 AND ref_course_id IN ('" + course_ids + @"') 
 AND ref_student_id IN('" + student_ids + @"')
 ORDER BY ref_student_id ";

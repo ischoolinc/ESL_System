@@ -972,11 +972,11 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 課程名稱
                         ws_total.Cells[totalAwardsCount + 2, 7].Value = courseRecord.ESLName;
                         // 教師一
-                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.ESLTeachers.Count > 0 ? courseRecord.ESLTeachers[0].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 8].Value = courseRecord.ESLTeachers.Count > 0 ? courseRecord.ESLTeachers.Find(t => t.Sequence ==1).TeacherName : "";
                         // 教師二
-                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.ESLTeachers.Count > 1 ? courseRecord.ESLTeachers[1].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 9].Value = courseRecord.ESLTeachers.Count > 1 ? courseRecord.ESLTeachers.Find(t => t.Sequence == 2).TeacherName : "";
                         // 教師三
-                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.ESLTeachers.Count > 2 ? courseRecord.ESLTeachers[2].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 10].Value = courseRecord.ESLTeachers.Count > 2 ? courseRecord.ESLTeachers.Find(t => t.Sequence == 3).TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位

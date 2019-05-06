@@ -1142,11 +1142,11 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 課程名稱
                         ws.Cells[totalAwardsCount + 2, 7].Value = eslCourseRecord.ESLName;
                         // 教師一
-                        ws.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers[0].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 1).TeacherName : "";
                         // 教師二
-                        ws.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers[1].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 2).TeacherName : "";
                         // 教師三
-                        ws.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers[2].TeacherName : "";
+                        ws.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 3).TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位
@@ -1313,11 +1313,11 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                         // 課程名稱
                         ws_total.Cells[totalAwardsCount + 2, 7].Value = eslCourseRecord.ESLName;
                         // 教師一
-                        ws_total.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers[0].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 8].Value = eslCourseRecord.ESLTeachers.Count > 0 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 1).TeacherName : "";
                         // 教師二
-                        ws_total.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers[1].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 9].Value = eslCourseRecord.ESLTeachers.Count > 1 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 2).TeacherName : "";
                         // 教師三
-                        ws_total.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers[2].TeacherName : "";
+                        ws_total.Cells[totalAwardsCount + 2, 10].Value = eslCourseRecord.ESLTeachers.Count > 2 ? eslCourseRecord.ESLTeachers.Find(t => t.Sequence == 3).TeacherName : "";
 
                         // 穎驊注解，另外 在樣板中 還有 Level 、 Group ， 目前 2019/1/3 系統中沒有這兩個欄位，
                         // 目前預計是等 寒假，在補齊課程欄位
