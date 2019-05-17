@@ -35,15 +35,18 @@ namespace ESL_System.Form
         private string school_year = "";
         private string semester = "";
 
-        // 儲放weeklyReport 學生 behaviorItem 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
-        private Dictionary<string, Dictionary<string, string>> _behaviorItemDict = new Dictionary<string, Dictionary<string, string>>();
+        //// 儲放weeklyReport 學生 behaviorItem 資料 的dict <studentID,<behaviorItemKey,behaviorItemValue>
+        //private Dictionary<string, Dictionary<string, string>> _behaviorItemDict = new Dictionary<string, Dictionary<string, string>>();
 
-        // 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<scoreItemKey,scoreItemValue>
-        private Dictionary<string, Dictionary<string, string>> _weeklyScoreDict = new Dictionary<string, Dictionary<string, string>>();
+        //// 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<scoreItemKey,scoreItemValue>
+        //private Dictionary<string, Dictionary<string, string>> _weeklyScoreDict = new Dictionary<string, Dictionary<string, string>>();
 
-        // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，新增可輸出 課程名稱、教師名稱
-        // 儲放weeklyReport 學生 其他 資料 的dict
-        private Dictionary<string, Dictionary<string, string>> _otherItemDict = new Dictionary<string, Dictionary<string, string>>();
+        //// [ischoolkingdom] Vicky新增，WeeklyReport報表列印，新增可輸出 課程名稱、教師名稱
+        //// 儲放weeklyReport 學生 其他 資料 的dict
+        //private Dictionary<string, Dictionary<string, string>> _otherItemDict = new Dictionary<string, Dictionary<string, string>>();
+
+        // 儲放weeklyReport 學生 gradebook 資料 的dict <studentID,<ItemKey,ItemValue>
+        private Dictionary<string, List<WeeklyReportRecord>> _weeklyDataDict = new Dictionary<string, List<WeeklyReportRecord>>();
 
 
         // 儲放 所有課程的科目名稱
@@ -837,23 +840,13 @@ namespace ESL_System.Form
 
             string student_ids = string.Join("','", studentIDList);
 
+            
             // 建立 weeklyScore結構
             foreach (string stuID in studentIDList)
             {
-                _weeklyScoreDict.Add(stuID, new Dictionary<string, string>());
+                _weeklyDataDict.Add(stuID, new List<WeeklyReportRecord>());
             }
 
-            // 建立 behaviorItem結構
-            foreach (string stuID in studentIDList)
-            {
-                _behaviorItemDict.Add(stuID, new Dictionary<string, string>());
-            }
-
-            // 建立 otherItem結構，內含 課程名稱、教師名稱
-            foreach (string stuID in studentIDList)
-            {
-                _otherItemDict.Add(stuID, new Dictionary<string, string>());
-            }
 
             // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，sql加入 課程名稱、教師名稱 資料
             // 按照時間順序抓WeeklyReport
@@ -870,6 +863,7 @@ SELECT
 	,$esl.weekly_data.personal_comment
     ,teacher.teacher_name
     ,course.course_name
+    ,course.subject
 FROM $esl.weekly_report
 LEFT JOIN teacher ON $esl.weekly_report.ref_teacher_id = teacher.id
 LEFT JOIN course ON $esl.weekly_report.ref_course_id = course.id
@@ -905,35 +899,34 @@ ORDER BY ref_student_id ";
 
                 string teacher_name = "" + row["teacher_name"];
 
-                if (_weeklyScoreDict.ContainsKey(id))
+                string subject = "" + row["subject"];
+
+                WeeklyReportRecord wr = new WeeklyReportRecord();
+
+                if (_weeklyDataDict.ContainsKey(id))
                 {
-                    // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，分數跟behavior之json資料整理，輸出時分行列舉
-                    if (!_weeklyScoreDict[id].ContainsKey("Score資料"))
                     {
                         string modified_text = grade_book_data.Insert(0, "{\"data\":");
-                        string modified_text_data = modified_text.Insert(modified_text.Length , "}");                        
+                        string modified_text_data = modified_text.Insert(modified_text.Length, "}");
                         Json_deserialize_data json_grade_data = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Json_deserialize_data>(modified_text_data);
                         string k = "";
                         foreach (var item in json_grade_data.data)
-                        {                                                        
-                            List<string> gradelist = new List<string>();          
-                            gradelist.Add(item.customAssessment+ ": " + item.value);
-                           
+                        {
+                            List<string> gradelist = new List<string>();
+                            gradelist.Add(item.customAssessment + ": " + item.value);
+
                             foreach (var i in gradelist)
                             {
-                               k +=  i + "\r\n";
-                            }                                
+                                k += i + "\r\n";
+                            }
                         }
-                                        
-                        _weeklyScoreDict[id].Add("Score資料", k );
-                        
 
+                        wr.ScoreData = k;
                     }
 
-                    if (!_behaviorItemDict[id].ContainsKey("Performance資料"))
                     {
                         string modified_text = behavior_data.Insert(0, "{\"data\":");
-                        string modified_text_data = modified_text.Insert(modified_text.Length, "}");                                               
+                        string modified_text_data = modified_text.Insert(modified_text.Length, "}");
                         Json_deserialize_data json_behavior_data = new System.Web.Script.Serialization.JavaScriptSerializer().Deserialize<Json_deserialize_data>(modified_text_data);
                         string k = "";
                         foreach (var item in json_behavior_data.data)
@@ -945,32 +938,23 @@ ORDER BY ref_student_id ";
                             {
                                 k += i + "\r\n";
                             }
-                        }                      
-                        _behaviorItemDict[id].Add("Performance資料", k);
+                        }
+
+                        wr.PerformanceData = k;
                     }
 
-                    if (!_behaviorItemDict[id].ContainsKey("GeneralComment"))
-                    {
-                        _behaviorItemDict[id].Add("GeneralComment", general_comment);
-                    }
+                    wr.GeneralComment = general_comment;
 
-                    if (!_behaviorItemDict[id].ContainsKey("PersonalComment"))
-                    {
-                        _behaviorItemDict[id].Add("PersonalComment", personal_comment);
-                    }
+                    wr.PersonalComment = personal_comment;
 
-                    // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
-                    if (!_otherItemDict[id].ContainsKey("課程名稱"))
-                    {
-                        _otherItemDict[id].Add("課程名稱", course_name);
-                    }
+                    wr.CourseName = course_name;
 
-                    if (!_otherItemDict[id].ContainsKey("教師名稱"))
-                    {
-                        _otherItemDict[id].Add("教師名稱", teacher_name);
-                    }
+                    wr.TeacherName = teacher_name;
 
+                    // 排序用屬性，實際不印出
+                    wr.Subject = subject;
 
+                    _weeklyDataDict[id].Add(wr);
                 }
             }
 
@@ -1028,6 +1012,33 @@ ORDER BY ref_student_id ";
                 studentList_new.AddRange(studentList);
 
                 studentList = studentList_new;
+
+                //  排序每一個學生 內的每一個課程
+                foreach (StudentRecord stuRecord in studentList)
+                {
+                    string id = stuRecord.ID;
+                    if (_weeklyDataDict.ContainsKey(id))
+                    {
+                        List<WeeklyReportRecord> WeeklyDataList_new = new List<WeeklyReportRecord>();
+
+                        WeeklyReportRecord wr = _weeklyDataDict[id].Find(x => x.Subject == _orderedSubject);
+
+                        if (wr != null)
+                        {
+                            WeeklyDataList_new.Add(wr);
+
+                            _weeklyDataDict[id].Remove(wr);
+                        }
+
+                        // 剩下的課程 用名稱排序
+                        _weeklyDataDict[id].Sort((x, y) => { return x.CourseName.CompareTo(y.CourseName); });
+
+                        WeeklyDataList_new.AddRange(_weeklyDataDict[id]);
+
+                        _weeklyDataDict[id] = WeeklyDataList_new;
+                    }
+                }
+
             }
 
             // 將欄位 指派給 DataTable
@@ -1037,65 +1048,40 @@ ORDER BY ref_student_id ";
             {
                 string id = stuRecord.ID;
 
-                DataRow row = _mergeDataTable.NewRow();
-
-                row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
-
-                row["學年度"] = K12.Data.School.DefaultSchoolYear;
-                row["學期"] = K12.Data.School.DefaultSemester;
-                row["學號"] = stuRecord.StudentNumber;
-                row["年級"] = stuRecord.Class != null ? "" + stuRecord.Class.GradeYear : "";
-
-                row["原班級名稱"] = stuRecord.Class != null ? "" + stuRecord.Class.Name : "";
-                row["學生英文姓名"] = stuRecord.EnglishName;
-                row["學生中文姓名"] = stuRecord.Name;
-
-                row["區間開始日期"] = _BeginDate.ToShortDateString();
-                row["區間結束日期"] = _EndDate.ToShortDateString();
-              
-                // grade book 資料
-                if (_weeklyScoreDict.ContainsKey(id))
+                // data book 資料
+                if (_weeklyDataDict.ContainsKey(id))
                 {
-                    foreach (string mergeKey in _weeklyScoreDict[id].Keys)
+                    foreach (WeeklyReportRecord wr in _weeklyDataDict[id])
                     {
-                        if (row.Table.Columns.Contains(mergeKey))
-                        {
+                        DataRow row = _mergeDataTable.NewRow();
 
-                            row[mergeKey] = _weeklyScoreDict[id][mergeKey];
-                        }
+                        row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
+
+                        row["學年度"] = K12.Data.School.DefaultSchoolYear;
+                        row["學期"] = K12.Data.School.DefaultSemester;
+                        row["學號"] = stuRecord.StudentNumber;
+                        row["年級"] = stuRecord.Class != null ? "" + stuRecord.Class.GradeYear : "";
+
+                        row["原班級名稱"] = stuRecord.Class != null ? "" + stuRecord.Class.Name : "";
+                        row["學生英文姓名"] = stuRecord.EnglishName;
+                        row["學生中文姓名"] = stuRecord.Name;
+
+                        row["區間開始日期"] = _BeginDate.ToShortDateString();
+                        row["區間結束日期"] = _EndDate.ToShortDateString();
+
+
+                        row["課程名稱"] = wr.CourseName;
+                        row["教師名稱"] = wr.TeacherName;
+                        row["Score資料"] = wr.ScoreData;
+                        row["Performance資料"] = wr.PerformanceData;
+                        row["GeneralComment"] = wr.GeneralComment;
+                        row["PersonalComment"] = wr.PersonalComment;
+
+                        _mergeDataTable.Rows.Add(row);
+
                     }
-                }
-
-                // behavior 資料
-                if (_behaviorItemDict.ContainsKey(id))
-                {
-                    foreach (string mergeKey in _behaviorItemDict[id].Keys)
-                    {
-                        if (row.Table.Columns.Contains(mergeKey))
-                        {
-                            row[mergeKey] = _behaviorItemDict[id][mergeKey];
-                        }
-                    }
-                }
-
-                // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，課程名稱、教師名稱功能變數
-                // otherItem 資料
-                if (_otherItemDict.ContainsKey(id))
-                {
-                    foreach (string mergeKey in _otherItemDict[id].Keys)
-                    {
-                        if (row.Table.Columns.Contains(mergeKey))
-                        {
-                            row[mergeKey] = _otherItemDict[id][mergeKey];
-                        }
-                    }
-                }
-
-                _mergeDataTable.Rows.Add(row);
-
-
+                }             
             }
-
 
             try
             {
