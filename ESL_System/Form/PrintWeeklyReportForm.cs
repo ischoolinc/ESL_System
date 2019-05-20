@@ -22,6 +22,7 @@ using System.Collections.Specialized;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
+using System.Text.RegularExpressions;
 
 namespace ESL_System.Form
 {
@@ -1013,32 +1014,31 @@ ORDER BY ref_student_id ";
 
                 studentList = studentList_new;
 
-                //  排序每一個學生 內的每一個課程
-                foreach (StudentRecord stuRecord in studentList)
+            }
+            //  排序每一個學生 內的每一個課程
+            foreach (StudentRecord stuRecord in studentList)
+            {
+                string id = stuRecord.ID;
+                if (_weeklyDataDict.ContainsKey(id))
                 {
-                    string id = stuRecord.ID;
-                    if (_weeklyDataDict.ContainsKey(id))
+                    List<WeeklyReportRecord> WeeklyDataList_new = new List<WeeklyReportRecord>();
+
+                    WeeklyReportRecord wr = _weeklyDataDict[id].Find(x => x.Subject == _orderedSubject);
+
+                    if (wr != null)
                     {
-                        List<WeeklyReportRecord> WeeklyDataList_new = new List<WeeklyReportRecord>();
+                        WeeklyDataList_new.Add(wr);
 
-                        WeeklyReportRecord wr = _weeklyDataDict[id].Find(x => x.Subject == _orderedSubject);
-
-                        if (wr != null)
-                        {
-                            WeeklyDataList_new.Add(wr);
-
-                            _weeklyDataDict[id].Remove(wr);
-                        }
-
-                        // 剩下的課程 用名稱排序
-                        _weeklyDataDict[id].Sort((x, y) => { return x.CourseName.CompareTo(y.CourseName); });
-
-                        WeeklyDataList_new.AddRange(_weeklyDataDict[id]);
-
-                        _weeklyDataDict[id] = WeeklyDataList_new;
+                        _weeklyDataDict[id].Remove(wr);
                     }
-                }
 
+                    // 剩下的課程 用名稱排序
+                    _weeklyDataDict[id].Sort((x, y) => { return x.CourseName.CompareTo(y.CourseName); });
+
+                    WeeklyDataList_new.AddRange(_weeklyDataDict[id]);
+
+                    _weeklyDataDict[id] = WeeklyDataList_new;
+                }
             }
 
             // 將欄位 指派給 DataTable
@@ -1084,8 +1084,7 @@ ORDER BY ref_student_id ";
             }
 
             try
-            {
-
+            {               
                 // 樣板的設定
                 _doc = _configure.Template;
             }
@@ -1099,7 +1098,57 @@ ORDER BY ref_student_id ";
 
             _doc.MailMerge.Execute(_mergeDataTable);
 
-            e.Result = _doc;
+
+
+            // Section 切分字典(StuID,List<Section>) 讓同一個學生若有多頁資料 可以是同一份電子報表上傳
+            Dictionary<string,Section> sectionDict = new Dictionary<string, Section>();
+
+            Document doc_final = new Document();
+
+            foreach (Section each in _doc.Sections)
+            {
+                Regex rx;
+                Group g;
+                
+                rx = new Regex(@"系統編號\{([0-9a-zA-Z]+)\}");
+
+                Match ch = rx.Match(each.GetText());
+                if (ch.Success)
+                {
+                    g = ch.Groups[1];
+
+                    if (!sectionDict.ContainsKey(g.Value))
+                    {
+                        sectionDict.Add(g.Value, each);                        
+                    }
+                    else
+                    {
+                        Node n = doc_final.ImportNode(each, true);
+                        sectionDict[g.Value].AppendChild(n);
+                    }
+                }
+                else
+                {
+                    if (!sectionDict.ContainsKey("沒有系統編號"))
+                    {
+                        sectionDict.Add("沒有系統編號", each);                        
+                    }
+                    else
+                    {
+                        Node n = doc_final.ImportNode(each, true);
+                        sectionDict["沒有系統編號"].AppendChild(n);                        
+                    }
+                }
+            }
+
+            foreach (string stuID in sectionDict.Keys)
+            {
+                Node n = doc_final.ImportNode(sectionDict[stuID],true);
+                doc_final.Sections.Add(n);
+
+            }
+
+            e.Result = doc_final;
         }
 
         private void _worker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)

@@ -521,6 +521,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
             Workbook wb = (Workbook)e.Result;
 
+        
+
 
             // 電子報表功能先暫時不製做
             #region 電子報表
@@ -989,6 +991,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 //把多餘的右半邊CELL欄位 砍掉 (總表)          
                 ws_total.Cells.ClearRange(1, semesterScoreCol + 1, totalAwardsCount + 2, 50);
                 ws_total.AutoFitColumns();
+                ws_total.FirstVisibleColumn = 0;// 將打開的介面 調到最左， 要不然就會看到 右邊一片空白。
             }
 
         }
