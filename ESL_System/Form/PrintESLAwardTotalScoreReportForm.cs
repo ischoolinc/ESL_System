@@ -1038,6 +1038,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                 //把多餘的右半邊CELL欄位 砍掉                
                 ws.Cells.ClearRange(1, termCol + 1, totalAwardsCount + 2, 50);
+                ws.AutoFitColumns();
+                ws.FirstVisibleColumn = 0;// 將打開的介面 調到最左， 要不然就會看到 右邊一片空白。
 
                 totalAwardsCount = 0;
 
@@ -1147,6 +1149,8 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
 
                 //把多餘的右半邊CELL欄位 砍掉 (總表)             
                 ws_total.Cells.ClearRange(1, termCol + 1, totalAwardsCount + 2, 50);
+                ws_total.AutoFitColumns();
+                ws_total.FirstVisibleColumn = 0;// 將打開的介面 調到最左， 要不然就會看到 右邊一片空白。
             }
         }
 
@@ -1412,6 +1416,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 //把多餘的右半邊CELL欄位 砍掉                
                 ws.Cells.ClearRange(1, semesterScoreCol + 1, totalAwardsCount + 2, 50);
                 ws.AutoFitColumns();
+                ws.FirstVisibleColumn = 0;// 將打開的介面 調到最左， 要不然就會看到 右邊一片空白。
 
                 totalAwardsCount = 0;
 
@@ -1569,6 +1574,7 @@ ORDER BY $esl.gradebook_assessment_score.last_update";
                 //把多餘的右半邊CELL欄位 砍掉 (總表)          
                 ws_total.Cells.ClearRange(1, semesterScoreCol + 1, totalAwardsCount + 2, 50);
                 ws_total.AutoFitColumns();
+                ws_total.FirstVisibleColumn = 0;// 將打開的介面 調到最左， 要不然就會看到 右邊一片空白。
             }
 
         }

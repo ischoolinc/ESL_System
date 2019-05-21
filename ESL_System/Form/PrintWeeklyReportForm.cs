@@ -59,9 +59,7 @@ namespace ESL_System.Form
         private DateTime _BeginDate;
         // 結束日期
         private DateTime _EndDate;
-
-        private Document _doc;
-
+        
         private DataTable _mergeDataTable = new DataTable();
 
         private List<UDT_WeeklyReportTemplate> _configuresList = new List<UDT_WeeklyReportTemplate>();
@@ -1044,108 +1042,150 @@ ORDER BY ref_student_id ";
             // 將欄位 指派給 DataTable
             _mergeDataTable = GetMergeField();
 
+
+            // Doc 切分字典(StuID,List<Doc>) 讓同一個學生若有多頁資料 可以是同一份電子報表上傳
+            Dictionary<string, Document> docDict = new Dictionary<string, Document>();
+
             foreach (StudentRecord stuRecord in studentList)
             {
                 string id = stuRecord.ID;
 
+                Document _doc;
+
                 // data book 資料
                 if (_weeklyDataDict.ContainsKey(id))
                 {
-                    foreach (WeeklyReportRecord wr in _weeklyDataDict[id])
+                    // 有項目 才列印
+                    if (_weeklyDataDict[id].Count != 0)
                     {
-                        DataRow row = _mergeDataTable.NewRow();
+                        foreach (WeeklyReportRecord wr in _weeklyDataDict[id])
+                        {
+                            DataRow row = _mergeDataTable.NewRow();
 
-                        row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
+                            row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
 
-                        row["學年度"] = K12.Data.School.DefaultSchoolYear;
-                        row["學期"] = K12.Data.School.DefaultSemester;
-                        row["學號"] = stuRecord.StudentNumber;
-                        row["年級"] = stuRecord.Class != null ? "" + stuRecord.Class.GradeYear : "";
+                            row["學年度"] = K12.Data.School.DefaultSchoolYear;
+                            row["學期"] = K12.Data.School.DefaultSemester;
+                            row["學號"] = stuRecord.StudentNumber;
+                            row["年級"] = stuRecord.Class != null ? "" + stuRecord.Class.GradeYear : "";
 
-                        row["原班級名稱"] = stuRecord.Class != null ? "" + stuRecord.Class.Name : "";
-                        row["學生英文姓名"] = stuRecord.EnglishName;
-                        row["學生中文姓名"] = stuRecord.Name;
+                            row["原班級名稱"] = stuRecord.Class != null ? "" + stuRecord.Class.Name : "";
+                            row["學生英文姓名"] = stuRecord.EnglishName;
+                            row["學生中文姓名"] = stuRecord.Name;
 
-                        row["區間開始日期"] = _BeginDate.ToShortDateString();
-                        row["區間結束日期"] = _EndDate.ToShortDateString();
+                            row["區間開始日期"] = _BeginDate.ToShortDateString();
+                            row["區間結束日期"] = _EndDate.ToShortDateString();
 
 
-                        row["課程名稱"] = wr.CourseName;
-                        row["教師名稱"] = wr.TeacherName;
-                        row["Score資料"] = wr.ScoreData;
-                        row["Performance資料"] = wr.PerformanceData;
-                        row["GeneralComment"] = wr.GeneralComment;
-                        row["PersonalComment"] = wr.PersonalComment;
+                            row["課程名稱"] = wr.CourseName;
+                            row["教師名稱"] = wr.TeacherName;
+                            row["Score資料"] = wr.ScoreData;
+                            row["Performance資料"] = wr.PerformanceData;
+                            row["GeneralComment"] = wr.GeneralComment;
+                            row["PersonalComment"] = wr.PersonalComment;
 
-                        _mergeDataTable.Rows.Add(row);
+                            _mergeDataTable.Rows.Add(row);
+
+                        }
+
+                        try
+                        {
+                            // 樣板的設定
+                            _doc = _configure.Template.Clone();
+                        }
+                        catch (Exception ex)
+                        {
+                            MsgBox.Show(ex.Message);
+                            e.Cancel = true;
+                            return;
+                        }
+
+
+                        _doc.MailMerge.Execute(_mergeDataTable);
+
+                        _mergeDataTable.Clear();
+
+                        for (int i = _doc.Sections.Count - 2; i >= 0; i--)
+                        {
+                            // Copy the content of the current section to the beginning of the last section.
+                            _doc.LastSection.PrependContent(_doc.Sections[i]);
+                            // Remove the copied section.
+                            _doc.Sections[i].Remove();
+                        }
+
+
+                        if (!docDict.ContainsKey(stuRecord.ID))
+                        {
+                            docDict.Add(stuRecord.ID, _doc);
+                        }
+                        else
+                        {
+
+                        }
 
                     }
-                }             
-            }
-
-            try
-            {               
-                // 樣板的設定
-                _doc = _configure.Template;
-            }
-            catch (Exception ex)
-            {
-                MsgBox.Show(ex.Message);
-                e.Cancel = true;
-                return;
+                }                
             }
 
 
-            _doc.MailMerge.Execute(_mergeDataTable);
 
 
 
-            // Section 切分字典(StuID,List<Section>) 讓同一個學生若有多頁資料 可以是同一份電子報表上傳
-            Dictionary<string,Section> sectionDict = new Dictionary<string, Section>();
+            //// Section 切分字典(StuID,List<Section>) 讓同一個學生若有多頁資料 可以是同一份電子報表上傳
+            //Dictionary<string,Section> sectionDict = new Dictionary<string, Section>();
 
             Document doc_final = new Document();
 
-            foreach (Section each in _doc.Sections)
+            //foreach (Section each in _doc.Sections)
+            //{
+            //    Regex rx;
+            //    Group g;
+
+            //    rx = new Regex(@"系統編號\{([0-9a-zA-Z]+)\}");
+
+            //    Match ch = rx.Match(each.GetText());
+            //    if (ch.Success)
+            //    {
+            //        g = ch.Groups[1];
+
+            //        if (!sectionDict.ContainsKey(g.Value))
+            //        {
+            //            sectionDict.Add(g.Value, new Section(doc_final));
+
+            //            Node n = doc_final.ImportNode(each.FirstChild, true);
+
+            //            sectionDict[g.Value].AppendChild(n);
+            //        }
+            //        else
+            //        {
+            //            Node n = doc_final.ImportNode(each.FirstChild, true);
+            //            sectionDict[g.Value].AppendChild(n);
+            //        }
+            //    }
+            //    else
+            //    {
+            //        if (!sectionDict.ContainsKey("沒有系統編號"))
+            //        {
+            //            sectionDict.Add("沒有系統編號", new Section(doc_final));
+
+            //            Node n = doc_final.ImportNode(each.FirstChild, true);
+
+            //            sectionDict["沒有系統編號"].AppendChild(n);
+            //        }
+            //        else
+            //        {
+            //            Node n = doc_final.ImportNode(each.FirstChild, true);
+            //            sectionDict["沒有系統編號"].AppendChild(n);                        
+            //        }
+            //    }
+            //}
+
+            doc_final.Sections.Clear();
+
+            foreach (string stuID in docDict.Keys)
             {
-                Regex rx;
-                Group g;
-                
-                rx = new Regex(@"系統編號\{([0-9a-zA-Z]+)\}");
-
-                Match ch = rx.Match(each.GetText());
-                if (ch.Success)
-                {
-                    g = ch.Groups[1];
-
-                    if (!sectionDict.ContainsKey(g.Value))
-                    {
-                        sectionDict.Add(g.Value, each);                        
-                    }
-                    else
-                    {
-                        Node n = doc_final.ImportNode(each, true);
-                        sectionDict[g.Value].AppendChild(n);
-                    }
-                }
-                else
-                {
-                    if (!sectionDict.ContainsKey("沒有系統編號"))
-                    {
-                        sectionDict.Add("沒有系統編號", each);                        
-                    }
-                    else
-                    {
-                        Node n = doc_final.ImportNode(each, true);
-                        sectionDict["沒有系統編號"].AppendChild(n);                        
-                    }
-                }
-            }
-
-            foreach (string stuID in sectionDict.Keys)
-            {
-                Node n = doc_final.ImportNode(sectionDict[stuID],true);
+                Node n = doc_final.ImportNode(docDict[stuID].Sections[0],true);
                 doc_final.Sections.Add(n);
-
             }
 
             e.Result = doc_final;
