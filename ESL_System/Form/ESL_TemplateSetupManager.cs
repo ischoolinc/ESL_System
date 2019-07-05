@@ -656,6 +656,9 @@ namespace ESL_System.Form
                 node_now.Parent.Nodes[1].Cells[2].Text = "指標型評量無法輸入比例";
                 node_now.Parent.Nodes[1].Enabled = false;
 
+                // 自訂義項目 也disable
+                node_now.Parent.Nodes[4].Enabled = false;
+
                 //假如甚麼都沒有，就先加入起始
                 if (node_now.Nodes.Count == 0)
                 {
@@ -733,7 +736,10 @@ namespace ESL_System.Form
                         node_now.Parent.Nodes[1].Cells[1].Text = "0"; // 切換到評語 比重則為0
                         node_now.Parent.Nodes[1].Cells[2].Text = "評語型評量無法輸入比例";
                         node_now.Parent.Nodes[1].Enabled = false;
-                        
+
+                        // 自訂義項目 也disable
+                        node_now.Parent.Nodes[4].Enabled = false;
+
 
                         DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
                         new_assessment_node_inputLimit.Text = "輸入限制";
@@ -752,6 +758,10 @@ namespace ESL_System.Form
                         {
                             node_now.Parent.Nodes.RemoveAt(node_now.Parent.Nodes.Count - 1); // 假若從 評語選回 分數 把最後一項 輸入限制刪掉。
                         }
+
+                        //分數 自訂義項目 要打開
+                        node_now.Parent.Nodes[4].Enabled = true;
+
                         // 然後再加入 評量計算類型(定期、平時)
                         DevComponents.AdvTree.Node new_assessment_node_examScoreType = new DevComponents.AdvTree.Node(); //計算評量成績分數種類(定期、平時)                                                               
                         new_assessment_node_examScoreType.Text = "評量結算分數類別";
@@ -1161,6 +1171,9 @@ namespace ESL_System.Form
                         new_assessment_node_percentage.Cells[1].Text = "0";
                         new_assessment_node_percentage.Cells[2].Text = "評語型評量無法輸入比例";
                         new_assessment_node_percentage.Enabled = false;
+
+                        // 評語 不允許自定義項目
+                        new_assessment_node_allowCustomAssessment.Enabled = false;
                     }
 
                     //假如有指標型評量 則加入最後一層指標型評量輸入
@@ -1227,6 +1240,9 @@ namespace ESL_System.Form
                         new_assessment_node_percentage.Cells[1].Text = "0";
                         new_assessment_node_percentage.Cells[2].Text = "指標型評量無法輸入比例";
                         new_assessment_node_percentage.Enabled = false;
+
+                        // 指標 不允許自定義項目
+                        new_assessment_node_allowCustomAssessment.Enabled = false;
 
                         //new_assessment_node_type.Expand(); //預設不展開此項
                     }

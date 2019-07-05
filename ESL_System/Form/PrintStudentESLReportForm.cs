@@ -1133,7 +1133,7 @@ namespace ESL_System.Form
 
             // (舊的SQL 按照ESL 2019寒假優化計畫 ， 全面採用 ref_sc_attend_id 欄位)
             // 按照時間順序抓， 如果有相同的成績結構， 以後來新的 取代前的
-            //            string sqlScore = @"    
+            //string sqlScore = @"    
             //SELECT 
             //        $esl.gradebook_assessment_score.last_update
             //        ,$esl.gradebook_assessment_score.term
@@ -1158,27 +1158,27 @@ namespace ESL_System.Form
             // 新SQL 採用  ref_sc_attend_id 欄位
             // 按照時間順序抓， 如果有相同的成績結構， 以後來新的 取代前的
             string sqlScore = @"    
-SELECT 
-        $esl.gradebook_assessment_score.last_update
-        ,$esl.gradebook_assessment_score.term
-        ,$esl.gradebook_assessment_score.subject
-        ,$esl.gradebook_assessment_score.assessment
-        ,$esl.gradebook_assessment_score.custom_assessment
-        ,sc_attend.ref_course_id
-        ,sc_attend.ref_student_id
-        ,$esl.gradebook_assessment_score.ref_teacher_id
-        ,$esl.gradebook_assessment_score.ref_sc_attend_id
-        ,$esl.gradebook_assessment_score.value
-        ,$esl.gradebook_assessment_score.ratio  
-        ,exam_template.name AS exam_template_name
-FROM $esl.gradebook_assessment_score    
-        LEFT JOIN sc_attend ON sc_attend.id =$esl.gradebook_assessment_score.ref_sc_attend_id
-        LEFT JOIN course ON course.id =sc_attend.ref_course_id
-        LEFT JOIN exam_template ON exam_template.id =  course.ref_exam_template_id
-WHERE 
-        sc_attend.ref_course_id IN ('" + course_ids + @"') 
-        AND sc_attend.ref_student_id IN('" + student_ids + @"')
-ORDER BY $esl.gradebook_assessment_score.last_update,sc_attend.ref_student_id ";
+            SELECT 
+                    $esl.gradebook_assessment_score.last_update
+                    ,$esl.gradebook_assessment_score.term
+                    ,$esl.gradebook_assessment_score.subject
+                    ,$esl.gradebook_assessment_score.assessment
+                    ,$esl.gradebook_assessment_score.custom_assessment
+                    ,sc_attend.ref_course_id
+                    ,sc_attend.ref_student_id
+                    ,$esl.gradebook_assessment_score.ref_teacher_id
+                    ,$esl.gradebook_assessment_score.ref_sc_attend_id
+                    ,$esl.gradebook_assessment_score.value
+                    ,$esl.gradebook_assessment_score.ratio  
+                    ,exam_template.name AS exam_template_name
+            FROM $esl.gradebook_assessment_score    
+                    LEFT JOIN sc_attend ON sc_attend.id =$esl.gradebook_assessment_score.ref_sc_attend_id
+                    LEFT JOIN course ON course.id =sc_attend.ref_course_id
+                    LEFT JOIN exam_template ON exam_template.id =  course.ref_exam_template_id
+            WHERE 
+                    sc_attend.ref_course_id IN ('" + course_ids + @"') 
+                    AND sc_attend.ref_student_id IN('" + student_ids + @"')
+            ORDER BY $esl.gradebook_assessment_score.last_update,sc_attend.ref_student_id ";
 
             DataTable dtScore = qh.Select(sqlScore);
 
