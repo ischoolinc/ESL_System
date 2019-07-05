@@ -146,6 +146,9 @@ namespace ESL_System.Form
             // 輸入分數 超過 界線提醒
             bool outRangeWarning = false;
 
+            // 檢查是否有老師
+            bool hasNoTeacher = false;
+
             if (_targetScoreType == "Score")
             {
                 decimal i = 0;
@@ -162,7 +165,20 @@ namespace ESL_System.Form
                             outRangeWarning = true;
                         }
                     }
+
+                    // 沒有老師
+                    if ("" + dataGridViewX1.Rows[row.Index].Cells[4].Value == "")
+                    {
+                        hasNoTeacher = true;
+                    }
                 }
+            }
+
+            // 沒有老師 不給存
+            if (hasNoTeacher)
+            {
+                MsgBox.Show("此成績項目沒有老師，請至課程指定教師。", "錯誤!", MessageBoxButtons.OKCancel, MessageBoxIcon.Error);
+                return;                
             }
 
             // 若畫面上有分數超過範圍，則跳出提醒視窗， 讓使用者決定是否要繼續儲存。
