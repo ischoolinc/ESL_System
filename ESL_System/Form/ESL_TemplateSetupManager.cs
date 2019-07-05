@@ -731,6 +731,10 @@ namespace ESL_System.Form
                         }
 
                         node_now.Parent.Nodes[1].Cells[1].Text = "0"; // 切換到評語 比重則為0
+                        node_now.Parent.Nodes[1].Cells[2].Text = "評語型評量無法輸入比例";
+                        node_now.Parent.Nodes[1].Enabled = false;
+                        
+
                         DevComponents.AdvTree.Node new_assessment_node_inputLimit = new DevComponents.AdvTree.Node(); //輸入限制(專給Comment 使用)
                         new_assessment_node_inputLimit.Text = "輸入限制";
                         new_assessment_node_inputLimit.Tag = "integer";
@@ -1150,6 +1154,14 @@ namespace ESL_System.Form
                     new_assessment_node_allowCustomAssessment.DragDropEnabled = false;
                     new_assessment_node_examScoreType.DragDropEnabled = false;
 
+
+                    if (a.Type == "Comment")// 假如是 評語類別
+                    {
+                        // 假如其為評語類別評量 將比例 設定 0,disable
+                        new_assessment_node_percentage.Cells[1].Text = "0";
+                        new_assessment_node_percentage.Cells[2].Text = "評語型評量無法輸入比例";
+                        new_assessment_node_percentage.Enabled = false;
+                    }
 
                     //假如有指標型評量 則加入最後一層指標型評量輸入
                     if (a.Type == "Indicator")
