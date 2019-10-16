@@ -1044,7 +1044,7 @@ ORDER BY ref_student_id ";
 
 
             // Doc 切分字典(StuID,List<Doc>) 讓同一個學生若有多頁資料 可以是同一份電子報表上傳
-            Dictionary<string, Document> docDict = new Dictionary<string, Document>();
+            Dictionary<string, List<Document>> docDict = new Dictionary<string, List<Document>>();
 
             foreach (StudentRecord stuRecord in studentList)
             {
@@ -1105,22 +1105,23 @@ ORDER BY ref_student_id ";
 
                         _mergeDataTable.Clear();
 
-                        for (int i = _doc.Sections.Count - 2; i >= 0; i--)
-                        {
-                            // Copy the content of the current section to the beginning of the last section.
-                            _doc.LastSection.PrependContent(_doc.Sections[i]);
-                            // Remove the copied section.
-                            _doc.Sections[i].Remove();
-                        }
-
+                        //for (int i = _doc.Sections.Count - 2; i >= 0; i--)
+                        //{
+                        //    // Copy the content of the current section to the beginning of the last section.
+                        //    _doc.LastSection.PrependContent(_doc.Sections[i]);
+                        //    // Remove the copied section.
+                        //    _doc.Sections[i].Remove();
+                        //}
 
                         if (!docDict.ContainsKey(stuRecord.ID))
                         {
-                            docDict.Add(stuRecord.ID, _doc);
+                            docDict.Add(stuRecord.ID, new List<Document>());
+
+                            docDict[stuRecord.ID].Add(_doc);
                         }
                         else
                         {
-
+                            docDict[stuRecord.ID].Add(_doc);
                         }
 
                     }
@@ -1184,8 +1185,14 @@ ORDER BY ref_student_id ";
 
             foreach (string stuID in docDict.Keys)
             {
-                Node n = doc_final.ImportNode(docDict[stuID].Sections[0],true);
-                doc_final.Sections.Add(n);
+                foreach (Document d in docDict[stuID])
+                {
+                    for (int i = 0; i < d.Sections.Count; i++)
+                    {
+                        Node n = doc_final.ImportNode(d.Sections[i], true);
+                        doc_final.Sections.Add(n);
+                    }                    
+                }                
             }
 
             e.Result = doc_final;

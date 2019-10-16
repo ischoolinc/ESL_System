@@ -307,12 +307,12 @@ SELECT
     ,$esl.gradebook_assessment_score.assessment
     ,$esl.gradebook_assessment_score.custom_assessment
     ,$esl.gradebook_assessment_score.value 
-FROM $esl.gradebook_assessment_score  
-    LEFT JOIN sc_attend ON $esl.gradebook_assessment_score.ref_sc_attend_id = sc_attend.id
-    LEFT JOIN course ON sc_attend.ref_course_id = course.id
-    LEFT JOIN student ON sc_attend.ref_student_id = student.id
+FROM student 	
+    LEFT JOIN sc_attend ON sc_attend.ref_student_id =student.id 
+	LEFT JOIN $esl.gradebook_assessment_score   ON  $esl.gradebook_assessment_score.ref_sc_attend_id = sc_attend.id
+    LEFT JOIN course ON sc_attend.ref_course_id = course.id    
     LEFT JOIN class ON student.ref_class_id = class.id
-    LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id    
+    LEFT JOIN teacher ON $esl.gradebook_assessment_score.ref_teacher_id = teacher.id
 WHERE sc_attend.ref_course_id IN ('" + course_ids + @"')
 ORDER BY $esl.gradebook_assessment_score.last_update";
                     ;
