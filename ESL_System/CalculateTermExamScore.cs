@@ -305,8 +305,20 @@ namespace ESL_System
             //          "AND assessment != ''";
 
             // 2019/01/29 ESL 寒假改版， 採用 sc_attend 找資料
-            query = @"SELECT * 
+            query = @"SELECT 
+                      $esl.gradebook_assessment_score.uid
+                      ,sc_attend.ref_course_id
+                     ,sc_attend.ref_student_id
+                     ,$esl.gradebook_assessment_score.ref_teacher_id
+                     ,$esl.gradebook_assessment_score.ref_sc_attend_id
+                     ,$esl.gradebook_assessment_score.term
+                     ,$esl.gradebook_assessment_score.subject
+                     ,$esl.gradebook_assessment_score.assessment
+                     ,$esl.gradebook_assessment_score.custom_assessment
+                     ,$esl.gradebook_assessment_score.value
+                     ,$esl.gradebook_assessment_score.ratio
                       FROM $esl.gradebook_assessment_score 
+                      LEFT JOIN sc_attend ON sc_attend.id = $esl.gradebook_assessment_score.ref_sc_attend_id
                       WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +                      
                       "AND term IN(" + termNames + ")" +
                       "AND assessment != ''";
@@ -386,11 +398,23 @@ namespace ESL_System
             #region 取得學生 ESL 成績(term、subject) 作為最後對照是否更新使用
 
             // 2019/01/29 ESL 寒假改版， 採用 sc_attend 找資料
-            query = @"SELECT * 
+            query = @"SELECT 
+                      $esl.gradebook_assessment_score.uid
+                     ,sc_attend.ref_course_id
+                     ,sc_attend.ref_student_id
+                     ,$esl.gradebook_assessment_score.ref_teacher_id
+                     ,$esl.gradebook_assessment_score.ref_sc_attend_id
+                     ,$esl.gradebook_assessment_score.term
+                     ,$esl.gradebook_assessment_score.subject
+                     ,$esl.gradebook_assessment_score.assessment
+                     ,$esl.gradebook_assessment_score.custom_assessment
+                     ,$esl.gradebook_assessment_score.value
+                     ,$esl.gradebook_assessment_score.ratio
                       FROM $esl.gradebook_assessment_score 
-                      WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +
-                      "AND term IN(" + termNames + ")" +
-                      "AND assessment IS NULL ";
+                      LEFT JOIN sc_attend ON sc_attend.id = $esl.gradebook_assessment_score.ref_sc_attend_id" +
+                      " WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +                      
+                      " AND term IN(" + termNames + ")" +
+                      " AND assessment IS NULL ";
 
             dt = qh.Select(query);
 
