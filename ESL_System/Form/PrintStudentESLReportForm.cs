@@ -162,7 +162,7 @@ namespace ESL_System.Form
             foreach (DataRow row in dtCourseID.Rows)
             {
                 string subject = "" + row["subject"];
-                _subjectList.Add(subject);                
+                _subjectList.Add(subject);
             }
             #endregion
 
@@ -219,7 +219,7 @@ namespace ESL_System.Form
 
             _configuresList = _AccessHelper.Select<UDT_ReportTemplate>(qry);
 
-            
+
 
             bkw.ReportProgress(100);
 
@@ -360,7 +360,7 @@ namespace ESL_System.Form
             }
             catch
             {
-               
+
             }
             linklabel1.Enabled = true;
             #endregion
@@ -575,7 +575,7 @@ namespace ESL_System.Form
             }
 
             builder.EndTable();
-            builder.Writeln(); 
+            builder.Writeln();
             #endregion
 
 
@@ -939,7 +939,7 @@ namespace ESL_System.Form
             builder.InsertField("MERGEFIELD " + eslTemplateName.Replace(' ', '_').Replace('"', '_') + "_" + "課程學期成績等第" + " \\* MERGEFORMAT ", "«CSL»");
 
             builder.EndRow();
-            builder.EndTable(); 
+            builder.EndTable();
             #endregion
 
             #endregion
@@ -949,7 +949,7 @@ namespace ESL_System.Form
         // 產生序列化的 功能變數
         private void MergeFieldSerialGenerator(Aspose.Words.DocumentBuilder builder, string ExamName, List<string> doaminList)
         {
-            #region 成績變數
+            #region 依領域分列
 
 
             // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string..Trim().Replace(' ', '_').Replace('"', '_') 
@@ -959,12 +959,11 @@ namespace ESL_System.Form
             // Apply the paragraph style to the current paragraph in the document and add some text.
             builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
             // 每一個 評量的名稱 放在最上面 (使用大字粗體)
-            builder.Writeln("評量名稱: " + ExamName);
+            builder.Writeln("評量名稱: " + ExamName+ " 依領域分列");
 
             // Change to a paragraph style that has no list formatting. (將字體還原)
             builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
             builder.Writeln("");
-
             foreach (string domain in doaminList)
             {
                 // 領域
@@ -1019,6 +1018,77 @@ namespace ESL_System.Form
                 builder.EndTable();
                 builder.Writeln();
             }
+
+
+
+            #endregion
+
+            #region 所有科目
+
+
+            // 2018/6/15 穎驊備註 以下整理 功能變數 最常使用的 string..Trim().Replace(' ', '_').Replace('"', '_') 
+            // >> 其用意為避免Word 功能變數合併列印時 會有一些奇怪的BUG ，EX: row["Final-Term評量_Science科目_In-Class Score子項目_分數1"] = "YOYO!"; >> 有空格印不出來 
+
+
+            // Apply the paragraph style to the current paragraph in the document and add some text.
+            builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
+            // 每一個 評量的名稱 放在最上面 (使用大字粗體)
+            builder.Writeln("評量名稱: " + ExamName + " 所有科目");
+
+            // Change to a paragraph style that has no list formatting. (將字體還原)
+            builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
+            builder.Writeln("");
+
+            builder.StartTable();
+            builder.InsertCell();
+            builder.Write("課程科目名稱");
+            builder.InsertCell();
+            builder.Write("課程教師一");
+            builder.InsertCell();
+            builder.Write("科目權數");
+            builder.InsertCell();
+            builder.Write("科目定期評量");
+            builder.InsertCell();
+            builder.Write("科目平時評量");
+            builder.InsertCell();
+            builder.Write("科目總成績");
+            //builder.InsertCell();
+            //builder.Write("科目文字評量");
+            builder.EndRow();
+
+            for (int i = 1; i < 26; i++)
+            {
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_課程科目名稱" + i + " \\* MERGEFORMAT ", "«SN»");
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_課程教師一" + i + " \\* MERGEFORMAT ", "«ST»");
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目權數" + i + " \\* MERGEFORMAT ", "«SC»");
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目定期評量" + i + " \\* MERGEFORMAT ", "«SF»");
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目平時評量" + i + " \\* MERGEFORMAT ", "«SA»");
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目總成績" + i + " \\* MERGEFORMAT ", "«SST»");
+
+                builder.EndRow();
+            }
+
+            builder.EndTable();
+            builder.Writeln();
+
+
 
             #endregion
         }
@@ -1329,7 +1399,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string id = "" + row["ref_student_id"];
 
                 string examWord = "" + row["exam_name"];
-                string domainWord = "" + row["domain"];                
+                string domainWord = "" + row["domain"];
                 string subjectWord = "" + row["subject"];
                 string teacher = "" + row["teacher_name"]; // 教師姓名，固定抓 該課程的 教師一
                 string credit = "" + row["credit"];
@@ -1337,37 +1407,71 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string assignment_score = "" + row["assignment_score"]; // 平時評量
                 string score = "" + row["score"]; // 評量總分
 
-                string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domainWord + "_";
+                {//依領域分開
+                    string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domainWord + "_";
 
-                if (_scoreDict.ContainsKey(id))
-                {
-                    bool added = false;  // 尚未加入
+                    if (_scoreDict.ContainsKey(id))
+                    {
+                        bool added = false;  // 尚未加入
 
-                    for (int i = 1; !added; i++)
-                    {                    
-                        // 課程科目名稱
-                        if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                        for (int i = 1; !added; i++)
                         {
-                            continue;
+                            // 課程科目名稱
+                            if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                                added = true;
+                            }
+
+                            _scoreDict[id].Add(scoreKey + "課程教師一" + i, teacher);
+
+                            _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
+
+                            _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
+
+                            _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
+
+                            _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
+
                         }
-                        else
-                        {
-                            _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
-                            added = true;
-                        }
-
-                        _scoreDict[id].Add(scoreKey + "課程教師一" + i, teacher);
-
-                        _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
-
-                        _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
-
-                        _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
-
-                        _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
-
                     }
+                }
+                {//所有科目
+                    string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量_";
 
+                    if (_scoreDict.ContainsKey(id))
+                    {
+                        bool added = false;  // 尚未加入
+
+                        for (int i = 1; !added; i++)
+                        {
+                            // 課程科目名稱
+                            if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                                added = true;
+                            }
+
+                            _scoreDict[id].Add(scoreKey + "課程教師一" + i, teacher);
+
+                            _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
+
+                            _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
+
+                            _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
+
+                            _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
+
+                        }
+                    }
                 }
             }
 
@@ -1396,7 +1500,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string domainWord = "" + row["domain"];
                 string courseWord = "" + row["course_name"];
                 string subjectWord = "" + row["subject"];
-                                
+
                 string score = "" + row["score"]; // 課程學期成績
 
                 string scoreKey = templateWord.Trim().Replace(' ', '_').Replace('"', '_');
@@ -1415,7 +1519,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                         if (decimal.TryParse(score, out score_d))
                         {
                             _scoreDict[id].Add(scoreKey + "_" + "課程學期成績等第", dm.GetDegreeByScore(score_d));
-                        }                        
+                        }
                     }
 
                     #endregion
@@ -1432,7 +1536,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                         }
                         else
                         {
-                            _scoreDict[id].Add("課程名稱" + i, courseWord);                            
+                            _scoreDict[id].Add("課程名稱" + i, courseWord);
                         }
 
                         // 課程科目名稱
@@ -1451,10 +1555,10 @@ WHERE course.id IN ('" + course_ids + "') " +
                         decimal score_d;
                         if (decimal.TryParse(score, out score_d))
                         {
-                            _scoreDict[id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));                            
+                            _scoreDict[id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
                         }
-                        
-                    } 
+
+                    }
                     #endregion
                 }
             }
@@ -1752,7 +1856,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 _itemDict.Add(templateName, new Dictionary<string, string>());
 
                 // 學期課程成績
-                if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_')+"_" + "課程學期成績分數"))
+                if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "課程學期成績分數"))
                     dataTable.Columns.Add(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "課程學期成績分數");
 
                 if (!dataTable.Columns.Contains(templateName.Replace(' ', '_').Replace('"', '_') + "_" + "課程學期成績等第"))
@@ -1899,6 +2003,7 @@ WHERE course.id IN ('" + course_ids + "') " +
             // 加入序列化的 功能變數
             foreach (string examName in _examList)
             {
+                //依領域分開
                 foreach (string domain in _doaminList)
                 {
                     for (int i = 1; i < 8; i++)
@@ -1911,13 +2016,23 @@ WHERE course.id IN ('" + course_ids + "') " +
                         dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目總成績" + i);
                     }
                 }
+                //所有科目
+                for (int i = 1; i < 26; i++)
+                {
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_課程科目名稱" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_課程教師一" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目權數" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目定期評量" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目平時評量" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目總成績" + i);
+                }
             }
             for (int i = 1; i < 26; i++)
             {
                 dataTable.Columns.Add("課程名稱" + i);
                 dataTable.Columns.Add("課程科目名稱" + i);
                 dataTable.Columns.Add("課程學期成績分數" + i);
-                dataTable.Columns.Add("課程學期成績等第" + i);     
+                dataTable.Columns.Add("課程學期成績等第" + i);
             }
 
 
@@ -1947,7 +2062,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 {
                     _configure = new UDT_ReportTemplate();
                     _configure.Name = dialog.ConfigName;
-                    _configure.Template = dialog.Template;                    
+                    _configure.Template = dialog.Template;
 
                     _configuresList.Add(_configure);
                     cboConfigure.Items.Insert(cboConfigure.SelectedIndex, _configure);
@@ -1968,11 +2083,11 @@ WHERE course.id IN ('" + course_ids + "') " +
                     btnPrint.Enabled = true;
                     _configure = _configuresList[cboConfigure.SelectedIndex];
                     if (_configure.Template == null)
-                        _configure.Decode();                    
+                        _configure.Decode();
                 }
                 else
                 {
-                    _configure = null;                             
+                    _configure = null;
                 }
 
             }
@@ -1982,7 +2097,7 @@ WHERE course.id IN ('" + course_ids + "') " +
         private void lnkDelConfig_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
         {
             if (_configure == null) return;
-      
+
             if (MessageBox.Show("樣板刪除後將無法回復，確定刪除樣板?", "刪除樣板", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) == System.Windows.Forms.DialogResult.OK)
             {
                 _configuresList.Remove(_configure);
@@ -2005,8 +2120,8 @@ WHERE course.id IN ('" + course_ids + "') " +
             if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
                 UDT_ReportTemplate conf = new UDT_ReportTemplate();
-                conf.Name = dialog.NewConfigureName;                
-                conf.Template = _configure.Template;    
+                conf.Name = dialog.NewConfigureName;
+                conf.Template = _configure.Template;
                 conf.Encode();
                 conf.Save();
                 _configuresList.Add(conf);
