@@ -19,10 +19,6 @@ namespace ESL_System.Form
 {
     public partial class ESL_TemplateSetupManager : FISCA.Presentation.Controls.BaseForm
     {
-        private ButtonItem _current_item;
-
-        private BackgroundWorker _workder;
-
         private Dictionary<string, string> _hintGuideDict = new Dictionary<string, string>();
 
         private Dictionary<string, string> _typeCovertDict = new Dictionary<string, string>();
@@ -41,11 +37,7 @@ namespace ESL_System.Form
         // 是否都有設定系統識別對照 ，若有沒有設定，則不給存檔
         private bool _allHasExam = true;
 
-        private ButtonItem currentItem
-        {
-            get { return _current_item; }
-            set { _current_item = value; }
-        }
+        private ButtonItem currentItem { get; set; }
 
         // 現在點在哪一小節
         DevComponents.AdvTree.Node node_now;
@@ -87,9 +79,6 @@ namespace ESL_System.Form
             _nodeTagCovertDict.Add("assessment", "評量");
             _nodeTagCovertDict.Add("string", "指標");
             #endregion
-
-            //載入資料
-            LoadAssessmentSetups();
         }
 
         /// <summary>
@@ -97,82 +86,60 @@ namespace ESL_System.Form
         /// </summary>
         private void LoadAssessmentSetups()
         {
-            _workder = new BackgroundWorker();
-            _workder.DoWork += new DoWorkEventHandler(Workder_DoWork);
-            _workder.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Workder_RunWorkerCompleted);
-
-            _workder.RunWorkerAsync();
-
-        }
-
-        private void Workder_DoWork(object sender, DoWorkEventArgs e)
-        {
-            // 2018/05/01 穎華重要備註， 在table exam_template 欄位 description 不為空代表其為ESL 的樣板
-            string query = "select * from exam_template where description !='' ORDER BY name";
-
-            QueryHelper qh = new QueryHelper();
-            DataTable dt = qh.Select(query);
-
-            if (dt.Rows.Count > 0)
+            try
             {
-                foreach (DataRow dr in dt.Rows)
+                // 2018/05/01 穎華重要備註， 在table exam_template 欄位 description 不為空代表其為ESL 的樣板
+                string query = "select * from exam_template where description !='' ORDER BY name";
+
+                QueryHelper qh = new QueryHelper();
+                DataTable dt = qh.Select(query);
+
+                if (dt.Rows.Count > 0)
                 {
-
-                    ButtonItem item = new ButtonItem();
-                    item.Text = "" + dr[1];
-                    item.Tag = "" + dr[0];
-                    item.OptionGroup = "AssessmentSetup";
-                    item.Click += new EventHandler(AssessmentSetup_Click); //點一下 將焦點轉換
-                    item.DoubleClick += new EventHandler(AssessmentSetup_DoubleClick); //連點兩下 進入更名視窗
-                    ipList.Items.Add(item);
-
-                    // 紀錄原本樣板 Description 資料，作為比較用
-                    if (!_oriTemplateDescriptionDict.ContainsKey("" + dr[0]))
+                    foreach (DataRow dr in dt.Rows)
                     {
-                        _oriTemplateDescriptionDict.Add("" + dr[0], "" + dr["description"]);
+
+                        ButtonItem item = new ButtonItem();
+                        item.Text = "" + dr[1];
+                        item.Tag = "" + dr[0];
+                        item.OptionGroup = "AssessmentSetup";
+                        item.Click += new EventHandler(AssessmentSetup_Click); //點一下 將焦點轉換
+                        item.DoubleClick += new EventHandler(AssessmentSetup_DoubleClick); //連點兩下 進入更名視窗
+                        ipList.Items.Add(item);
+
+                        // 紀錄原本樣板 Description 資料，作為比較用
+                        if (!_oriTemplateDescriptionDict.ContainsKey("" + dr[0]))
+                        {
+                            _oriTemplateDescriptionDict.Add("" + dr[0], "" + dr["description"]);
+                        }
+                    }
+                }
+
+
+                query = "select * from exam";
+
+                qh = new QueryHelper();
+                dt = qh.Select(query);
+
+                if (dt.Rows.Count > 0)
+                {
+                    _examID_NameDict.Clear();
+                    _examName_IDDict.Clear();
+
+                    foreach (DataRow dr in dt.Rows)
+                    {
+                        _examID_NameDict.Add("" + dr["id"], "" + dr["exam_name"]);
+                        _examName_IDDict.Add("" + dr["exam_name"], "" + dr["id"]);
                     }
                 }
             }
-
-
-            query = "select * from exam";
-
-            qh = new QueryHelper();
-            dt = qh.Select(query);
-
-            if (dt.Rows.Count > 0)
+            catch (Exception exc)
             {
-                _examID_NameDict.Clear();
-                _examName_IDDict.Clear();
-
-                foreach (DataRow dr in dt.Rows)
-                {
-                    _examID_NameDict.Add("" + dr["id"], "" + dr["exam_name"]);
-                    _examName_IDDict.Add("" + dr["exam_name"], "" + dr["id"]);
-                }
+                //CurrentUser.ReportError(e.Error);
+                DisableFunctions();
+                MsgBox.Show("下載評量設定資料錯誤。", Application.ProductName);
             }
-
-        }
-
-        private void Workder_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
-        {
-            try
-            {
-                if (e.Error != null)
-                {
-                    //CurrentUser.ReportError(e.Error);
-                    DisableFunctions();
-                    AfterLoadAssessmentSetup();
-                    MsgBox.Show("下載評量設定資料錯誤。", Application.ProductName);
-                    return;
-                }
-
-                AfterLoadAssessmentSetup();
-            }
-            catch (Exception ex)
-            {
-                MsgBox.Show(ex.Message);
-            }
+            AfterLoadAssessmentSetup();
         }
 
         private void BeforeLoadAssessmentSetup()
@@ -254,8 +221,8 @@ namespace ESL_System.Form
                             t.InputEndTime = ele_term.Attribute("InputEndTime").Value;
 
                             // 2019/03/18 ESL 寒假優化項目決議， 子項目成績 需要另外獨立設定 輸入時間區間，假如使用者沒有設定， 預設為 與 term 輸入時間區段一樣
-                            t.CustomInputStartTime = ele_term.Attribute("CustomInputStartTime")!=null ? ele_term.Attribute("CustomInputStartTime").Value : t.InputStartTime;
-                            t.CustomInputEndTime = ele_term.Attribute("CustomInputEndTime")!=null ? ele_term.Attribute("CustomInputEndTime").Value: t.InputEndTime;
+                            t.CustomInputStartTime = ele_term.Attribute("CustomInputStartTime") != null ? ele_term.Attribute("CustomInputStartTime").Value : t.InputStartTime;
+                            t.CustomInputEndTime = ele_term.Attribute("CustomInputEndTime") != null ? ele_term.Attribute("CustomInputEndTime").Value : t.InputEndTime;
 
                             t.Ref_exam_id = ele_term.Attribute("Ref_exam_id") != null ? ele_term.Attribute("Ref_exam_id").Value : ""; // 2018/09/26 穎驊新增，因應要將 ESL 評量導入 成績系統，恩正說，在此加入評量對照
 
@@ -413,6 +380,8 @@ namespace ESL_System.Form
         private void ESL_TemplateSetupManager_Load(object sender, EventArgs e)
         {
             BeforeLoadAssessmentSetup();
+            //載入資料
+            LoadAssessmentSetups();
         }
 
         // 新增、刪除 Node 按鈕
@@ -1315,7 +1284,7 @@ namespace ESL_System.Form
             foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
-                {                    
+                {
                     foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
                     {
                         foreach (DevComponents.AdvTree.Node node_assessment_sub in node_assessment.Nodes)
@@ -1341,7 +1310,7 @@ namespace ESL_System.Form
             foreach (DevComponents.AdvTree.Node node_term in advTree1.Nodes)
             {
                 foreach (DevComponents.AdvTree.Node node_subject in node_term.Nodes)
-                {                                        
+                {
                     foreach (DevComponents.AdvTree.Node node_assessment in node_subject.Nodes)
                     {
                         if (node_assessment.Text == "比例:")
@@ -1593,7 +1562,7 @@ namespace ESL_System.Form
             updQuery += string.Format(@"
                 UPDATE exam_template 
                     SET description = '" + description_xml + "'" +
-                    ", extension = '<Extension><ScorePercentage>" + ipt01.Value +"</ScorePercentage></Extension>' " +
+                    ", extension = '<Extension><ScorePercentage>" + ipt01.Value + "</ScorePercentage></Extension>' " +
                 "WHERE id = '" + esl_exam_template_id + "'");
 
 
