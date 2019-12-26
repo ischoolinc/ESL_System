@@ -960,7 +960,7 @@ namespace ESL_System.Form
             // Apply the paragraph style to the current paragraph in the document and add some text.
             builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
             // 每一個 評量的名稱 放在最上面 (使用大字粗體)
-            builder.Writeln("評量名稱: " + ExamName+ " 依領域分列");
+            builder.Writeln("評量名稱: " + ExamName + " 依領域分列");
 
             // Change to a paragraph style that has no list formatting. (將字體還原)
             builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
@@ -1190,7 +1190,7 @@ namespace ESL_System.Form
 
             #region 取得ESL 課程成績
             _bw.ReportProgress(20, "取得ESL課程成績");
-            
+
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
@@ -1252,12 +1252,12 @@ namespace ESL_System.Form
 
             DataTable dtScore = qh.Select(sqlScore);
 
-            decimal progress = 20;            
-            decimal per = (decimal)(100 - progress) / (dtScore.Rows.Count !=0 ? dtScore.Rows.Count:1);
-            
+            decimal progress = 20;
+            decimal per = (decimal)(100 - progress) / (dtScore.Rows.Count != 0 ? dtScore.Rows.Count : 1);
+
             foreach (DataRow row in dtScore.Rows)
-            {                
-                progress += (decimal)(per);                
+            {
+                progress += (decimal)(per);
                 _bw.ReportProgress((int)progress);
 
                 string termWord = "" + row["term"];
@@ -1960,7 +1960,9 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                         string subjectWieght = "" + Math.Round((float.Parse(subject.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"]), 2, MidpointRounding.ToEven);
 
-                        _itemDict[templateName].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", subjectWieght); //subject比重 
+                        var subjectKey = "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重";
+                        if (_itemDict[templateName].ContainsKey(subjectKey))
+                            _itemDict[templateName].Add(subjectKey, subjectWieght); //subject比重 
 
                         // 計算比重用，先整理 Assessment  的 總和
                         foreach (Assessment assessment in subject.AssessmentList)
@@ -1995,8 +1997,9 @@ WHERE course.id IN ('" + course_ids + "') " +
                                     dataTable.Columns.Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "教師");
 
                                 string assessmentWieght = "" + Math.Round((weightCalDict[term.Name + "_" + subject.Name] * float.Parse(assessment.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"] * weightCalDict[term.Name + "_" + subject.Name + "_AssessmentTotal"]), 2, MidpointRounding.ToEven);
-
-                                _itemDict[templateName].Add("評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重", assessmentWieght); //assessment比重 
+                                var assessmentKey = "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重";
+                                if (_itemDict[templateName].ContainsKey(assessmentKey))
+                                    _itemDict[templateName].Add(assessmentKey, assessmentWieght); //assessment比重 
 
                             }
                             if (assessment.Type == "Indicator") // 檢查看有沒有　　Indicator　，有的話另外存List 做對照
