@@ -31,8 +31,6 @@ namespace ESL_System.Form
         private string school_year = "";
         private string semester = "";
 
-        // 儲放樣板 id 與 樣板名稱的對照
-        private Dictionary<string, string> _templateIDNameDict = new Dictionary<string, string>();
 
         // 儲放學生ESL 成績的dict 其結構為 <studentID,<scoreKey,scoreValue>
         private Dictionary<string, Dictionary<string, string>> _scoreDict = new Dictionary<string, Dictionary<string, string>>();
@@ -404,6 +402,9 @@ namespace ESL_System.Form
         // 穎驊搬過來的工具，可以一次大量建立有規則的功能變數，可以省下很多時間。
         private void CreateFieldTemplate()
         {
+            // 儲放樣板 id 與 樣板名稱的對照
+            Dictionary<string, string> templateIDNameDict = new Dictionary<string, string>();
+
             List<Term> termList = new List<Term>();
 
             Aspose.Words.Document doc = new Aspose.Words.Document();
@@ -529,7 +530,7 @@ namespace ESL_System.Form
 
                 termList.Clear(); // 每一個樣板 清完後 再加
 
-                _templateIDNameDict.Add(dr["id"].ToString(), dr["name"].ToString());
+                templateIDNameDict.Add(dr["id"].ToString(), dr["name"].ToString());
             }
 
             // 幫每一個系統試別 建立序列化的功能變數 
