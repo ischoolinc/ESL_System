@@ -33,3 +33,5 @@ ESL_System/obj/Debug/ESLSystem.csprojResolveAssemblyReference.cache
 ESL_System/obj/Debug/ESL_System.Form.PrintESLReportForm.resources
 ESL_System/obj/Debug/ESL_System.Form.ESLCourseScoreStatusForm.resources
 /ESL_System/obj
+/ESL_System/ESLSystem.csproj.user
+/ESL_System/bin

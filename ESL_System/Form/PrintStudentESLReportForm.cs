@@ -1962,7 +1962,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                         string subjectWieght = "" + Math.Round((float.Parse(subject.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"]), 2, MidpointRounding.ToEven);
 
                         var subjectKey = "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重";
-                        if (_itemDict[templateName].ContainsKey(subjectKey))
+                        if (!_itemDict[templateName].ContainsKey(subjectKey))
                             _itemDict[templateName].Add(subjectKey, subjectWieght); //subject比重 
 
                         // 計算比重用，先整理 Assessment  的 總和
@@ -1999,7 +1999,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                                 string assessmentWieght = "" + Math.Round((weightCalDict[term.Name + "_" + subject.Name] * float.Parse(assessment.Weight) * 100) / (weightCalDict[term.Name + "_SubjectTotal"] * weightCalDict[term.Name + "_" + subject.Name + "_AssessmentTotal"]), 2, MidpointRounding.ToEven);
                                 var assessmentKey = "評量" + "_" + term.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + subject.Name.Trim().Replace(' ', '_').Replace('"', '_') + "/" + assessment.Name.Trim().Replace(' ', '_').Replace('"', '_') + "_" + "比重";
-                                if (_itemDict[templateName].ContainsKey(assessmentKey))
+                                if (!_itemDict[templateName].ContainsKey(assessmentKey))
                                     _itemDict[templateName].Add(assessmentKey, assessmentWieght); //assessment比重 
 
                             }
