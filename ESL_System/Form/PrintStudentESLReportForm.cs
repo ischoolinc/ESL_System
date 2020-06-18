@@ -16,6 +16,10 @@ using System.Xml;
 using System.IO;
 using Aspose.Words;
 using K12.Data.Configuration;
+using ESL_System.Service;
+using ESL_System.Model;
+using FISCA.UDT;
+using ESL_System.UDT;
 
 namespace ESL_System.Form
 {
@@ -31,6 +35,8 @@ namespace ESL_System.Form
         private string school_year = "";
         private string semester = "";
 
+        // 儲放 學期科目成績算術平均用物件
+        private SemsTotalScoreInfos _SemsTotalScoreInfos = new SemsTotalScoreInfos();
 
         // 儲放學生ESL 成績的dict 其結構為 <studentID,<scoreKey,scoreValue>
         private Dictionary<string, Dictionary<string, string>> _scoreDict = new Dictionary<string, Dictionary<string, string>>();
@@ -292,7 +298,9 @@ namespace ESL_System.Form
                 _orderedSubject = comboBoxEx3.Text; // 排序科目
             }
 
-            _bw.RunWorkerAsync();
+            FormParam formParam = new FormParam(school_year, semester);
+
+            _bw.RunWorkerAsync(formParam);
 
             //2018/12/20 不選電腦內樣板了，有設定檔
             //// 2018/10/29 穎驊註解，目前的作法先每一次都讓使用者列印前，選擇列印樣板
@@ -553,6 +561,22 @@ namespace ESL_System.Form
             builder.StartTable();
 
             builder.InsertCell();
+            builder.Write("學期科目成績算術平均");
+            builder.InsertCell();
+            builder.InsertField("MERGEFIELD " + "學期科目成績算術平均" + " \\* MERGEFORMAT ", "«SS_AVG»");
+            builder.EndRow();
+
+
+
+            builder.InsertCell();
+            builder.Write("學期科目GPA算術平均");
+
+            builder.InsertCell();
+            builder.InsertField("MERGEFIELD " + "學期科目GPA算術平均" + " \\* MERGEFORMAT ", "«SSGPA_AVG»");
+            builder.EndRow();
+
+
+            builder.InsertCell();
             builder.Write("課程名稱");
             builder.InsertCell();
             builder.Write("課程科目名稱");
@@ -560,6 +584,10 @@ namespace ESL_System.Form
             builder.Write("課程學期成績分數");
             builder.InsertCell();
             builder.Write("課程學期成績等第");
+            builder.InsertCell();
+            builder.Write("課程學期成績GPA");
+            builder.InsertCell();
+            builder.Write("課程文字描述");
 
             builder.EndRow();
 
@@ -573,6 +601,10 @@ namespace ESL_System.Form
                 builder.InsertField("MERGEFIELD " + "課程學期成績分數" + i + " \\* MERGEFORMAT ", "«CSS»");
                 builder.InsertCell();
                 builder.InsertField("MERGEFIELD " + "課程學期成績等第" + i + " \\* MERGEFORMAT ", "«CSL»");
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + "課程學期成績GPA" + i + " \\* MERGEFORMAT ", "«CSL»");
+                builder.InsertCell();
+                builder.InsertField("MERGEFIELD " + "課程文字描述" + i + " \\* MERGEFORMAT ", "«CTEXT»"); // 20200615客製
                 builder.EndRow();
             }
 
@@ -986,6 +1018,8 @@ namespace ESL_System.Form
                 builder.Write("科目總成績");
                 //builder.InsertCell();
                 //builder.Write("科目文字評量");
+                //builder.InsertCell();
+                //builder.Write("文字描述");
                 builder.EndRow();
 
                 for (int i = 1; i < 8; i++)
@@ -1097,6 +1131,8 @@ namespace ESL_System.Form
 
         private void _bkWork_DoWork(object sender, DoWorkEventArgs e)
         {
+            FormParam formParam = e.Argument as FormParam;
+
             // 處理等第
             DegreeMapper dm = new DegreeMapper();
 
@@ -1138,6 +1174,7 @@ namespace ESL_System.Form
 
             if (courseIDList.Count == 0)
             {
+                e.Cancel = true;
                 MsgBox.Show("本學期沒有任何設定ESL樣板的課程。", "錯誤!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
@@ -1442,6 +1479,8 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             DataTable dtSerialScore = qh.Select(sqlSerialScore);
 
+
+
             foreach (DataRow row in dtSerialScore.Rows)
             {
                 string id = "" + row["ref_student_id"];
@@ -1523,12 +1562,18 @@ WHERE course.id IN ('" + course_ids + "') " +
                 }
             }
 
+
+
+
+
             // 課程學期成績
             string sqlSemesterCourseScore = @"SELECT
 sc_attend.ref_student_id
 ,exam_template.name
 ,course.course_name
 ,course.domain
+,course.semester
+,course.school_year
 ,course.subject
 ,sc_attend.score
 FROM sc_attend
@@ -1539,6 +1584,12 @@ WHERE course.id IN ('" + course_ids + "') " +
 "ORDER BY ref_student_id,domain,subject";
 
             DataTable dtSemesterCourseScore = qh.Select(sqlSemesterCourseScore);
+
+            // 整理科目文字評量 (【sems_subj_score 】) 
+            Dictionary<string, Dictionary<string, string>> dicSubjectTexts = DataService.GetSemsSubjText(studentIDList, formParam.SchoolYear, formParam.Semester);
+
+            DataService dataService = new DataService();
+
 
             foreach (DataRow row in dtSemesterCourseScore.Rows)
             {
@@ -1552,6 +1603,9 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string score = "" + row["score"]; // 課程學期成績
 
                 string scoreKey = templateWord.Trim().Replace(' ', '_').Replace('"', '_');
+
+
+
 
                 if (_scoreDict.ContainsKey(id))
                 {
@@ -1573,7 +1627,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                     #endregion
                     #region 序列化功能變數
                     bool added = false;  // 尚未加入
-
+                
                     for (int i = 1; !added; i++)
                     {
 
@@ -1600,19 +1654,76 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                         _scoreDict[id].Add("課程學期成績分數" + i, score);
 
+
+
+
                         decimal score_d;
+
                         if (decimal.TryParse(score, out score_d))
                         {
                             _scoreDict[id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
                         }
 
+                        decimal? GPA_d = dataService.GetFinalGPA(subjectWord, score_d);
+                        _scoreDict[id].Add("課程學期成績GPA" + i, GPA_d.ToString());
+
+                        // 處理學期算數平均
+                        this._SemsTotalScoreInfos.AddforCoumpte(id, new SemsSubjScoreInfo(subjectWord, score_d, GPA_d));
+
+
+                        if (_scoreDict[id].ContainsKey("課程文字描述" + i))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            //不同來源之學期科目文字評量
+                            if (dicSubjectTexts.ContainsKey(id))
+                            {
+                                if (dicSubjectTexts[id].ContainsKey(subjectWord))
+                                {
+                                    _scoreDict[id].Add("課程文字描述" + i, dicSubjectTexts[id][subjectWord]);
+                                }
+                            }
+                        }
+
+
                     }
+               
+                        //decimal SemestAverageScore = Math.Round(totalScoreSum / subjCount, 1, MidpointRounding.AwayFromZero);
+                        //_scoreDict[id].Add("學期科目成績算術平均", SemestAverageScore.ToString());
+                        //decimal SemestAverageGPA = Math.Round(totalGPASum / subjCount, 1, MidpointRounding.AwayFromZero);
+                        //_scoreDict[id].Add("學期科目GPA算術平均", SemestAverageGPA.ToString());
+                 
                     #endregion
                 }
             }
 
-
             #endregion
+
+            //學期科目算數平均
+            // 取得計算 學期算術平均的物件
+            Dictionary<string, SemsTotalScoreInfo> semsScoreInfos =  this._SemsTotalScoreInfos.GetAllSemsTotalScoreInfo();
+
+            foreach (string studID in this._SemsTotalScoreInfos.GetAllSemsTotalScoreInfo().Keys)
+            {
+                if (_scoreDict.ContainsKey(studID)) 
+                {
+                    SemsTotalScoreInfo semsTotalScoreInfo = semsScoreInfos[studID];
+                    if (!_scoreDict[studID].ContainsKey("學期科目成績算術平均")) 
+                    {
+                    _scoreDict[studID].Add("學期科目成績算術平均", semsTotalScoreInfo.GetScoreAvg(2).ToString());
+                    
+                    }
+                    if (!_scoreDict[studID].ContainsKey("學期科目GPA算術平均"))
+                    {
+                     _scoreDict[studID].Add("學期科目GPA算術平均", semsTotalScoreInfo.GetGPAAvg(2).ToString());
+                    }
+                }
+            }
+
+
+
 
 
             #region 取得 缺曠獎懲
@@ -1754,8 +1865,6 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                 _mergeDataTable.Rows.Add(row);
 
-
-
             }
 
 
@@ -1784,7 +1893,8 @@ WHERE course.id IN ('" + course_ids + "') " +
         {
             if (e.Cancelled)
             {
-                this.Close();
+                this.btnPrint.Enabled = true;
+                this.btnPrint.Enabled = false;
                 return;
             }
 
@@ -2073,12 +2183,18 @@ WHERE course.id IN ('" + course_ids + "') " +
                     dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目總成績" + i);
                 }
             }
+            dataTable.Columns.Add("學期科目成績算術平均");
+            dataTable.Columns.Add("學期科目GPA算術平均");
+
+
             for (int i = 1; i < 26; i++)
             {
                 dataTable.Columns.Add("課程名稱" + i);
                 dataTable.Columns.Add("課程科目名稱" + i);
                 dataTable.Columns.Add("課程學期成績分數" + i);
+                dataTable.Columns.Add("課程學期成績GPA" + i);
                 dataTable.Columns.Add("課程學期成績等第" + i);
+                dataTable.Columns.Add("課程文字描述" + i);
             }
 
 
