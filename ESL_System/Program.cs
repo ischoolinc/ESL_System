@@ -8,6 +8,7 @@ using FISCA.Presentation;
 using K12.Presentation;
 using FISCA.Permission;
 using JHSchool;
+using SubjectGPAMapping;
 
 
 namespace ESL_System
@@ -18,6 +19,9 @@ namespace ESL_System
         [FISCA.MainMethod()]
         public static void Main()
         {
+            //GPAMapping.Register();
+
+
             FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
 
             accessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增

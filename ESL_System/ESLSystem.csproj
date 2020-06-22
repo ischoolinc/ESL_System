@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ESL_System</RootNamespace>
     <AssemblyName>ESL_System</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\ESL_System.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -97,6 +98,7 @@
       <HintPath>Library\JHSchool.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="JHSchool.Data, Version=2.0.0.2, Culture=neutral, processorArchitecture=MSIL" />
     <Reference Include="K12.Data, Version=2.0.0.8, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Library\K12.Data.dll</HintPath>
@@ -131,6 +133,14 @@
       <DependentUpon>BasicInfoItem.cs</DependentUpon>
     </Compile>
     <Compile Include="DegreeMapper.cs" />
+    <Compile Include="Model\FormParam.cs" />
+    <Compile Include="Model\SemsSubjScoreInfo.cs" />
+    <Compile Include="Model\SemsTotalScoreInfos.cs" />
+    <Compile Include="Model\SubjectGPAMapping.cs" />
+    <Compile Include="Model\SemsTotalScoreInfo.cs" />
+    <Compile Include="Service\DataService.cs" />
+    <Compile Include="UDT\ScoreGPAMapping.cs" />
+    <Compile Include="UDT\SubjectInfoForGAPLevel.cs" />
     <Compile Include="WeeklyReportRecord.cs" />
     <Compile Include="ESLCourseRecord.cs" />
     <Compile Include="ESLScore\Assessment.cs" />
@@ -411,6 +421,12 @@
     <None Include="Resource\MidReport_MailMergeList.docx" />
     <None Include="Resource\SemesterReport .docx" />
     <None Include="Resource\SemesterReport_MailMergeList.docx" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SubjectGPAMapping\SubjectGPAMapping.csproj">
+      <Project>{046be27e-32e6-4e03-844b-fb92ea252e3c}</Project>
+      <Name>SubjectGPAMapping</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
