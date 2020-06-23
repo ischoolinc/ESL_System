@@ -20,7 +20,7 @@ namespace ESL_System.Service
         List<SubjectInfoForGAPLevel> SubGPAMapping;
         List<ScoreGPAMapping> ScoreGPAMapping;
 
-       public DataService()
+        public DataService()
         {
             AccessHelper accessHelper = new AccessHelper();
             SubGPAMapping = accessHelper.Select<SubjectInfoForGAPLevel>();
@@ -43,7 +43,7 @@ namespace ESL_System.Service
 
             foreach (JHSemesterScoreRecord scorerecord in ListJHSemesterScoreRecord)
             {
-                Dictionary<string, SubjectScore> subjDic = scorerecord.Subjects;  // 取得科目資料s
+                Dictionary<string, SubjectScore> subjDic = scorerecord.Subjects;  // 取得科目資料
 
                 Dictionary<string, SubjectScore> subjDicf = subjDic.Where(x => x.Value.SchoolYear == schoolYear && x.Value.Semester == semester).ToDictionary(x => x.Key, x => x.Value); ;
 
@@ -62,7 +62,6 @@ namespace ESL_System.Service
 
                     if (!dicSubjTextInfos[scorerecord.RefStudentID].ContainsKey(subjName))
                     {
-
                         dicSubjTextInfos[scorerecord.RefStudentID].Add(subjName, subjectScore.Text);
                     }
                 }
@@ -97,9 +96,7 @@ namespace ESL_System.Service
             }
             else
             {
-
                 return GetStandar(score);
-
             }
 
         }
@@ -110,15 +107,22 @@ namespace ESL_System.Service
         {
             foreach (ScoreGPAMapping scoreGPAMapping in this.ScoreGPAMapping)
             {
-                if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                if (score != 100)
                 {
-
-                    return scoreGPAMapping.Honers;
-
+                    if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.Honers;
+                    }
+                }
+                else 
+                {
+                    if (score >= scoreGPAMapping.MinScore && score <= scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.Honers;
+                    }
                 }
             }
             return null;
-
         }
 
 
@@ -127,12 +131,21 @@ namespace ESL_System.Service
         {
             foreach (ScoreGPAMapping scoreGPAMapping in this.ScoreGPAMapping)
             {
-                if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                if (score != 100)
                 {
-
-                    return scoreGPAMapping.AP;
-
+                    if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.AP;
+                    }
                 }
+                else  // 分數等於100 
+                {
+                    if (score >= scoreGPAMapping.MinScore && score <= scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.AP;
+                    }
+                }
+
             }
             return null;
 
@@ -143,11 +156,24 @@ namespace ESL_System.Service
         {
             foreach (ScoreGPAMapping scoreGPAMapping in this.ScoreGPAMapping)
             {
-                if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                if (score != 100)
                 {
-                    return scoreGPAMapping.GPA;
+                    if (score >= scoreGPAMapping.MinScore && score < scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.GPA;
 
+                    }
                 }
+                else  //分數=100
+                {
+
+                    if (score >= scoreGPAMapping.MinScore && score <= scoreGPAMapping.MaxScore)
+                    {
+                        return scoreGPAMapping.GPA;
+
+                    }
+                }
+
             }
             return null;
 

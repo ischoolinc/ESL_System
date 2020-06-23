@@ -1016,6 +1016,8 @@ namespace ESL_System.Form
                 builder.Write("科目平時評量");
                 builder.InsertCell();
                 builder.Write("科目總成績");
+                builder.InsertCell();
+                builder.Write("科目文字描述");
                 //builder.InsertCell();
                 //builder.Write("科目文字評量");
                 //builder.InsertCell();
@@ -1047,6 +1049,11 @@ namespace ESL_System.Form
                     builder.InsertCell();
 
                     builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目總成績" + i + " \\* MERGEFORMAT ", "«SST»");
+
+
+                    builder.InsertCell();
+
+                    builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目文字描述" + i + " \\* MERGEFORMAT ", "«STEXT»");
 
                     builder.EndRow();
                 }
@@ -1088,8 +1095,8 @@ namespace ESL_System.Form
             builder.Write("科目平時評量");
             builder.InsertCell();
             builder.Write("科目總成績");
-            //builder.InsertCell();
-            //builder.Write("科目文字評量");
+            builder.InsertCell();
+            builder.Write("科目文字描述");
             builder.EndRow();
 
             for (int i = 1; i < 26; i++)
@@ -1117,6 +1124,14 @@ namespace ESL_System.Form
                 builder.InsertCell();
 
                 builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目總成績" + i + " \\* MERGEFORMAT ", "«SST»");
+
+
+                builder.InsertCell();
+
+                builder.InsertField("MERGEFIELD " + ExamName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目文字描述" + i + " \\* MERGEFORMAT ", "«SST»");
+
+
+
 
                 builder.EndRow();
             }
@@ -1462,8 +1477,9 @@ exam.exam_name
 ,sc_attend.ref_student_id
 ,sce_take.score AS score -- 評量總分
 --,sce_take.extension
-,unnest(xpath('/Extension/Score/text()', xmlparse(content sce_take.extension))) ::text AS exam_score 
-,unnest(xpath('/Extension/AssignmentScore/text()', xmlparse(content sce_take.extension))) ::text AS assignment_score 
+,array_to_string(xpath('/Extension/Score/text()', xmlparse(content sce_take.extension)),'') ::text AS exam_score 
+,array_to_string(xpath('/Extension/AssignmentScore/text()', xmlparse(content sce_take.extension)),'') ::text AS assignment_score 
+,array_to_string(xpath('/Extension/Text/text()', xmlparse(content sce_take.extension)),'') ::text AS text 
 FROM sce_take 
 LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
 LEFT JOIN course ON course.id = sc_attend.ref_course_id
@@ -1493,7 +1509,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string exam_score = "" + row["exam_score"]; // 定期評量
                 string assignment_score = "" + row["assignment_score"]; // 平時評量
                 string score = "" + row["score"]; // 評量總分
-
+                string text = "" + row["text"];
                 {//依領域分開
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domainWord + "_";
 
@@ -1523,6 +1539,8 @@ WHERE course.id IN ('" + course_ids + "') " +
                             _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
 
                             _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
+
+                            _scoreDict[id].Add(scoreKey + "科目文字描述" + i, text);
 
                         }
                     }
@@ -1556,6 +1574,8 @@ WHERE course.id IN ('" + course_ids + "') " +
                             _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
 
                             _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
+
+                            _scoreDict[id].Add(scoreKey + "科目文字描述" + i, text);
 
                         }
                     }
@@ -1599,7 +1619,6 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string domainWord = "" + row["domain"];
                 string courseWord = "" + row["course_name"];
                 string subjectWord = "" + row["subject"];
-
                 string score = "" + row["score"]; // 課程學期成績
 
                 string scoreKey = templateWord.Trim().Replace(' ', '_').Replace('"', '_');
@@ -1803,8 +1822,8 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                 row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
 
-                row["學年度"] = K12.Data.School.DefaultSchoolYear;
-                row["學期"] = K12.Data.School.DefaultSemester;
+                row["學年度"] = this.school_year;
+                row["學期"] = this.semester;
                 row["學號"] = stuRecord.StudentNumber;
                 row["年級"] = stuRecord.Class != null ? "" + stuRecord.Class.GradeYear : "";
 
@@ -2170,6 +2189,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                         dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目定期評量" + i);
                         dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目平時評量" + i);
                         dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目總成績" + i);
+                        dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domain + "_" + "科目文字描述" + i);
                     }
                 }
                 //所有科目
@@ -2181,6 +2201,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                     dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目定期評量" + i);
                     dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目平時評量" + i);
                     dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目總成績" + i);
+                    dataTable.Columns.Add(examName.Replace(' ', '_').Replace('"', '_') + "_" + "評量_科目文字描述" + i);
                 }
             }
             dataTable.Columns.Add("學期科目成績算術平均");

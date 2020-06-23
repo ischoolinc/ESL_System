@@ -422,11 +422,5 @@
     <None Include="Resource\SemesterReport .docx" />
     <None Include="Resource\SemesterReport_MailMergeList.docx" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\SubjectGPAMapping\SubjectGPAMapping.csproj">
-      <Project>{046be27e-32e6-4e03-844b-fb92ea252e3c}</Project>
-      <Name>SubjectGPAMapping</Name>
-    </ProjectReference>
-  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
