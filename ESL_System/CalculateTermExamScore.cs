@@ -73,7 +73,7 @@ namespace ESL_System
             _worker.RunWorkerCompleted += new RunWorkerCompletedEventHandler(Worker_RunWorkerCompleted);
             _worker.ProgressChanged += new ProgressChangedEventHandler(Worker_ProgressChanged);
             _worker.WorkerReportsProgress = true;
-            _worker.WorkerSupportsCancellation = true;            
+            _worker.WorkerSupportsCancellation = true;
             _worker.RunWorkerAsync();
 
         }
@@ -248,8 +248,8 @@ namespace ESL_System
                         if (elmRoot.Element("Extension").Element("ScorePercentage") != null)
                         {
                             _scoreRatioTotalDict.Add(course.ID + "_中文系統評分樣版定期比例", int.Parse(elmRoot.Element("Extension").Element("ScorePercentage").Value));
-                            _scoreRatioTotalDict.Add(course.ID + "_中文系統評分樣版平時比例", 100 -int.Parse(elmRoot.Element("Extension").Element("ScorePercentage").Value));
-                        }                        
+                            _scoreRatioTotalDict.Add(course.ID + "_中文系統評分樣版平時比例", 100 - int.Parse(elmRoot.Element("Extension").Element("ScorePercentage").Value));
+                        }
                     }
                 }
             }
@@ -265,7 +265,7 @@ namespace ESL_System
             // 將全部狀態非一般生的學生 修課紀錄移除
             _scatList.RemoveAll(scaRecord => scaRecord.Student.Status != StudentRecord.StudentStatus.一般);
 
-            
+
             // 將修課紀錄 以stidentID 整理成字典
             foreach (K12.Data.SCAttendRecord scattendRecord in _scatList)
             {
@@ -319,7 +319,7 @@ namespace ESL_System
                      ,$esl.gradebook_assessment_score.ratio
                       FROM $esl.gradebook_assessment_score 
                       LEFT JOIN sc_attend ON sc_attend.id = $esl.gradebook_assessment_score.ref_sc_attend_id
-                      WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +                      
+                      WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +
                       "AND term IN(" + termNames + ")" +
                       "AND assessment != ''";
 
@@ -387,8 +387,8 @@ namespace ESL_System
                 }
             }
             else
-            {                
-                e.Cancel = true;                
+            {
+                e.Cancel = true;
                 return;
             }
             #endregion
@@ -412,7 +412,7 @@ namespace ESL_System
                      ,$esl.gradebook_assessment_score.ratio
                       FROM $esl.gradebook_assessment_score 
                       LEFT JOIN sc_attend ON sc_attend.id = $esl.gradebook_assessment_score.ref_sc_attend_id" +
-                      " WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +                      
+                      " WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +
                       " AND term IN(" + termNames + ")" +
                       " AND assessment IS NULL ";
 
@@ -550,7 +550,7 @@ namespace ESL_System
 
                 foreach (Term t in _scoreTemplateDict[courseID])
                 {
-                    t.SubjectTotalWeight = 0;                  
+                    t.SubjectTotalWeight = 0;
 
                     foreach (Subject s in t.SubjectList)
                     {
@@ -563,9 +563,9 @@ namespace ESL_System
                             if (a.Type == "Score") // 只取分數型成績
                             {
                                 key_assessment = courseID + "_" + t.Name + "_" + s.Name + "_" + a.Name;
-                                
+
                                 // 2019/02/01 穎驊更新， ESＬ　寒假優化，assessment　直接對應 term 成績計算
-                                int ratio_assessment = int.Parse(a.Weight); 
+                                int ratio_assessment = int.Parse(a.Weight);
 
                                 _scoreRatioDict.Add(key_assessment, ratio_assessment);
 
@@ -576,7 +576,7 @@ namespace ESL_System
                         }
 
                         key_subject = courseID + "_" + t.Name + "_" + s.Name;
-                         
+
                         _scoreRatioDict.Add(key_subject, ratio_subject);
                     }
                 }
@@ -601,7 +601,7 @@ namespace ESL_System
                     key_score_assessment = score.RefCourseID + "_" + score.Term + "_" + score.Subject + "_" + score.Assessment; // 查分數比例的KEY 這些就夠
 
                     key_subject = score.RefCourseID + "_" + score.RefStudentID + "_" + score.Term + "_" + score.Subject; // 寫給學生的Subject 成績 還必須要有 studentID 才有獨立性
-                    
+
                     if (_scoreRatioDict.ContainsKey(key_score_assessment))
                     {
                         decimal assementScore;
@@ -615,14 +615,14 @@ namespace ESL_System
                             // 如果 學生該筆成績 有獨立的  Ratio 權重設定，以該Ratio 權重優先
                             if (score.Ratio != null)
                             {
-                                subject_score_partial = assementScore *  decimal.Parse(score.Ratio + "");
+                                subject_score_partial = assementScore * decimal.Parse(score.Ratio + "");
                             }
                             else
                             {
                                 subject_score_partial = assementScore * _scoreRatioDict[key_score_assessment];
                             }
 
-                            
+
                             // 處理 subject分母
                             if (!_scoreRatioTotalDict.ContainsKey(key_subject))
                             {
@@ -633,18 +633,18 @@ namespace ESL_System
                                 else
                                 {
                                     _scoreRatioTotalDict.Add(key_subject, _scoreRatioDict[key_score_assessment]);
-                                }                                
+                                }
                             }
                             else
                             {
                                 if (score.Ratio != null)
-                                {                                    
+                                {
                                     _scoreRatioTotalDict[key_subject] += decimal.Parse(score.Ratio + "");
                                 }
                                 else
                                 {
                                     _scoreRatioTotalDict[key_subject] += _scoreRatioDict[key_score_assessment];
-                                }                                
+                                }
                             }
 
                             // 處理 subject分母(定期、平時)
@@ -653,24 +653,24 @@ namespace ESL_System
                                 if (!_scoreRatioTotalDict.ContainsKey(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]))
                                 {
                                     if (score.Ratio != null)
-                                    {                                        
+                                    {
                                         _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], decimal.Parse(score.Ratio + ""));
                                     }
                                     else
                                     {
                                         _scoreRatioTotalDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], _scoreRatioDict[key_score_assessment]);
-                                    }                                    
+                                    }
                                 }
                                 else
                                 {
                                     if (score.Ratio != null)
-                                    {                                        
+                                    {
                                         _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += decimal.Parse(score.Ratio + "");
                                     }
                                     else
                                     {
                                         _scoreRatioTotalDict[key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment]] += _scoreRatioDict[key_score_assessment];
-                                    }                                    
+                                    }
                                 }
                             }
 
@@ -718,7 +718,7 @@ namespace ESL_System
                                         // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的                                    
                                         subjectScore.Score = 0;
                                     }
-                                    
+
 
                                     _subjectScoreDict.Add(key_subject + "_" + _scoreExamScoreTypeDict[key_score_assessment], subjectScore);
                                 }
@@ -731,9 +731,9 @@ namespace ESL_System
                                     else
                                     {
                                         // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的                                                                         
-                                    }                                    
+                                    }
                                 }
-                            }                            
+                            }
                         }
                         else
                         {
@@ -747,7 +747,7 @@ namespace ESL_System
             foreach (string key_subject in _subjectScoreDict.Keys)
             {
                 ESLScore subjectScore = _subjectScoreDict[key_subject];
-                
+
                 string key_score_subject = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term + "_" + subjectScore.Subject; // 寫給學生的Subject 成績 還必須要有 studentID 才有獨立性
 
                 string key_term = subjectScore.RefCourseID + "_" + subjectScore.RefStudentID + "_" + subjectScore.Term; // 寫給學生的Term 成績 還必須要有 studentID 才有獨立性
@@ -755,7 +755,7 @@ namespace ESL_System
                 decimal term_score_partial;
 
                 if (_scoreRatioTotalDict.ContainsKey(key_score_subject))
-                {                                     
+                {
                     term_score_partial = subjectScore.Score;
 
                     // 處理 term 分母
@@ -770,7 +770,7 @@ namespace ESL_System
                             _scoreRatioTotalDict[key_term] += _scoreRatioTotalDict[key_score_subject];
                         }
                     }
-                                        
+
                     // 處理 term (定期)分母 
                     if (key_subject.Contains("定期"))
                     {
@@ -822,7 +822,7 @@ namespace ESL_System
 
                     // 定期的term 成績
                     if (key_subject.Contains("定期"))
-                    {                        
+                    {
                         if (!_termScoreDict.ContainsKey(key_term + "_定期"))
                         {
                             ESLScore termScore = new ESLScore();
@@ -844,7 +844,7 @@ namespace ESL_System
 
                     // 平時的term 成績
                     if (key_subject.Contains("平時"))
-                    {                        
+                    {
                         if (!_termScoreDict.ContainsKey(key_term + "_平時"))
                         {
                             ESLScore termScore = new ESLScore();
@@ -862,7 +862,7 @@ namespace ESL_System
                         {
                             _termScoreDict[key_term + "_平時"].Score += term_score_partial;
                         }
-                    }                    
+                    }
                 }
             }
 
@@ -904,18 +904,18 @@ namespace ESL_System
 
                     // 2018/12/17 穎驊與恩正討論後，恩正說，為了減少誤差，正確算出成績，因此平時成績用反推的  (Term 一般 -Term 定期 = Term 平時)
                     if (_termScoreDict.ContainsKey(score.Key + "_平時"))
-                    {                        
+                    {
                         if (_termScoreDict.ContainsKey(score.Key + "_定期"))
                         {
                             // 定期 加 平時 的權重 固定為 100
-                            _termScoreDict[score.Key + "_平時"].Score = Math.Round(((_termScoreDict[score.Key].Score *100 - (_termScoreDict[score.Key + "_定期"].Score)* (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版定期比例"])) / (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版平時比例"])), _decimalPlace, MidpointRounding.AwayFromZero);
+                            _termScoreDict[score.Key + "_平時"].Score = Math.Round(((_termScoreDict[score.Key].Score * 100 - (_termScoreDict[score.Key + "_定期"].Score) * (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版定期比例"])) / (_scoreRatioTotalDict[ratioTotalTermKey + "_中文系統評分樣版平時比例"])), _decimalPlace, MidpointRounding.AwayFromZero);
                         }
                         else
                         {
                             _termScoreDict[score.Key + "_平時"].Score = Math.Round(_termScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
                         }
                     }
-                }               
+                }
             }
 
             // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
@@ -925,7 +925,7 @@ namespace ESL_System
                 if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
                 {
                     string ratioTotalSubjectKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_" + score.Value.Subject;
-                    
+
                     // 2018/11/13 穎驊修正， 由於 康橋驗算後，發現在在小數後兩位有精度的問題，
                     // 在此統一在結算 term 為止 之前不會做任何的 四捨五入。
                     _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
@@ -962,7 +962,7 @@ namespace ESL_System
                     {
                         _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
                     }
-                }                
+                }
             }
 
             // 以 studentID 為 key 整理 學生term 成績 至 _scorefinalDict
@@ -980,7 +980,7 @@ namespace ESL_System
                     {
                         _scorefinalDict[score.Value.RefStudentID].Add(score.Value);
                     }
-                }                
+                }
             }
             #endregion
 
@@ -1122,12 +1122,12 @@ namespace ESL_System
                         // 總評量成績
                         if (!key.Contains("定期") && !key.Contains("平時"))
                         {
-                            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && ""+ sce.Score != "" + score.Score)
+                            if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && "" + sce.Score != "" + score.Score)
                             {
                                 sce.Score = score.Score;
 
                                 sce.NeedUpdate = true;
-                            }                            
+                            }
                         }
 
                         // 定期的 term 成績
@@ -1135,7 +1135,7 @@ namespace ESL_System
                         {
                             if (sce.RefCourseID == score.RefCourseID && sce.RefStudentID == score.RefStudentID && GetScore(sce) != "" + score.Score)
                             {
-                                SetScore(sce, "" + score.Score);                                
+                                SetScore(sce, "" + score.Score);
                                 sce.NeedUpdate = true;
                             }
                         }
@@ -1180,7 +1180,7 @@ namespace ESL_System
                         {
                             ESLScore score = _termScoreDict[key];
 
-                            if (!key.Contains("定期") &&!key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
+                            if (!key.Contains("定期") && !key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
                                 sce.RefSCAttendID = sca.ID;
                                 sce.RefExamID = target_exam_id;
@@ -1196,7 +1196,7 @@ namespace ESL_System
                                 sce.RefExamID = target_exam_id;
                                 sce.RefStudentID = sca.RefStudentID;
                                 sce.RefCourseID = sca.RefCourseID;
-                                SetScore(sce, "" + score.Score);                                
+                                SetScore(sce, "" + score.Score);
                             }
                             if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                             {
@@ -1211,7 +1211,7 @@ namespace ESL_System
                         {
                             insertList.Add(sce);
                         }
-                        
+
                     }
 
                 }
@@ -1239,7 +1239,7 @@ namespace ESL_System
                             sce.RefExamID = target_exam_id;
                             sce.RefStudentID = sca.RefStudentID;
                             sce.RefCourseID = sca.RefCourseID;
-                            SetScore(sce, "" + score.Score);                            
+                            SetScore(sce, "" + score.Score);
                         }
                         if (key.Contains("平時") && sca.RefCourseID == score.RefCourseID && sca.RefStudentID == score.RefStudentID)
                         {
@@ -1325,16 +1325,17 @@ SELECT
 FROM
 	score_data_row
 WHERE action ='INSERT'", examData);
-
-
-
             UpdateHelper uh = new UpdateHelper();
 
-            _worker.ReportProgress(80, "上傳成績...");
+            if (!string.IsNullOrWhiteSpace(examData))
+            {
 
-            //執行sql
-            uh.Execute(examsql);
 
+                _worker.ReportProgress(80, "上傳成績...");
+
+                //執行sql
+                uh.Execute(examsql);
+            }
 
             #endregion
 
@@ -1345,15 +1346,15 @@ WHERE action ='INSERT'", examData);
 
 
             // 沒有新增任何成績資料，代表所選ESL 課程都沒有成績，不需執行SQL
-            if (updateESLscoreList.Count + insertESLscoreList.Count == 0)
+            if (updateESLscoreList.Count + insertESLscoreList.Count != 0)
             {
-                return;
-            }
+                //  return;
 
 
-            foreach (ESLScore score in updateESLscoreList)
-            {
-                string data = string.Format(@"
+
+                foreach (ESLScore score in updateESLscoreList)
+                {
+                    string data = string.Format(@"
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
@@ -1366,12 +1367,12 @@ WHERE action ='INSERT'", examData);
                     ,'UPDATE'::TEXT AS action
                 ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.RefScAttendID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, score.ID);
 
-                dataList.Add(data);
-            }
+                    dataList.Add(data);
+                }
 
-            foreach (ESLScore score in insertESLscoreList)
-            {
-                string data = string.Format(@"
+                foreach (ESLScore score in insertESLscoreList)
+                {
+                    string data = string.Format(@"
                 SELECT
                     '{0}'::BIGINT AS ref_student_id
                     ,'{1}'::BIGINT AS ref_course_id
@@ -1384,13 +1385,13 @@ WHERE action ='INSERT'", examData);
                     ,'INSERT'::TEXT AS action
                 ", score.RefStudentID, score.RefCourseID, score.RefTeacherID, score.RefScAttendID, score.Term, score.Subject != null ? "'" + score.Subject + "' ::TEXT" : "NULL", score.Score, 0);  // insert 給 uid = 0
 
-                dataList.Add(data);
-            }
+                    dataList.Add(data);
+                }
 
-            string Data = string.Join(" UNION ALL", dataList);
+                string Data = string.Join(" UNION ALL", dataList);
 
 
-            string sql = string.Format(@"
+                string sql = string.Format(@"
 WITH score_data_row AS(			 
                 {0}     
 ),update_score AS(	    
@@ -1433,12 +1434,161 @@ WHERE action ='INSERT'", Data);
 
 
 
-            uh = new UpdateHelper();
+                uh = new UpdateHelper();
 
-            _worker.ReportProgress(90, "上傳成績...");
 
-            //執行sql
-            uh.Execute(sql);
+                if (!string.IsNullOrWhiteSpace(sql))
+                {
+                    _worker.ReportProgress(90, "上傳成績...");
+                    //執行sql
+                    uh.Execute(sql);
+                }
+            }
+
+
+            #region 將 Commet 組合 回寫 sce_take 相對 文字描述
+            // 取得課程內本次評量有Commen
+            Dictionary<string, List<string>> tmpCourseDict = new Dictionary<string, List<string>>();
+            foreach (string cid in _scoreTemplateDict.Keys)
+            {
+                foreach (Term t in _scoreTemplateDict[cid])
+                {
+                    // 這次試別
+                    if (t.Ref_exam_id == target_exam_id)
+                    {
+                        foreach (Subject s in t.SubjectList)
+                        {
+                            foreach (Assessment a in s.AssessmentList)
+                            {
+                                if (a.Type == "Comment")
+                                {
+                                    // 紀錄 Key
+                                    string key = t.Name + "_" + s.Name + "_" + a.Name;
+                                    if (!tmpCourseDict.ContainsKey(cid))
+                                        tmpCourseDict.Add(cid, new List<string>());
+
+                                    tmpCourseDict[cid].Add(key);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            // 取得資料修課學生 Comment 值
+
+            query = @"SELECT 
+                      $esl.gradebook_assessment_score.uid
+                     ,sc_attend.ref_course_id
+                     ,sc_attend.ref_student_id
+                     ,$esl.gradebook_assessment_score.ref_teacher_id
+                     ,$esl.gradebook_assessment_score.ref_sc_attend_id
+                     ,$esl.gradebook_assessment_score.term
+                     ,$esl.gradebook_assessment_score.subject
+                     ,$esl.gradebook_assessment_score.assessment
+                     ,$esl.gradebook_assessment_score.value
+                      FROM $esl.gradebook_assessment_score 
+                      LEFT JOIN sc_attend ON sc_attend.id = $esl.gradebook_assessment_score.ref_sc_attend_id" +
+                  " WHERE ref_sc_attend_id IN( " + sc_attend_IDs + ") " +
+                  " AND term IN(" + termNames + ")" +
+                  "";
+
+            // 比對後每位修課學生 Comment
+            //ref_sc_attend_id,Comment
+            Dictionary<string, List<string>> StudCommentDict = new Dictionary<string, List<string>>();
+            QueryHelper qha = new QueryHelper();
+            DataTable dt1 = qha.Select(query);
+
+            foreach (DataRow dr in dt1.Rows)
+            {
+                string id = dr["ref_sc_attend_id"].ToString();
+
+                string cid = dr["ref_course_id"].ToString();
+
+                string ck = dr["term"] + "_" + dr["subject"] + "_" + dr["assessment"];
+
+                if (tmpCourseDict.ContainsKey(cid))
+                {
+                    if (tmpCourseDict[cid].Contains(ck))
+                    {
+                        // 是 Comment
+                        if (!StudCommentDict.ContainsKey(id))
+                            StudCommentDict.Add(id, new List<string>());
+
+                        if (dr["value"] != null && dr["value"].ToString() != "")
+                        {
+                            StudCommentDict[id].Add(dr["value"].ToString());
+                        }
+                    }
+                }
+            }
+
+            // 回寫試
+            query = @"SELECT 
+                    sce_take.id
+                    ,ref_sc_attend_id
+                    ,ref_student_id
+                    ,ref_course_id
+                    ,ref_exam_id
+                    ,sce_take.score
+                    ,sce_take.create_date
+                    ,sce_take.extension
+                    FROM sce_take              
+                    LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
+                    WHERE ref_sc_attend_id IN( " + scattendIDs + ") " +
+                   "AND ref_exam_id = " + "'" + target_exam_id + "'";
+
+            DataTable dt2 = qha.Select(query);
+            List<string> updateData = new List<string>();
+            foreach (DataRow dr in dt2.Rows)
+            {
+                string sceid = dr["id"].ToString();
+                string scid = dr["ref_sc_attend_id"].ToString();
+                string extension = dr["extension"].ToString();
+
+                if (StudCommentDict.ContainsKey(scid))
+                {
+                    string text = string.Join(",", StudCommentDict[scid].ToArray());
+
+                    try
+                    {
+                        XElement elmRoot = null;
+
+                        if (string.IsNullOrWhiteSpace(extension))
+                        {
+                            elmRoot = new XElement("Extension");
+                        }
+                        else
+                        {
+                            elmRoot = XElement.Parse(extension);
+                        }
+                        elmRoot.SetElementValue("Text", text);
+                        string new_extension = elmRoot.ToString();
+                        string updateQry = "UPDATE sce_take SET extension='" + new_extension + "' WHERE id=" + sceid;
+                        updateData.Add(updateQry);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
+
+                }
+            }
+
+            try
+            {
+                if (updateData.Count > 0)
+                {
+                    UpdateHelper uh1 = new UpdateHelper();
+                    uh1.Execute(updateData);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+
+
+            #endregion
 
             _worker.ReportProgress(100, "ESL 評量成績計算完成。");
 
@@ -1452,7 +1602,7 @@ WHERE action ='INSERT'", Data);
                 MsgBox.Show("計算失敗!!，錯誤訊息:" + e.Error.Message);
 
             }
-            else if(e.Cancelled)
+            else if (e.Cancelled)
             {
                 MsgBox.Show("計算中止!!，中止訊息: 所選擇ESL課程，並無任何ESL 成績資料，請檢查。");
             }
@@ -1461,12 +1611,12 @@ WHERE action ='INSERT'", Data);
                 MsgBox.Show("計算完成!");
             }
 
-            
+
         }
 
         private void Worker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(""+e.UserState, e.ProgressPercentage);
+            FISCA.Presentation.MotherForm.SetStatusBarMessage("" + e.UserState, e.ProgressPercentage);
         }
 
 
