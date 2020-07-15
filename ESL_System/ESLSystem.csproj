@@ -135,12 +135,15 @@
       <DependentUpon>BasicInfoItem.cs</DependentUpon>
     </Compile>
     <Compile Include="DegreeMapper.cs" />
+    <Compile Include="Model\CourseInfo.cs" />
     <Compile Include="Model\FormParam.cs" />
     <Compile Include="Model\SemsSubjScoreInfo.cs" />
     <Compile Include="Model\SemsTotalScoreInfos.cs" />
+    <Compile Include="Model\StudentScAttend.cs" />
     <Compile Include="Model\SubjectGPAMapping.cs" />
     <Compile Include="Model\SemsTotalScoreInfo.cs" />
     <Compile Include="Service\DataService.cs" />
+    <Compile Include="StringComparer.cs" />
     <Compile Include="UDT\ScoreGPAMapping.cs" />
     <Compile Include="UDT\SubjectInfoForGAPLevel.cs" />
     <Compile Include="WeeklyReportRecord.cs" />

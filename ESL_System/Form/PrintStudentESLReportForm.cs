@@ -1146,6 +1146,9 @@ namespace ESL_System.Form
 
         private void _bkWork_DoWork(object sender, DoWorkEventArgs e)
         {
+            // 先準備好
+
+
             FormParam formParam = e.Argument as FormParam;
 
             // 處理等第
@@ -1239,6 +1242,17 @@ namespace ESL_System.Form
 
             //取得學生基本資料
             List<K12.Data.StudentRecord> studentList = K12.Data.Student.SelectByIDs(studentIDList);
+
+            //20200714 為了讓學期科目印出來與評量稱績相同  所以須先建立 學生修課紀錄清單以便 產生 科目名稱1 科目名稱2 時 可以生出對對的對應
+            // todo
+            DataService _dataService = new DataService();
+            Dictionary<string, StudentScAttend> dicStudentScAttend = _dataService.GetStudentScAttend(formParam.SchoolYear, formParam.Semester, courseIDList, studentIDList);
+
+
+
+
+
+
 
 
             #region 取得ESL 課程成績
@@ -1462,6 +1476,7 @@ namespace ESL_System.Form
 
             }
 
+            // 2020/07/14 根據 中科需求 樣板終須同時印出 期中考 及 期末考   所有科目變數需先整理出修課紀錄並 (討論with 嘉詮 )
 
             //2018/12/18 穎驊與恩正討論後， 對應 序列化 成績的功能變數， 從學生 系統評量成績 sce_take 抓取  對應成績
             string sqlSerialScore = @"
@@ -1481,7 +1496,7 @@ exam.exam_name
 ,array_to_string(xpath('/Extension/AssignmentScore/text()', xmlparse(content sce_take.extension)),'') ::text AS assignment_score 
 ,array_to_string(xpath('/Extension/Text/text()', xmlparse(content sce_take.extension)),'') ::text AS text 
 FROM sce_take 
-LEFT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
+RIGHT JOIN sc_attend ON sc_attend.id = sce_take.ref_sc_attend_id
 LEFT JOIN course ON course.id = sc_attend.ref_course_id
 LEFT JOIN exam ON exam.id =sce_take.ref_exam_id
 LEFT JOIN exam_template ON exam_template.id =course.ref_exam_template_id
@@ -1490,7 +1505,7 @@ LEFT JOIN teacher ON teacher.id =tc_instruct.ref_teacher_id
 WHERE course.id IN ('" + course_ids + "') " +
 "AND sc_attend.ref_student_id IN ('" + student_ids + "')" +
 "AND tc_instruct.sequence =1" +
-"ORDER BY ref_student_id,exam_name,domain,subject";
+"ORDER BY ref_student_id,domain,subject,exam_name";
 
 
             DataTable dtSerialScore = qh.Select(sqlSerialScore);
@@ -1499,7 +1514,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             foreach (DataRow row in dtSerialScore.Rows)
             {
-                string id = "" + row["ref_student_id"];
+                string ref_student_id = "" + row["ref_student_id"];
 
                 string examWord = "" + row["exam_name"];
                 string domainWord = "" + row["domain"];
@@ -1513,71 +1528,125 @@ WHERE course.id IN ('" + course_ids + "') " +
                 {//依領域分開
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domainWord + "_";
 
-                    if (_scoreDict.ContainsKey(id))
+                    if (_scoreDict.ContainsKey(ref_student_id))
                     {
                         bool added = false;  // 尚未加入
-
-                        for (int i = 1; !added; i++)
+                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x => x.Subject).ToList();
+                        int index = SubjList.IndexOf(subjectWord)+1;
+                        //foreach (string subject in dicStudentScAttend[ref_student_id].SubjectFromScAttend)
                         {
-                            // 課程科目名稱
-                            if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                            //課程科目名稱
+                            if (_scoreDict[ref_student_id].ContainsKey(scoreKey + "課程科目名稱" + index))
                             {
                                 continue;
                             }
                             else
                             {
-                                _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                                _scoreDict[ref_student_id].Add(scoreKey + "課程科目名稱" + index, subjectWord);
                                 added = true;
+                                _scoreDict[ref_student_id].Add(scoreKey + "課程教師一" + index, teacher);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目權數" + index, credit);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目定期評量" + index, exam_score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目平時評量" + index, assignment_score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目總成績" + index, score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目文字描述" + index, text);
+
                             }
 
-                            _scoreDict[id].Add(scoreKey + "課程教師一" + i, teacher);
 
-                            _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
 
-                            _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
-
-                            _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
-
-                            _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
-
-                            _scoreDict[id].Add(scoreKey + "科目文字描述" + i, text);
-
+                          
                         }
+
+
+
+
+
+                        //for (int i = 1; !added; i++)
+                        //{
+                        //    // 課程科目名稱
+                        //    if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                        //    {
+                        //        continue;
+                        //    }
+                        //    else
+                        //    {
+                        //        _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                        //        added = true;
+                        //    }
+
+                        //   
+                        //}
                     }
                 }
                 {//所有科目
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量_";
 
-                    if (_scoreDict.ContainsKey(id))
+                    if (_scoreDict.ContainsKey(ref_student_id))
                     {
                         bool added = false;  // 尚未加入
 
-                        for (int i = 1; !added; i++)
+                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x => x.Subject).ToList();
+                        int index = SubjList.IndexOf(subjectWord)+1;
                         {
                             // 課程科目名稱
-                            if (_scoreDict[id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                            if (_scoreDict[ref_student_id].ContainsKey(scoreKey + "課程科目名稱" + index))
                             {
                                 continue;
                             }
                             else
                             {
-                                _scoreDict[id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                                _scoreDict[ref_student_id].Add(scoreKey + "課程科目名稱" + index, subjectWord);
                                 added = true;
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "課程教師一" + index, teacher);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目權數" + index, credit);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目定期評量" + index, exam_score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目平時評量" + index, assignment_score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目總成績" + index, score);
+
+                                _scoreDict[ref_student_id].Add(scoreKey + "科目文字描述" + index, text);
+
                             }
-
-                            _scoreDict[id].Add(scoreKey + "課程教師一" + i, teacher);
-
-                            _scoreDict[id].Add(scoreKey + "科目權數" + i, credit);
-
-                            _scoreDict[id].Add(scoreKey + "科目定期評量" + i, exam_score);
-
-                            _scoreDict[id].Add(scoreKey + "科目平時評量" + i, assignment_score);
-
-                            _scoreDict[id].Add(scoreKey + "科目總成績" + i, score);
-
-                            _scoreDict[id].Add(scoreKey + "科目文字描述" + i, text);
-
+                          
                         }
+
+
+                        //for (int i = 1; !added; i++)
+                        //{
+                        //    // 課程科目名稱
+                        //    if (_scoreDict[ref_student_id].ContainsKey(scoreKey + "課程科目名稱" + i))
+                        //    {
+                        //        continue;
+                        //    }
+                        //    else
+                        //    {
+                        //        _scoreDict[ref_student_id].Add(scoreKey + "課程科目名稱" + i, subjectWord);
+                        //        added = true;
+                        //    }
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "課程教師一" + i, teacher);
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "科目權數" + i, credit);
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "科目定期評量" + i, exam_score);
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "科目平時評量" + i, assignment_score);
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "科目總成績" + i, score);
+
+                        //    _scoreDict[ref_student_id].Add(scoreKey + "科目文字描述" + i, text);
+
+                        //}
                     }
                 }
             }
@@ -1605,15 +1674,15 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             DataTable dtSemesterCourseScore = qh.Select(sqlSemesterCourseScore);
 
-            // 整理科目文字評量 (【sems_subj_score 】) 
-            Dictionary<string, Dictionary<string, string>> dicSubjectTexts = DataService.GetSemsSubjText(studentIDList, formParam.SchoolYear, formParam.Semester);
 
             DataService dataService = new DataService();
+            // 整理科目文字評量 (【sems_subj_score 】) 
+            Dictionary<string, Dictionary<string, string>> dicSubjectTexts = dataService.GetSemsSubjText(studentIDList, formParam.SchoolYear, formParam.Semester);
 
 
             foreach (DataRow row in dtSemesterCourseScore.Rows)
             {
-                string id = "" + row["ref_student_id"];
+                string ref_student_id = "" + row["ref_student_id"];
 
                 string templateWord = "" + row["name"];
                 string domainWord = "" + row["domain"];
@@ -1626,52 +1695,53 @@ WHERE course.id IN ('" + course_ids + "') " +
 
 
 
-                if (_scoreDict.ContainsKey(id))
+                if (_scoreDict.ContainsKey(ref_student_id))
                 {
                     #region 跟樣板的功能變數
                     // 理論上一學期上 一個學生 只會有一個ESL評分樣版的課程成績 ， 不會有同一個ESL 評分樣版 有不同的課程成績
-                    if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "課程學期成績分數"))
+                    if (!_scoreDict[ref_student_id].ContainsKey(scoreKey + "_" + "課程學期成績分數"))
                     {
-                        _scoreDict[id].Add(scoreKey + "_" + "課程學期成績分數", score);
+                        _scoreDict[ref_student_id].Add(scoreKey + "_" + "課程學期成績分數", score);
                     }
-                    if (!_scoreDict[id].ContainsKey(scoreKey + "_" + "課程學期成績等第"))
+                    if (!_scoreDict[ref_student_id].ContainsKey(scoreKey + "_" + "課程學期成績等第"))
                     {
                         decimal score_d;
                         if (decimal.TryParse(score, out score_d))
                         {
-                            _scoreDict[id].Add(scoreKey + "_" + "課程學期成績等第", dm.GetDegreeByScore(score_d));
+                            _scoreDict[ref_student_id].Add(scoreKey + "_" + "課程學期成績等第", dm.GetDegreeByScore(score_d));
                         }
                     }
 
                     #endregion
                     #region 序列化功能變數
                     bool added = false;  // 尚未加入
-                
-                    for (int i = 1; !added; i++)
+
+                   List<string> SubjList= dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x=>x.Subject).ToList();
+                    int i = SubjList.IndexOf(subjectWord) + 1;
                     {
 
                         // 課程名稱
-                        if (_scoreDict[id].ContainsKey("課程名稱" + i))
+                        if (_scoreDict[ref_student_id].ContainsKey("課程名稱" + i))
                         {
                             continue;
                         }
                         else
                         {
-                            _scoreDict[id].Add("課程名稱" + i, courseWord);
+                            _scoreDict[ref_student_id].Add("課程名稱" + i, courseWord);
                         }
 
                         // 課程科目名稱
-                        if (_scoreDict[id].ContainsKey("課程科目名稱" + i))
+                        if (_scoreDict[ref_student_id].ContainsKey("課程科目名稱" + i))
                         {
                             continue;
                         }
                         else
                         {
-                            _scoreDict[id].Add("課程科目名稱" + i, subjectWord);
+                            _scoreDict[ref_student_id].Add("課程科目名稱" + i, subjectWord);
                             added = true;
                         }
 
-                        _scoreDict[id].Add("課程學期成績分數" + i, score);
+                        _scoreDict[ref_student_id].Add("課程學期成績分數" + i, score);
 
 
 
@@ -1680,63 +1750,66 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                         if (decimal.TryParse(score, out score_d))
                         {
-                            _scoreDict[id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
+                            _scoreDict[ref_student_id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
                         }
 
                         decimal? GPA_d = dataService.GetFinalGPA(subjectWord, score_d);
-                        _scoreDict[id].Add("課程學期成績GPA" + i, GPA_d.ToString());
+                        _scoreDict[ref_student_id].Add("課程學期成績GPA" + i, GPA_d.ToString());
 
                         // 處理學期算數平均
-                        this._SemsTotalScoreInfos.AddforCoumpte(id, new SemsSubjScoreInfo(subjectWord, score_d, GPA_d));
+                        this._SemsTotalScoreInfos.AddforCoumpte(ref_student_id, new SemsSubjScoreInfo(subjectWord, score_d, GPA_d));
 
 
-                        if (_scoreDict[id].ContainsKey("課程文字描述" + i))
+                        if (_scoreDict[ref_student_id].ContainsKey("課程文字描述" + i))
                         {
                             continue;
                         }
                         else
                         {
                             //不同來源之學期科目文字評量
-                            if (dicSubjectTexts.ContainsKey(id))
+                            if (dicSubjectTexts.ContainsKey(ref_student_id))
                             {
-                                if (dicSubjectTexts[id].ContainsKey(subjectWord))
+                                if (dicSubjectTexts[ref_student_id].ContainsKey(subjectWord))
                                 {
-                                    _scoreDict[id].Add("課程文字描述" + i, dicSubjectTexts[id][subjectWord]);
+                                    _scoreDict[ref_student_id].Add("課程文字描述" + i, dicSubjectTexts[ref_student_id][subjectWord]);
                                 }
                             }
                         }
 
 
                     }
-               
-                        //decimal SemestAverageScore = Math.Round(totalScoreSum / subjCount, 1, MidpointRounding.AwayFromZero);
-                        //_scoreDict[id].Add("學期科目成績算術平均", SemestAverageScore.ToString());
-                        //decimal SemestAverageGPA = Math.Round(totalGPASum / subjCount, 1, MidpointRounding.AwayFromZero);
-                        //_scoreDict[id].Add("學期科目GPA算術平均", SemestAverageGPA.ToString());
-                 
+
+                    //decimal SemestAverageScore = Math.Round(totalScoreSum / subjCount, 1, MidpointRounding.AwayFromZero);
+                    //_scoreDict[id].Add("學期科目成績算術平均", SemestAverageScore.ToString());
+                    //decimal SemestAverageGPA = Math.Round(totalGPASum / subjCount, 1, MidpointRounding.AwayFromZero);
+                    //_scoreDict[id].Add("學期科目GPA算術平均", SemestAverageGPA.ToString());
+
                     #endregion
                 }
             }
 
             #endregion
 
+
+
+
             //學期科目算數平均
             // 取得計算 學期算術平均的物件
-            Dictionary<string, SemsTotalScoreInfo> semsScoreInfos =  this._SemsTotalScoreInfos.GetAllSemsTotalScoreInfo();
+            Dictionary<string, SemsTotalScoreInfo> semsScoreInfos = this._SemsTotalScoreInfos.GetAllSemsTotalScoreInfo();
 
             foreach (string studID in this._SemsTotalScoreInfos.GetAllSemsTotalScoreInfo().Keys)
             {
-                if (_scoreDict.ContainsKey(studID)) 
+                if (_scoreDict.ContainsKey(studID))
                 {
                     SemsTotalScoreInfo semsTotalScoreInfo = semsScoreInfos[studID];
-                    if (!_scoreDict[studID].ContainsKey("學期科目成績算術平均")) 
+                    if (!_scoreDict[studID].ContainsKey("學期科目成績算術平均"))
                     {
-                    _scoreDict[studID].Add("學期科目成績算術平均", semsTotalScoreInfo.GetScoreAvg(2).ToString());
-                    
+                        _scoreDict[studID].Add("學期科目成績算術平均", semsTotalScoreInfo.GetScoreAvg(2).ToString());
+
                     }
                     if (!_scoreDict[studID].ContainsKey("學期科目GPA算術平均"))
                     {
-                     _scoreDict[studID].Add("學期科目GPA算術平均", semsTotalScoreInfo.GetGPAAvg(2).ToString());
+                        _scoreDict[studID].Add("學期科目GPA算術平均", semsTotalScoreInfo.GetGPAAvg(2).ToString());
                     }
                 }
             }
