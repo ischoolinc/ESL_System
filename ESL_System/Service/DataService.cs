@@ -118,11 +118,7 @@ FROM (
                 {
                     dicSubjTextInfos[ref_student_id].Add(SubjectName, SemsScoreText);
                 }
-
-
             }
-
-
             return dicSubjTextInfos;
         }
 
@@ -155,7 +151,6 @@ FROM (
             {
                 return GetStandar(score);
             }
-
         }
 
 
@@ -202,7 +197,6 @@ FROM (
                         return scoreGPAMapping.AP;
                     }
                 }
-
             }
             return null;
 
@@ -270,10 +264,10 @@ WHERE name  ='JHEvaluation_Subject_Ordinal'";
 
         public Dictionary<string, int> GetSubjOrderDicFromJunior()
         {
-            Dictionary<string, int> domainOrder = new Dictionary<string, int>();
+            Dictionary<string, int> SubjectOrder = new Dictionary<string, int>();
             string sql = @"  
 SELECT
-    unnest(xpath('//Subjects/Subject/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS domain_name
+    unnest(xpath('//Subjects/Subject/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS subject_name
 FROM  
     list 
 WHERE name  ='JHEvaluation_Subject_Ordinal'";
@@ -281,9 +275,9 @@ WHERE name  ='JHEvaluation_Subject_Ordinal'";
             int order = 1;
             foreach (DataRow dr in dt.Rows)
             {
-                domainOrder.Add("" + dr["domain_name"], order++);
+                SubjectOrder.Add("" + dr["subject_name"], order++);
             }
-            return domainOrder;
+            return SubjectOrder;
         }
 
 

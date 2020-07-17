@@ -1251,12 +1251,6 @@ namespace ESL_System.Form
             Dictionary<string, StudentScAttend> dicStudentScAttend = _dataService.GetStudentScAttend(formParam.SchoolYear, formParam.Semester, courseIDList, studentIDList, this.SchoolType);
 
 
-
-
-
-
-
-
             #region 取得ESL 課程成績
             _bw.ReportProgress(20, "取得ESL課程成績");
 
@@ -1533,12 +1527,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                 //foreach (var item in collection)
                 {
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量_";
-
-
                 }
-
-
-
 
                 {//依領域分開
 
