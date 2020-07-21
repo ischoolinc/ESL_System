@@ -1271,7 +1271,7 @@ namespace ESL_System
                     ,'{3}'::TEXT AS extension                                        
                     ,'{4}'::INTEGER AS id
                     ,'UPDATE'::TEXT AS action
-                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions, score.ID);
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'","''"), score.ID);
 
                 examDataList.Add(data);
             }
@@ -1286,7 +1286,7 @@ namespace ESL_System
                     ,'{3}'::TEXT AS extension                                        
                     ,'{4}'::INTEGER AS id
                     ,'INSERT'::TEXT AS action
-                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions, 0);
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'","''"), 0);
 
                 examDataList.Add(data);
             }
@@ -1326,6 +1326,7 @@ FROM
 	score_data_row
 WHERE action ='INSERT'", examData);
             UpdateHelper uh = new UpdateHelper();
+          
 
             if (!string.IsNullOrWhiteSpace(examData))
             {
@@ -1562,7 +1563,7 @@ WHERE action ='INSERT'", Data);
                             elmRoot = XElement.Parse(extension);
                         }
                         elmRoot.SetElementValue("Text", text);
-                        string new_extension = elmRoot.ToString();
+                        string new_extension = elmRoot.ToString().Replace("'","''");
                         string updateQry = "UPDATE sce_take SET extension='" + new_extension + "' WHERE id=" + sceid;
                         updateData.Add(updateQry);
                     }
