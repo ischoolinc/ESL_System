@@ -25,6 +25,8 @@ namespace ESL_System.Form
 {
     public partial class PrintStudentESLReportForm : FISCA.Presentation.Controls.BaseForm
     {
+        string SchoolType = "";
+
         private BackgroundWorker _bw = new BackgroundWorker();
 
         private string _wordURL = "";
@@ -1246,13 +1248,7 @@ namespace ESL_System.Form
             //20200714 為了讓學期科目印出來與評量稱績相同  所以須先建立 學生修課紀錄清單以便 產生 科目名稱1 科目名稱2 時 可以生出對對的對應
             // todo
             DataService _dataService = new DataService();
-            Dictionary<string, StudentScAttend> dicStudentScAttend = _dataService.GetStudentScAttend(formParam.SchoolYear, formParam.Semester, courseIDList, studentIDList);
-
-
-
-
-
-
+            Dictionary<string, StudentScAttend> dicStudentScAttend = _dataService.GetStudentScAttend(formParam.SchoolYear, formParam.Semester, courseIDList, studentIDList, this.SchoolType);
 
 
             #region 取得ESL 課程成績
@@ -1525,14 +1521,24 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string assignment_score = "" + row["assignment_score"]; // 平時評量
                 string score = "" + row["score"]; // 評量總分
                 string text = "" + row["text"];
+                
+                
+                
+                //foreach (var item in collection)
+                {
+                    string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量_";
+                }
+
                 {//依領域分開
+
+
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量" + "_" + domainWord + "_";
 
                     if (_scoreDict.ContainsKey(ref_student_id))
                     {
                         bool added = false;  // 尚未加入
-                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x => x.Subject).ToList();
-                        int index = SubjList.IndexOf(subjectWord)+1;
+                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.SubjectOrder).Select(x => x.Subject).ToList();
+                        int index = SubjList.IndexOf(subjectWord) + 1;
                         //foreach (string subject in dicStudentScAttend[ref_student_id].SubjectFromScAttend)
                         {
                             //課程科目名稱
@@ -1560,7 +1566,7 @@ WHERE course.id IN ('" + course_ids + "') " +
 
 
 
-                          
+
                         }
 
 
@@ -1591,8 +1597,8 @@ WHERE course.id IN ('" + course_ids + "') " +
                     {
                         bool added = false;  // 尚未加入
 
-                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x => x.Subject).ToList();
-                        int index = SubjList.IndexOf(subjectWord)+1;
+                        List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.SubjectOrder).Select(x => x.Subject).ToList();
+                        int index = SubjList.IndexOf(subjectWord) + 1;
                         {
                             // 課程科目名稱
                             if (_scoreDict[ref_student_id].ContainsKey(scoreKey + "課程科目名稱" + index))
@@ -1617,7 +1623,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                                 _scoreDict[ref_student_id].Add(scoreKey + "科目文字描述" + index, text);
 
                             }
-                          
+
                         }
 
 
@@ -1716,7 +1722,7 @@ WHERE course.id IN ('" + course_ids + "') " +
                     #region 序列化功能變數
                     bool added = false;  // 尚未加入
 
-                   List<string> SubjList= dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.Subject).Select(x=>x.Subject).ToList();
+                    List<string> SubjList = dicStudentScAttend[ref_student_id].SubjectFromScAttend.OrderBy(x => x.DomainOrder).ThenBy(x => x.SubjectOrder).Select(x => x.Subject).ToList();
                     int i = SubjList.IndexOf(subjectWord) + 1;
                     {
 
@@ -2307,6 +2313,14 @@ WHERE course.id IN ('" + course_ids + "') " +
 
         private void PrintStudentESLReportForm_Load(object sender, EventArgs e)
         {
+            try
+            {
+                this.SchoolType = DataService.GetSchoolSystem();
+            }
+            catch (Exception ex)
+            {
+                MsgBox.Show($"取得系統學制發生錯誤! \n{ex.Message}");
+            }
             bkw.RunWorkerAsync();
         }
 
