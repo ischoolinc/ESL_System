@@ -879,14 +879,15 @@ namespace ESL_System
                 {
                     string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
 
-                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                    _termScoreDict[score.Key].Score = _termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]);
+
                 }
                 // 定期的term 成績
                 if (score.Key.Contains("定期"))
                 {
                     string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_定期";
 
-                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]), _decimalPlace, MidpointRounding.AwayFromZero);
+                    _termScoreDict[score.Key].Score = _termScoreDict[score.Key].Score / (_scoreRatioTotalDict[ratioTotalTermKey]);
                 }
             }
 
@@ -918,6 +919,32 @@ namespace ESL_System
                 }
             }
 
+            // 反退後再處理進位
+            // 計算Term成績後，現在將各自加權後的成績除以各自的的總權重
+            foreach (KeyValuePair<string, ESLScore> score in _termScoreDict)
+            {
+                // 各課程  自己的 四捨五入 精度 小數位
+                int _decimalPlace = _scoreDecimalPlaceDict[score.Value.RefCourseID];
+
+                // 一般的 term 成績
+                if (!score.Key.Contains("定期") && !score.Key.Contains("平時"))
+                {
+                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term;
+
+                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
+
+
+                }
+                // 定期的term 成績
+                if (score.Key.Contains("定期"))
+                {
+                    string ratioTotalTermKey = score.Value.RefCourseID + "_" + score.Value.RefStudentID + "_" + score.Value.Term + "_定期";
+
+                    _termScoreDict[score.Key].Score = Math.Round(_termScoreDict[score.Key].Score, _decimalPlace, MidpointRounding.AwayFromZero);
+                }
+            }
+
+
             // 計算Subject成績後，現在將各自加權後的成績除以各自的的總權重
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
             {
@@ -931,6 +958,9 @@ namespace ESL_System
                     _subjectScoreDict[score.Key].Score = _subjectScoreDict[score.Key].Score / _scoreRatioTotalDict[ratioTotalSubjectKey];
                 }
             }
+
+
+
 
             // 2018/11/13 穎驊更新， 已經計算完 Term 成績，現在可以把 Subject 成績 四捨五入
             foreach (KeyValuePair<string, ESLScore> score in _subjectScoreDict)
@@ -1271,7 +1301,7 @@ namespace ESL_System
                     ,'{3}'::TEXT AS extension                                        
                     ,'{4}'::INTEGER AS id
                     ,'UPDATE'::TEXT AS action
-                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'","''"), score.ID);
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'", "''"), score.ID);
 
                 examDataList.Add(data);
             }
@@ -1286,7 +1316,7 @@ namespace ESL_System
                     ,'{3}'::TEXT AS extension                                        
                     ,'{4}'::INTEGER AS id
                     ,'INSERT'::TEXT AS action
-                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'","''"), 0);
+                ", score.RefSCAttendID, score.RefExamID, score.Score, score.Extensions.Replace("'", "''"), 0);
 
                 examDataList.Add(data);
             }
@@ -1326,7 +1356,7 @@ FROM
 	score_data_row
 WHERE action ='INSERT'", examData);
             UpdateHelper uh = new UpdateHelper();
-          
+
 
             if (!string.IsNullOrWhiteSpace(examData))
             {
@@ -1563,7 +1593,7 @@ WHERE action ='INSERT'", Data);
                             elmRoot = XElement.Parse(extension);
                         }
                         elmRoot.SetElementValue("Text", text);
-                        string new_extension = elmRoot.ToString().Replace("'","''");
+                        string new_extension = elmRoot.ToString().Replace("'", "''");
                         string updateQry = "UPDATE sce_take SET extension='" + new_extension + "' WHERE id=" + sceid;
                         updateData.Add(updateQry);
                     }
