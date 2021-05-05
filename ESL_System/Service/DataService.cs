@@ -105,7 +105,7 @@ FROM (
             foreach (DataRow dr in dt.Rows)
             {
                 string ref_student_id = "" + dr["ref_student_id"];
-                string SubjectName = "" + dr["subject"];
+                string SubjectName = ("" + dr["subject"]).Replace("&amp;", "&");
                 string SemsScoreText = "" + dr["文字描述"];
 
                 if (!dicSubjTextInfos.ContainsKey(ref_student_id))
@@ -240,11 +240,19 @@ FROM (
         {
             Dictionary<string, int> domainOrder = new Dictionary<string, int>();
             string sql = @"  
+
+WITH   domain_mapping  AS (
 SELECT
 	 unnest(xpath('//Domains/Domain/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS domain_name
 FROM  
 	 list 
-WHERE name  ='JHEvaluation_Subject_Ordinal'";
+WHERE name  ='JHEvaluation_Subject_Ordinal'
+
+)SELECT 
+	replace (domain_name ,'&amp;amp;','&') AS domain_name
+	FROM 
+	domain_mapping
+";
             DataTable dt = this.QHlper.Select(sql);
             int order = 1;
             foreach (DataRow dr in dt.Rows)
@@ -266,11 +274,18 @@ WHERE name  ='JHEvaluation_Subject_Ordinal'";
         {
             Dictionary<string, int> SubjectOrder = new Dictionary<string, int>();
             string sql = @"  
+
+WITH    subject_mapping AS 
+(
 SELECT
     unnest(xpath('//Subjects/Subject/@Name',  xmlparse(content replace(replace(content ,'&lt;','<'),'&gt;','>'))))::text AS subject_name
 FROM  
     list 
-WHERE name  ='JHEvaluation_Subject_Ordinal'";
+WHERE name  ='JHEvaluation_Subject_Ordinal'
+
+)SELECT
+		replace (subject_name ,'&amp;amp;','&') AS subject_name
+	FROM  subject_mapping";
             DataTable dt = this.QHlper.Select(sql);
             int order = 1;
             foreach (DataRow dr in dt.Rows)
