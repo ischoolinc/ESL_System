@@ -71,7 +71,7 @@ namespace ESL_System.Form
 
 
         // 開始日期
-        private DateTime _BeginDate;
+        private DateTime _BeginDate ;
         // 結束日期
         private DateTime _EndDate;
 
@@ -104,9 +104,13 @@ namespace ESL_System.Form
             bkw.WorkerReportsProgress = true;
             bkw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bkw_RunWorkerCompleted);
 
-            // 預設都為今天
-            dtBegin.Value = DateTime.Now;
-            dtEnd.Value = DateTime.Now;
+            //// 預設都為今天
+            //dtBegin.Value = DateTime.Now;
+            //dtEnd.Value = DateTime.Now;
+
+            // 2021-11 原本用Now 會有時間差，改為00:00:00到23:59:59，就可以找出完整一天的資料
+            dtBegin.Value = DateTime.Today;
+            dtEnd.Value = DateTime.Today.AddHours(23).AddMinutes(59).AddSeconds(59);
 
 
             // 缺曠資料
@@ -497,7 +501,10 @@ namespace ESL_System.Form
             {
                 foreach (var absence in _absenceList)
                 {
-                    itemList.Add(type + absence);
+                    //itemList.Add(type + absence);
+                    // 2021-11 解決缺曠名稱有空白會印不出來的問題
+                    itemList.Add(type.Replace(' ', '_').Replace('"', '_') + absence.Replace(' ', '_').Replace('"', '_'));
+
                 }
             }
 
@@ -1832,8 +1839,8 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             _bw.ReportProgress(50, "取得獎懲資料");
             // 獎懲資料
-            _DisciplineCountDict = Utility.GetDisciplineCountByDate(studentIDList, _BeginDate, _EndDate);
 
+            _DisciplineCountDict = Utility.GetDisciplineCountByDate(studentIDList, _BeginDate, _EndDate);
             #endregion
 
             // BY subject 排序 ，將studentList 順序重新整理
@@ -1921,14 +1928,18 @@ WHERE course.id IN ('" + course_ids + "') " +
                 {
                     foreach (var absence in _absenceList)
                     {
-                        row[type + absence] = "0";
+                        //row[type + absence] = "0";
+                        //2021-11 解決缺曠名稱有空白會印不出來的問題
+                        row[type.Replace(' ', '_').Replace('"', '_') + absence.Replace(' ', '_').Replace('"', '_')] = "0";
                     }
                 }
                 if (_AttendanceDict.ContainsKey(stuRecord.ID))
                 {
                     foreach (var absentKey in _AttendanceDict[stuRecord.ID].Keys)
                     {
-                        row[absentKey] = _AttendanceDict[stuRecord.ID][absentKey];
+                        //row[absentKey] = _AttendanceDict[stuRecord.ID][absentKey];
+                        //2021-11 解決缺曠名稱有空白會印不出來的問題
+                        row[absentKey.Replace(' ', '_').Replace('"', '_')] = _AttendanceDict[stuRecord.ID][absentKey];
                     }
                 }
                 // 獎懲區間統計值
@@ -1939,6 +1950,15 @@ WHERE course.id IN ('" + course_ids + "') " +
                         string key = str + "區間統計";
                         if (_DisciplineCountDict[stuRecord.ID].ContainsKey(str))
                             row[key] = _DisciplineCountDict[stuRecord.ID][str];
+                    }
+                }
+                else
+                {
+                    //2021-11 區間內沒有獎懲時，也要印出0
+                    foreach (string str in Global.GetDisciplineNameList())
+                    {
+                        string key = str + "區間統計";
+                        row[key] = 0;
                     }
                 }
 
@@ -2094,7 +2114,10 @@ WHERE course.id IN ('" + course_ids + "') " +
             {
                 foreach (var absence in _absenceList)
                 {
-                    dataTable.Columns.Add(type + absence);
+                    //dataTable.Columns.Add(type + absence);
+                    //2021-11 解決缺曠名稱有空白會印不出來的問題
+                    dataTable.Columns.Add(type.Replace(' ', '_').Replace('"', '_') + absence.Replace(' ', '_').Replace('"', '_'));
+
                 }
             }
 
