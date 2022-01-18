@@ -453,6 +453,12 @@ namespace ESL_System.Form
                     "原班級名稱",
                     "學生英文姓名",
                     "學生中文姓名",
+                    "國籍一",
+                    "國籍一護照名",
+                    "國籍二",
+                    "國籍二護照名",
+                    "國籍一英文",
+                    "國籍二英文",
                     "電子報表辨識編號"
                 })
             {
@@ -1899,12 +1905,16 @@ WHERE course.id IN ('" + course_ids + "') " +
                 studentList = studentList_new;
             }
 
-
+            QueryHelper qh1 = new QueryHelper();
             foreach (StudentRecord stuRecord in studentList)
             {
                 string id = stuRecord.ID;
 
                 DataRow row = _mergeDataTable.NewRow();
+
+                //護照資料
+                string strSQL1 = "select nationality1, passport_name1, nat1.eng_name as nat_eng1, nationality2, passport_name2, nat2.eng_name as nat_eng2, nationality3, passport_name3, nat3.eng_name as nat_eng3 from student_info_ext  as stud_info left outer join $ischool.mapping.nationality as nat1 on nat1.name = stud_info.nationality1 left outer join $ischool.mapping.nationality as nat2 on nat2.name = stud_info.nationality2 left outer join $ischool.mapping.nationality as nat3 on nat3.name = stud_info.nationality3 WHERE ref_student_id=" + stuRecord.ID;
+                DataTable student_info_ext = qh1.Select(strSQL1);
 
                 row["電子報表辨識編號"] = "系統編號{" + stuRecord.ID + "}"; // 學生系統編號
 
@@ -1916,6 +1926,25 @@ WHERE course.id IN ('" + course_ids + "') " +
                 row["原班級名稱"] = stuRecord.Class != null ? "" + stuRecord.Class.Name : "";
                 row["學生英文姓名"] = stuRecord.EnglishName;
                 row["學生中文姓名"] = stuRecord.Name;
+
+                if (student_info_ext.Rows.Count > 0)
+                {
+                    row["國籍一"] = student_info_ext.Rows[0]["nationality1"];
+                    row["國籍一護照名"] = student_info_ext.Rows[0]["passport_name1"];
+                    row["國籍二"] = student_info_ext.Rows[0]["nationality2"];
+                    row["國籍二護照名"] = student_info_ext.Rows[0]["passport_name2"];
+                    row["國籍一英文"] = student_info_ext.Rows[0]["nat_eng1"];
+                    row["國籍二英文"] = student_info_ext.Rows[0]["nat_eng2"];
+                }
+                else
+                {
+                    row["國籍一"] = "";
+                    row["國籍一護照名"] = "";
+                    row["國籍二"] = "";
+                    row["國籍二護照名"] = "";
+                    row["國籍一英文"] = "";
+                    row["國籍二英文"] = "";
+                }
 
                 row["區間開始日期"] = _BeginDate.ToShortDateString();
                 row["區間結束日期"] = _EndDate.ToShortDateString();
@@ -2094,6 +2123,12 @@ WHERE course.id IN ('" + course_ids + "') " +
             dataTable.Columns.Add("原班級名稱");
             dataTable.Columns.Add("學生英文姓名");
             dataTable.Columns.Add("學生中文姓名");
+            dataTable.Columns.Add("國籍一");
+            dataTable.Columns.Add("國籍一護照名");
+            dataTable.Columns.Add("國籍二");
+            dataTable.Columns.Add("國籍二護照名");
+            dataTable.Columns.Add("國籍一英文");
+            dataTable.Columns.Add("國籍二英文");
             dataTable.Columns.Add("電子報表辨識編號");
 
             dataTable.Columns.Add("區間開始日期");
