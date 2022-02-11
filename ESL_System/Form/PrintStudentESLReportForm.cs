@@ -71,7 +71,7 @@ namespace ESL_System.Form
 
 
         // 開始日期
-        private DateTime _BeginDate ;
+        private DateTime _BeginDate;
         // 結束日期
         private DateTime _EndDate;
 
@@ -1534,9 +1534,9 @@ WHERE course.id IN ('" + course_ids + "') " +
                 string assignment_score = "" + row["assignment_score"]; // 平時評量
                 string score = "" + row["score"]; // 評量總分
                 string text = "" + row["text"];
-                
-                
-                
+
+
+
                 //foreach (var item in collection)
                 {
                     string scoreKey = examWord.Replace(' ', '_').Replace('"', '_') + "_" + "評量_";
@@ -1767,16 +1767,29 @@ WHERE course.id IN ('" + course_ids + "') " +
 
                         decimal score_d;
 
-                        if (decimal.TryParse(score, out score_d))
+                        // 當空值
+                        if (string.IsNullOrEmpty(score))
                         {
-                            _scoreDict[ref_student_id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
+                            _scoreDict[ref_student_id].Add("課程學期成績等第" + i, "");
+                            _scoreDict[ref_student_id].Add("課程學期成績GPA" + i, "");
+                        }
+                        else
+                        {
+                            // 非空值才處理
+                            if (decimal.TryParse(score, out score_d))
+                            {
+                                _scoreDict[ref_student_id].Add("課程學期成績等第" + i, dm.GetDegreeByScore(score_d));
+                            }
+
+                            decimal? GPA_d = dataService.GetFinalGPA(subjectWord, score_d);
+                            _scoreDict[ref_student_id].Add("課程學期成績GPA" + i, GPA_d.ToString());
+
+                            // 處理學期算數平均
+                            this._SemsTotalScoreInfos.AddforCoumpte(ref_student_id, new SemsSubjScoreInfo(subjectWord, score_d, GPA_d));
+
                         }
 
-                        decimal? GPA_d = dataService.GetFinalGPA(subjectWord, score_d);
-                        _scoreDict[ref_student_id].Add("課程學期成績GPA" + i, GPA_d.ToString());
 
-                        // 處理學期算數平均
-                        this._SemsTotalScoreInfos.AddforCoumpte(ref_student_id, new SemsSubjScoreInfo(subjectWord, score_d, GPA_d));
 
 
                         if (_scoreDict[ref_student_id].ContainsKey("課程文字描述" + i))
@@ -1809,8 +1822,14 @@ WHERE course.id IN ('" + course_ids + "') " +
 
             #endregion
 
+            //StreamWriter sw = new StreamWriter(Application.StartupPath + "\\debug.txt", false, Encoding.UTF8);
+            //foreach (string key0 in _scoreDict.Keys)
+            //{
+            //    foreach (string key in _scoreDict[key0].Keys)
+            //        sw.WriteLine("Key=" + key + ", value=" + _scoreDict[key0][key]);
 
-
+            //}
+            //sw.Close();
 
             //學期科目算數平均
             // 取得計算 學期算術平均的物件
