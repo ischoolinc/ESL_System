@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using FISCA.Presentation.Controls;
 using FISCA.Data;
+using K12.Data;
 
 namespace ESL_System.Form
 {
@@ -39,7 +40,21 @@ namespace ESL_System.Form
                 return;
             }
 
+            //因應康橋需求
+            //在計算ESL成績時,沒有Log紀錄難以追查相關狀態
+            //第一階段: 增加計算清單的執行相關Log
+            //2022/12/30 - By Dylan
+            List<CourseRecord> courseList = K12.Data.Course.SelectByIDs(_CourseIDList);
+            StringBuilder sb_Log = new StringBuilder();
+            sb_Log.AppendLine("已執行計算ESL課程：");
+            foreach (CourseRecord course in courseList)
+            {
+                sb_Log.AppendLine(string.Format("學年度「{0}」學期「{1}」課程名稱「{2}」", course.SchoolYear, course.Semester, course.Name));
+            }
+            FISCA.LogAgent.ApplicationLog.Log("計算ESL課程評量成績", "計算", sb_Log.ToString());
+
             string courseIDs = string.Join(",", _CourseIDList);
+
 
             // 抓取課程上樣板，是否真的有設定所選對應試別
             string query = @"
@@ -53,7 +68,6 @@ FROM course
 	LEFT JOIN exam ON exam.id = te_include.ref_exam_id
 WHERE course.id IN ( " + courseIDs + @")
 ORDER BY course.id,ref_exam_id";
-
             
             QueryHelper qh = new QueryHelper();
             DataTable dt = qh.Select(query);
@@ -94,7 +108,7 @@ ORDER BY course.id,ref_exam_id";
 
                 MsgBox.Show(erroor);
 
-                return; 
+                return;
             }
 
 
@@ -144,7 +158,7 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  "
                     this.Close();
                 }
             }
-                                 
+
             // 抓取系統內 設定的試別
             query = "SELECT id,exam_name FROM exam ";
 
@@ -171,9 +185,9 @@ WHERE course.id IN( " + courseIDs + ") AND  exam_template.description IS NULL  "
             foreach (KeyValuePair<string, string> exam in _ExamDict)
             {
                 object o = exam.Key;
-                
+
                 comboBoxEx1.Items.Add(o);
-               
+
             }
         }
     }
