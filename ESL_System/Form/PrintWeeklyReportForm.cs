@@ -51,7 +51,7 @@ namespace ESL_System.Form
         private DateTime _BeginDate;
         // 結束日期
         private DateTime _EndDate;
-        
+
         private DataTable _mergeDataTable = new DataTable();
 
         private List<UDT_WeeklyReportTemplate> _configuresList = new List<UDT_WeeklyReportTemplate>();
@@ -61,6 +61,9 @@ namespace ESL_System.Form
         public PrintWeeklyReportForm()
         {
             InitializeComponent();
+
+            this.Text = string.Format("列印 {0}", NameCheck.ReportName);
+            labelX12.Text = string.Format("請選擇日期區間：(依區間統計該週的 {0})", NameCheck.ReportName);
 
             _bw.DoWork += new DoWorkEventHandler(_bkWork_DoWork);
             _bw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(_worker_RunWorkerCompleted);
@@ -72,7 +75,7 @@ namespace ESL_System.Form
             bkw.ProgressChanged += new ProgressChangedEventHandler(bkw_ProgressChanged);
             bkw.WorkerReportsProgress = true;
             bkw.RunWorkerCompleted += new RunWorkerCompletedEventHandler(bkw_RunWorkerCompleted);
-            
+
             // [ischoolkingdom] Vicky新增，WeeklyReport報表列印，預設時間為當週
             // 預設都為今天之當週週一至週五   
             DateTime date = DateTime.Now;
@@ -239,7 +242,7 @@ namespace ESL_System.Form
             linklabel1.Enabled = false;
             #region 儲存檔案
 
-            string reportName = "WeeklyReport樣板(" + _configure.Name + ")";
+            string reportName = string.Format("{0} 樣板(", NameCheck.ReportName) + _configure.Name + ")";
 
             string path = Path.Combine(System.Windows.Forms.Application.StartupPath, "Reports");
             if (!Directory.Exists(path))
@@ -368,7 +371,7 @@ namespace ESL_System.Form
 
             builder.ParagraphFormat.Style = builder.Document.Styles["ESLNameStyle"];
             // 固定變數，不分　期中、期末、學期  (使用大字粗體)
-            builder.Writeln("WeeklyReport報表統計");
+            builder.Writeln(string.Format("{0} 報表統計",NameCheck.ReportName));
 
             builder.ParagraphFormat.Style = builder.Document.Styles["Normal"];
 
@@ -825,13 +828,13 @@ namespace ESL_System.Form
 
 
             #region 取得Weekly 資料
-            _bw.ReportProgress(20, "取得ESL課程WeeklyReport 資料");
+            _bw.ReportProgress(20, string.Format("取得ESL課程 {0} 資料",NameCheck.ReportName));
 
             string course_ids = string.Join("','", courseIDList);
 
             string student_ids = string.Join("','", studentIDList);
 
-            
+
             // 建立 weeklyScore結構
             foreach (string stuID in studentIDList)
             {
@@ -1117,7 +1120,7 @@ ORDER BY ref_student_id ";
                         }
 
                     }
-                }                
+                }
             }
 
 
@@ -1183,8 +1186,8 @@ ORDER BY ref_student_id ";
                     {
                         Node n = doc_final.ImportNode(d.Sections[i], true);
                         doc_final.Sections.Add(n);
-                    }                    
-                }                
+                    }
+                }
             }
 
             e.Result = doc_final;
@@ -1198,7 +1201,7 @@ ORDER BY ref_student_id ";
                 return;
             }
 
-            FISCA.Presentation.MotherForm.SetStatusBarMessage(" WeeklyReport報表產生完成。");
+            FISCA.Presentation.MotherForm.SetStatusBarMessage(string.Format("{0} 報表產生完成。",NameCheck.ReportName));
 
             Document doc = (Document)e.Result;
             doc.MailMerge.DeleteFields();
@@ -1231,7 +1234,7 @@ ORDER BY ref_student_id ";
 
             SaveFileDialog sd = new SaveFileDialog();
             sd.Title = "另存新檔";
-            sd.FileName = "WeeklyReport 報表.docx";
+            sd.FileName = string.Format("{0}報表.docx",NameCheck.ReportName);
             sd.Filter = "Word檔案 (*.docx)|*.docx|所有檔案 (*.*)|*.*";
             if (sd.ShowDialog() == System.Windows.Forms.DialogResult.OK)
             {
@@ -1370,7 +1373,7 @@ ORDER BY ref_student_id ";
             }
         }
     }
-    
+
 
     /// 寫data屬性
     public class Json_deserialize_data

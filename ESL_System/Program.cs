@@ -19,6 +19,7 @@ namespace ESL_System
         [FISCA.MainMethod()]
         public static void Main()
         {
+            NameCheck.Check();
 
             FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
 
@@ -259,24 +260,22 @@ namespace ESL_System
 
 
             Catalog ribbon10 = RoleAclSource.Instance["學生"]["報表"];
-            ribbon10.Add(new RibbonFeature("1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D", "WeeklyReport報表"));
 
-            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0;
+            ribbon10.Add(new RibbonFeature("1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D", NameCheck.ReportName + "報表"));
+
+            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"][NameCheck.ReportName + "報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0;
 
             K12.Presentation.NLDPanels.Student.SelectedSourceChanged += delegate
             {
-                MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0);
+                MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"][NameCheck.ReportName + "報表"].Enable = UserAcl.Current["1C26A90B-DD2E-4298-A6D8-35C7E3C8EC7D"].Executable && (K12.Presentation.NLDPanels.Student.SelectedSource.Count > 0);
             };
 
-
-            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"]["WeeklyReport報表"].Click += delegate
+            MotherForm.RibbonBarItems["學生", "資料統計"]["報表"]["ESL報表"][NameCheck.ReportName + "報表"].Click += delegate
             {
                 Form.PrintWeeklyReportForm form = new Form.PrintWeeklyReportForm();
 
                 form.ShowDialog();
             };
-
-
         }
     }
 }

@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>ESL_System</RootNamespace>
     <AssemblyName>ESL_System</AssemblyName>
-    <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -111,6 +111,9 @@
       <HintPath>Library\K12.Presentation.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\..\..\GitHub_Open\Open_ESL\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="PSSchool.Evaluation">
       <HintPath>Library\PSSchool.Evaluation.dll</HintPath>
       <Private>False</Private>
@@ -142,6 +145,7 @@
     <Compile Include="Model\StudentScAttend.cs" />
     <Compile Include="Model\SubjectGPAMapping.cs" />
     <Compile Include="Model\SemsTotalScoreInfo.cs" />
+    <Compile Include="NameCheck.cs" />
     <Compile Include="Service\DataService.cs" />
     <Compile Include="StringComparer.cs" />
     <Compile Include="UDT\ScoreGPAMapping.cs" />
@@ -342,6 +346,7 @@
     </Content>
     <Content Include="Resource\calc_64.png" />
     <None Include="packages.config" />
+    <None Include="Resources\School.json" />
     <None Include="Resource\ESL課程班級取前N名%28樣板%29.xlsx" />
     <None Include="Resource\WeeklyReport樣板.docx" />
     <None Include="Resource\預設ESL等第對照表.xml" />

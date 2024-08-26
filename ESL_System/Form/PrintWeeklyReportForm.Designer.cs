@@ -291,9 +291,9 @@
             this.labelX12.BackgroundStyle.CornerType = DevComponents.DotNetBar.eCornerType.Square;
             this.labelX12.Location = new System.Drawing.Point(11, 97);
             this.labelX12.Name = "labelX12";
-            this.labelX12.Size = new System.Drawing.Size(319, 21);
+            this.labelX12.Size = new System.Drawing.Size(230, 21);
             this.labelX12.TabIndex = 36;
-            this.labelX12.Text = "請選擇日期區間：(依區間統計該週的WeeklyReport)";
+            this.labelX12.Text = "請選擇日期區間：(依區間統計該週的)";
             // 
             // comboBoxEx2
             // 
@@ -501,7 +501,7 @@
             this.MaximumSize = new System.Drawing.Size(583, 309);
             this.MinimumSize = new System.Drawing.Size(583, 309);
             this.Name = "PrintWeeklyReportForm";
-            this.Text = "列印WeeklyReport";
+            this.Text = "報表";
             this.Load += new System.EventHandler(this.PrintStudentESLReportForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dtEnd)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dtBegin)).EndInit();
