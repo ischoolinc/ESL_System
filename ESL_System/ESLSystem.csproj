@@ -111,9 +111,6 @@
       <HintPath>Library\K12.Presentation.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\..\..\GitHub_Open\Open_ESL\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
     <Reference Include="PSSchool.Evaluation">
       <HintPath>Library\PSSchool.Evaluation.dll</HintPath>
       <Private>False</Private>
@@ -345,8 +342,6 @@
       <SubType>Designer</SubType>
     </Content>
     <Content Include="Resource\calc_64.png" />
-    <None Include="packages.config" />
-    <None Include="Resources\School.json" />
     <None Include="Resource\ESL課程班級取前N名%28樣板%29.xlsx" />
     <None Include="Resource\WeeklyReport樣板.docx" />
     <None Include="Resource\預設ESL等第對照表.xml" />
@@ -431,6 +426,9 @@
     <None Include="Resource\MidReport_MailMergeList.docx" />
     <None Include="Resource\SemesterReport .docx" />
     <None Include="Resource\SemesterReport_MailMergeList.docx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

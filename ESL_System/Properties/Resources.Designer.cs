@@ -167,16 +167,6 @@ namespace ESL_System.Properties {
         /// <summary>
         ///   查詢類型 System.Byte[] 的當地語系化資源。
         /// </summary>
-        internal static byte[] School {
-            get {
-                object obj = ResourceManager.GetObject("School", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   查詢類型 System.Byte[] 的當地語系化資源。
-        /// </summary>
         internal static byte[] SemesterReport {
             get {
                 object obj = ResourceManager.GetObject("SemesterReport", resourceCulture);
