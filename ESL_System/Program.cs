@@ -8,6 +8,8 @@ using FISCA.Presentation;
 using K12.Presentation;
 using FISCA.Permission;
 using JHSchool;
+using System.Diagnostics;
+using System.IO;
 
 
 
@@ -19,10 +21,35 @@ namespace ESL_System
         [FISCA.MainMethod()]
         public static void Main()
         {
-            FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
+           /* Action<string> log = (msg) =>
+            {
+                try
+                {
+                    File.AppendAllText("log_esl.txt", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + " " + msg + "\r\n");
+                }
+                catch { }
+            };
 
-            accessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
-            accessHelper.Select<UDT_WeeklyReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+           */
+            Task.Run(() =>
+            {
+                Stopwatch sw2 = new Stopwatch();
+                sw2.Start();
+                try
+                {
+                    FISCA.UDT.AccessHelper accessHelper = new FISCA.UDT.AccessHelper();
+                    accessHelper.Select<UDT_ReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
+                    accessHelper.Select<UDT_WeeklyReportTemplate>(); // 先將UDT 選起來，如果是第一次開啟沒有話就會新增
+                    sw2.Stop();
+                 //   log("AccessHelper Init (Async): " + sw2.ElapsedMilliseconds + " ms");
+                }
+                catch (Exception ex)
+                {
+                   // log("AccessHelper Init Failed: " + ex.Message);
+                }
+            });
 
             Catalog ribbon = RoleAclSource.Instance["教務作業"]["功能按鈕"];
             ribbon.Add(new RibbonFeature("ESL評分樣版設定", "ESL評分樣版設定"));
@@ -36,6 +63,10 @@ namespace ESL_System
                 form.ShowDialog();
 
             };
+
+          //  sw.Stop();
+          //  log("ESL評分樣版設定 Init: " + sw.ElapsedMilliseconds + " ms");
+          ////  sw.Restart();
 
             Catalog ribbon2 = RoleAclSource.Instance["課程"]["ESL課程"];
             ribbon2.Add(new RibbonFeature("ESL評量分數計算", "評量成績結算"));
@@ -64,6 +95,10 @@ namespace ESL_System
                 form.ShowDialog();
 
             };
+
+         //   sw.Stop();
+         //   log("ESL評量分數計算 Init: " + sw.ElapsedMilliseconds + " ms");
+         //   sw.Restart();
 
 
             //2019/02/26 穎驊註解， 依據ESL 寒假優化項目 課程上的 ESL 報表功能 將移除，日後會統一在學生上列印
@@ -121,6 +156,10 @@ namespace ESL_System
 
             };
 
+        //    sw.Stop();
+        //    log("ESL課程成績輸入狀況 Init: " + sw.ElapsedMilliseconds + " ms");
+        //    sw.Restart();
+
 
             Catalog ribbon5 = RoleAclSource.Instance["學生"]["報表"];
             ribbon5.Add(new RibbonFeature("1C389099-FBA2-4C4B-9C0C-0FD7CB18EBC3", "ESL個人成績單"));
@@ -139,6 +178,10 @@ namespace ESL_System
 
                 form.ShowDialog();
             };
+
+          //  sw.Stop();
+          //  log("ESL個人成績單 Init: " + sw.ElapsedMilliseconds + " ms");
+          //  sw.Restart();
 
 
             Catalog ribbon6 = RoleAclSource.Instance["課程"]["ESL課程"];
@@ -174,6 +217,10 @@ namespace ESL_System
 
             };
 
+        //    sw.Stop();
+        //    log("課程成績匯出 Init: " + sw.ElapsedMilliseconds + " ms");
+        //    sw.Restart();
+
             //MotherForm.RibbonBarItems["課程", "ESL課程"]["匯入新竹成績(暫時)"].Click += delegate
             //{
             //    ImportHCScore import = new ImportHCScore();
@@ -199,6 +246,10 @@ namespace ESL_System
                 printform.ShowDialog();
             };
 
+       //     sw.Stop();
+       //     log("班級前N名 Init: " + sw.ElapsedMilliseconds + " ms");
+       //     sw.Restart();
+
 
             Catalog ribbon8 = RoleAclSource.Instance["課程"]["ESL報表"];
             ribbon8.Add(new RibbonFeature("4B1318A1-1DA6-4A23-8508-2A394CFE4D9C", "進步名單"));
@@ -218,6 +269,10 @@ namespace ESL_System
 
                 printform.ShowDialog();
             };
+
+        //    sw.Stop();
+        //    log("進步名單 Init: " + sw.ElapsedMilliseconds + " ms");
+        //    sw.Restart();
 
 
             Catalog ribbon9 = RoleAclSource.Instance["課程"]["ESL課程"];
@@ -251,10 +306,18 @@ namespace ESL_System
                 form.ShowDialog();
             };
 
+        //    sw.Stop();
+        //    log("缺考成績處理(指定比例) Init: " + sw.ElapsedMilliseconds + " ms");
+        //    sw.Restart();
+
 
             //課程基本資訊 (課程難度(Level)、上課地點) 
             // 此外掛方式，會讓只有 加掛 ESL 模組學校  才可以在 課程上 有 課程難度(Level)、上課地點 兩個欄位可以編輯
             K12.Presentation.NLDPanels.Course.AddDetailBulider(new FISCA.Presentation.DetailBulider<CourseExtendControls.BasicInfoItem>());
+
+         //   sw.Stop();
+         //   log("DetailBulider BasicInfoItem Init: " + sw.ElapsedMilliseconds + " ms");
+         //   sw.Restart();
 
 
             Catalog ribbon10 = RoleAclSource.Instance["學生"]["報表"];
@@ -274,6 +337,10 @@ namespace ESL_System
 
                 form.ShowDialog();
             };
+
+         //   sw.Stop();
+         //   log("WeeklyReport Init: " + sw.ElapsedMilliseconds + " ms");
+          //  sw.Reset();
         }
     }
 }
